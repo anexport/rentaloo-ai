@@ -21,26 +21,59 @@ export const useMessaging = () => {
     if (!user) return;
 
     try {
+      // First, get conversation IDs where user is a participant
+      const { data: userConversations, error: convError } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("profile_id", user.id);
+
+      if (convError) throw convError;
+
+      const conversationIds = (userConversations || []).map(
+        (uc) => uc.conversation_id
+      );
+
+      if (conversationIds.length === 0) {
+        setConversations([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get full conversation details
       const { data, error } = await supabase
         .from("conversations")
         .select(
           `
           *,
-          participants:profiles(*),
           booking_request:booking_requests(
             *,
             equipment:equipment(*)
           )
         `
         )
-        .contains("participants", [user.id])
+        .in("id", conversationIds)
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
 
-      // Get last message for each conversation
-      const conversationsWithLastMessage = await Promise.all(
+      // Get participants and last message for each conversation
+      const conversationsWithDetails = await Promise.all(
         (data || []).map(async (conversation) => {
+          // Get participants
+          const { data: participantLinks } = await supabase
+            .from("conversation_participants")
+            .select(
+              `
+              profile_id,
+              profiles:profile_id (*)
+            `
+            )
+            .eq("conversation_id", conversation.id);
+
+          const participants =
+            participantLinks?.map((link: any) => link.profiles) || [];
+
+          // Get last message
           const { data: lastMessage } = await supabase
             .from("messages")
             .select(
@@ -56,12 +89,13 @@ export const useMessaging = () => {
 
           return {
             ...conversation,
+            participants,
             last_message: lastMessage,
           };
         })
       );
 
-      setConversations(conversationsWithLastMessage);
+      setConversations(conversationsWithDetails);
     } catch (err) {
       console.error("Error fetching conversations:", err);
       setError(
@@ -144,34 +178,88 @@ export const useMessaging = () => {
       if (!user) return null;
 
       try {
-        // Check if conversation already exists
         const allParticipants = [user.id, ...participantIds];
-        const { data: existingConversation } = await supabase
-          .from("conversations")
-          .select("*")
-          .contains("participants", allParticipants)
-          .single();
 
-        if (existingConversation) {
-          return existingConversation;
+        // Check if conversation already exists for this booking request
+        if (bookingRequestId) {
+          const { data: existingConversation } = await supabase
+            .from("conversations")
+            .select("*")
+            .eq("booking_request_id", bookingRequestId)
+            .single();
+
+          if (existingConversation) {
+            return existingConversation;
+          }
+        }
+
+        // If no booking request, check for existing conversation between these participants
+        if (!bookingRequestId) {
+          // Get all conversations where current user is a participant
+          const { data: userConvs } = await supabase
+            .from("conversation_participants")
+            .select("conversation_id")
+            .eq("profile_id", user.id);
+
+          if (userConvs && userConvs.length > 0) {
+            const convIds = userConvs.map((c) => c.conversation_id);
+
+            // For each conversation, check if it has exactly the right participants
+            for (const convId of convIds) {
+              const { data: convParticipants } = await supabase
+                .from("conversation_participants")
+                .select("profile_id")
+                .eq("conversation_id", convId);
+
+              const participantSet = new Set(
+                convParticipants?.map((p) => p.profile_id) || []
+              );
+              const targetSet = new Set(allParticipants);
+
+              if (
+                participantSet.size === targetSet.size &&
+                [...participantSet].every((id) => targetSet.has(id))
+              ) {
+                const { data: existingConv } = await supabase
+                  .from("conversations")
+                  .select("*")
+                  .eq("id", convId)
+                  .single();
+
+                if (existingConv) return existingConv;
+              }
+            }
+          }
         }
 
         // Create new conversation
-        const { data, error } = await supabase
+        const { data: newConversation, error: convError } = await supabase
           .from("conversations")
           .insert({
-            participants: allParticipants.map((id) => id), // Ensure UUIDs are properly handled
             booking_request_id: bookingRequestId,
+            participants: allParticipants, // Keep for backwards compatibility
           })
           .select()
           .single();
 
-        if (error) throw error;
+        if (convError) throw convError;
+
+        // Add participants to junction table
+        const participantInserts = allParticipants.map((participantId) => ({
+          conversation_id: newConversation.id,
+          profile_id: participantId,
+        }));
+
+        const { error: participantError } = await supabase
+          .from("conversation_participants")
+          .insert(participantInserts);
+
+        if (participantError) throw participantError;
 
         // Refresh conversations
         fetchConversations();
 
-        return data;
+        return newConversation;
       } catch (err) {
         console.error("Error creating conversation:", err);
         setError(

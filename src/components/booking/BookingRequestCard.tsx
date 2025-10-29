@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
+import { useMessaging } from "@/hooks/useMessaging";
 import type { BookingRequestWithDetails } from "../../types/booking";
 import {
   formatBookingDate,
@@ -45,11 +46,14 @@ const BookingRequestCard = ({
   showActions = true,
 }: BookingRequestCardProps) => {
   const { user } = useAuth();
+  const { getOrCreateConversation } = useMessaging();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [hasPayment, setHasPayment] = useState(false);
   const [showRenterScreening, setShowRenterScreening] = useState(false);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
 
   // Check if payment exists for this booking
   useEffect(() => {
@@ -59,7 +63,7 @@ const BookingRequestCard = ({
         .select("id")
         .eq("booking_request_id", bookingRequest.id)
         .eq("payment_status", "succeeded")
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to handle 0 results
 
       setHasPayment(!!data && !error);
     };
@@ -93,12 +97,75 @@ const BookingRequestCard = ({
 
       if (error) throw error;
 
+      // Send system message about status change
+      try {
+        // Find or create conversation for this booking
+        const otherUserId = isOwner
+          ? bookingRequest.renter_id
+          : bookingRequest.owner.id;
+
+        const conversation = await getOrCreateConversation(
+          [otherUserId],
+          bookingRequest.id
+        );
+
+        if (conversation) {
+          const statusMessages = {
+            approved: `Booking request has been approved! 🎉`,
+            declined: `Booking request has been declined.`,
+            cancelled: `Booking request has been cancelled.`,
+          };
+
+          // Insert system message
+          await supabase.from("messages").insert({
+            conversation_id: conversation.id,
+            sender_id: user.id,
+            content: statusMessages[newStatus],
+            message_type: "system",
+          });
+        }
+      } catch (msgError) {
+        console.error("Error sending status message:", msgError);
+        // Don't fail the status update if message fails
+      }
+
       onStatusChange?.();
     } catch (error) {
       console.error("Error updating booking status:", error);
       alert(`Failed to ${newStatus} booking request. Please try again.`);
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleOpenMessaging = async () => {
+    if (!user) return;
+
+    setIsLoadingConversation(true);
+
+    try {
+      // Determine the other participant (owner or renter)
+      const otherUserId = isOwner
+        ? bookingRequest.renter_id
+        : bookingRequest.owner.id;
+
+      // Get or create conversation for this booking
+      const conversation = await getOrCreateConversation(
+        [otherUserId],
+        bookingRequest.id
+      );
+
+      if (conversation) {
+        setConversationId(conversation.id);
+        setShowMessaging(true);
+      } else {
+        alert("Failed to start conversation. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error opening messaging:", error);
+      alert("Failed to start conversation. Please try again.");
+    } finally {
+      setIsLoadingConversation(false);
     }
   };
 
@@ -305,11 +372,12 @@ const BookingRequestCard = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setShowMessaging(true)}
+              onClick={handleOpenMessaging}
+              disabled={isLoadingConversation}
               className="ml-auto"
             >
               <MessageSquare className="h-4 w-4 mr-1" />
-              Message
+              {isLoadingConversation ? "Loading..." : "Message"}
             </Button>
           </div>
         )}
@@ -328,10 +396,16 @@ const BookingRequestCard = ({
       </CardContent>
 
       {/* Messaging Modal */}
-      {showMessaging && (
+      {showMessaging && conversationId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <MessagingInterface onClose={() => setShowMessaging(false)} />
+            <MessagingInterface
+              initialConversationId={conversationId}
+              onClose={() => {
+                setShowMessaging(false);
+                setConversationId(null);
+              }}
+            />
           </div>
         </div>
       )}

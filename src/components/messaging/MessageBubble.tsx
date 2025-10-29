@@ -1,6 +1,7 @@
 import type { MessageWithSender } from "../../types/messaging";
 import { useAuth } from "../../hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
+import { Info } from "lucide-react";
 
 interface MessageBubbleProps {
   message: MessageWithSender;
@@ -9,6 +10,26 @@ interface MessageBubbleProps {
 const MessageBubble = ({ message }: MessageBubbleProps) => {
   const { user } = useAuth();
   const isOwnMessage = user?.id === message.sender_id;
+  const isSystemMessage = message.message_type === "system";
+
+  // System messages are centered and styled differently
+  if (isSystemMessage) {
+    return (
+      <div className="flex justify-center mb-4">
+        <div className="max-w-md px-4 py-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 flex items-center space-x-2">
+          <Info className="h-4 w-4" />
+          <div>
+            <div className="text-sm">{message.content}</div>
+            <div className="text-xs text-blue-600 mt-1">
+              {formatDistanceToNow(new Date(message.created_at || ""), {
+                addSuffix: true,
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

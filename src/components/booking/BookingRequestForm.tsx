@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/hooks/useAuth";
+import { useMessaging } from "@/hooks/useMessaging";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "../../lib/database.types";
 import type {
@@ -63,6 +64,7 @@ const BookingRequestForm = ({
   onCancel,
 }: BookingRequestFormProps) => {
   const { user } = useAuth();
+  const { getOrCreateConversation } = useMessaging();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calculation, setCalculation] = useState<BookingCalculation | null>(
     null
@@ -195,11 +197,23 @@ const BookingRequestForm = ({
         message: data.message || null,
       };
 
-      const { error } = await supabase
+      const { data: newBooking, error } = await supabase
         .from("booking_requests")
-        .insert(bookingData);
+        .insert(bookingData)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Automatically create a conversation for this booking
+      if (newBooking) {
+        try {
+          await getOrCreateConversation([equipment.owner_id], newBooking.id);
+        } catch (convError) {
+          console.error("Error creating conversation:", convError);
+          // Don't fail the booking if conversation creation fails
+        }
+      }
 
       onSuccess?.();
     } catch (error) {
@@ -228,15 +242,19 @@ const BookingRequestForm = ({
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Equipment Info */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-lg">{equipment.title}</h3>
-            <p className="text-gray-600">{equipment.category.name}</p>
-            <p className="text-sm text-gray-500">📍 {equipment.location}</p>
+          <div className="bg-muted p-4 rounded-lg">
+            <h3 className="font-semibold text-lg text-foreground">
+              {equipment.title}
+            </h3>
+            <p className="text-muted-foreground">{equipment.category.name}</p>
+            <p className="text-sm text-muted-foreground">
+              📍 {equipment.location}
+            </p>
             <div className="flex items-center space-x-4 mt-2">
               <span className="text-2xl font-bold text-primary">
                 ${equipment.daily_rate}/day
               </span>
-              <span className="text-sm text-gray-500 capitalize">
+              <span className="text-sm text-muted-foreground capitalize">
                 {equipment.condition} condition
               </span>
             </div>
@@ -350,11 +368,9 @@ const BookingRequestForm = ({
 
           {/* Rental Period Summary */}
           {watchedStartDate && watchedEndDate && (
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">
-                Rental Period
-              </h4>
-              <div className="flex items-center space-x-2 text-blue-700">
+            <div className="bg-primary/10 dark:bg-primary/20 p-4 rounded-lg border border-primary/20">
+              <h4 className="font-semibold text-primary mb-2">Rental Period</h4>
+              <div className="flex items-center space-x-2 text-primary">
                 <Clock className="h-4 w-4" />
                 <span>
                   {formatBookingDate(watchedStartDate)} -{" "}

@@ -53,10 +53,11 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
         .eq("reviewee_id", targetUserId);
 
       // Fetch completed bookings count
+      // Note: bookings table doesn't have a 'status' column, it has 'return_status'
       const { count: bookingsCount } = await supabase
         .from("bookings")
         .select("*", { count: "exact", head: true })
-        .eq("status", "completed");
+        .eq("return_status", "completed");
 
       // Calculate trust score
       const accountAgeDays = calculateAccountAge(profileData.created_at);

@@ -440,7 +440,9 @@ const EquipmentSearch = () => {
                       <div className="text-xl font-bold text-primary">
                         ${item.daily_rate}
                       </div>
-                      <div className="text-sm text-gray-500">per day</div>
+                      <div className="text-sm text-muted-foreground">
+                        per day
+                      </div>
                     </div>
                   </div>
 
