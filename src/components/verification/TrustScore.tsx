@@ -146,12 +146,12 @@ const TrustScore = ({ score, showBreakdown = true }: TrustScoreProps) => {
                     value={percentage}
                     className={`h-2 transition-transform duration-300 group-hover:scale-x-[1.02] ${
                       percentage >= 80
-                        ? "bg-green-500/20"
+                        ? "[&>div]:bg-chart-4"
                         : percentage >= 60
-                        ? "bg-blue-500/20"
+                        ? "[&>div]:bg-chart-2"
                         : percentage >= 40
-                        ? "bg-yellow-500/20"
-                        : "bg-orange-500/20"
+                        ? "[&>div]:bg-chart-5"
+                        : "[&>div]:bg-chart-1"
                     }`}
                   />
                   {percentage < 100 && (

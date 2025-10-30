@@ -66,20 +66,20 @@ export const calculateTrustScore = (data: {
  * Get trust score color based on score value
  */
 export const getTrustScoreColor = (score: number): string => {
-  if (score >= 80) return "text-green-600";
-  if (score >= 60) return "text-blue-600";
-  if (score >= 40) return "text-yellow-600";
-  return "text-orange-600";
+  if (score >= 80) return "text-chart-4";
+  if (score >= 60) return "text-chart-2";
+  if (score >= 40) return "text-chart-5";
+  return "text-chart-1";
 };
 
 /**
  * Get trust score background color
  */
 export const getTrustScoreBgColor = (score: number): string => {
-  if (score >= 80) return "bg-green-100";
-  if (score >= 60) return "bg-blue-100";
-  if (score >= 40) return "bg-yellow-100";
-  return "bg-orange-100";
+  if (score >= 80) return "bg-chart-4/10";
+  if (score >= 60) return "bg-chart-2/10";
+  if (score >= 40) return "bg-chart-5/10";
+  return "bg-chart-1/10";
 };
 
 /**
