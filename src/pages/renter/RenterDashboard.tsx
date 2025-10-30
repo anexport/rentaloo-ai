@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import TransactionHistory from "@/components/payment/TransactionHistory";
@@ -27,6 +27,8 @@ import { getVerificationProgress } from "@/lib/verification";
 const RenterDashboard = () => {
   const { user } = useAuth();
   const { profile, loading: verificationLoading } = useVerification();
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "overview";
   const [hasEquipment, setHasEquipment] = useState(false);
   const [pendingOwnerRequests, setPendingOwnerRequests] = useState(0);
 
@@ -137,14 +139,18 @@ const RenterDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-foreground mb-4">
-          Quick Actions
-        </h2>
-        <QuickActions />
-      </div>
+      {activeTab !== "bookings" && (
+        <>
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-foreground mb-4">
+              Quick Actions
+            </h2>
+            <QuickActions />
+          </div>
 
-      <Separator className="my-8" />
+          <Separator className="my-8" />
+        </>
+      )}
 
       {/* Owner Equipment Card (if applicable) */}
       {hasEquipment && (
@@ -231,37 +237,41 @@ const RenterDashboard = () => {
         )}
       </div>
 
-      <Separator className="my-8" />
+      {activeTab !== "bookings" && (
+        <>
+          <Separator className="my-8" />
 
-      {/* Transaction History */}
-      <div className="mb-8">
-        <TransactionHistory userType="renter" />
-      </div>
+          {/* Transaction History */}
+          <div className="mb-8">
+            <TransactionHistory userType="renter" />
+          </div>
 
-      <Separator className="my-8" />
+          <Separator className="my-8" />
 
-      {/* My Reviews Given */}
-      {user && (
-        <div className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Star className="h-5 w-5 text-primary" />
-                <span>My Reviews</span>
-              </CardTitle>
-              <CardDescription>
-                Reviews you have written for equipment owners
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ReviewList
-                reviewerId={user.id}
-                showSummary={false}
-                showEquipment={true}
-              />
-            </CardContent>
-          </Card>
-        </div>
+          {/* My Reviews Given */}
+          {user && (
+            <div className="mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Star className="h-5 w-5 text-primary" />
+                    <span>My Reviews</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Reviews you have written for equipment owners
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ReviewList
+                    reviewerId={user.id}
+                    showSummary={false}
+                    showEquipment={true}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </>
       )}
     </DashboardLayout>
   );
