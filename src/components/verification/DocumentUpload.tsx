@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Upload, X, FileText, AlertCircle } from "lucide-react";
+import { Upload, X, FileText, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -110,105 +110,142 @@ const DocumentUpload = ({
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-1">
-              {getTypeLabel()}
-            </h3>
-            <p className="text-xs text-gray-500">
-              Upload a clear photo or scan (max 5MB, JPG/PNG/PDF)
-            </p>
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold text-foreground mb-1">
+          {getTypeLabel()}
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Upload a clear photo or scan (max 5MB, JPG/PNG/PDF)
+        </p>
+      </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {!selectedFile ? (
+        <div
+          className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
+            isDragging
+              ? "border-primary bg-primary/10 scale-[1.02]"
+              : "border-border bg-card hover:border-primary/50 hover:bg-accent/50"
+          }`}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+        >
+          <div className={`transition-transform duration-200 ${isDragging ? 'scale-110' : 'scale-100'}`}>
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+              <Upload className="h-8 w-8 text-primary" />
+            </div>
           </div>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {!selectedFile ? (
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                isDragging
-                  ? "border-primary bg-primary/5"
-                  : "border-gray-300 hover:border-gray-400"
-              }`}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-            >
-              <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-sm text-gray-600 mb-2">
-                Drag and drop your document here, or
-              </p>
-              <label htmlFor={`file-upload-${type}`}>
-                <Button variant="outline" asChild>
-                  <span>Browse Files</span>
-                </Button>
-                <input
-                  id={`file-upload-${type}`}
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          ) : (
-            <div className="border rounded-lg p-4 space-y-4">
-              {/* Preview */}
-              {preview ? (
-                <div className="relative">
-                  <img
-                    src={preview}
-                    alt="Document preview"
-                    className="w-full h-48 object-contain bg-gray-50 rounded"
-                  />
-                  <button
-                    onClick={handleRemove}
-                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-sm hover:bg-gray-100"
-                    aria-label="Remove file"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-3">
-                  <FileText className="h-10 w-10 text-gray-400" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedFile.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleRemove}
-                    className="p-1 hover:bg-gray-100 rounded"
-                    aria-label="Remove file"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-
-              {/* Upload Button */}
-              <Button
-                onClick={handleUpload}
-                disabled={isUploading}
-                className="w-full"
-              >
-                {isUploading ? "Uploading..." : "Upload Document"}
-              </Button>
-            </div>
-          )}
+          <p className="text-sm text-foreground font-medium mb-1">
+            {isDragging ? "Drop your file here" : "Drag and drop your document"}
+          </p>
+          <p className="text-xs text-muted-foreground mb-4">
+            or click below to browse
+          </p>
+          <label htmlFor={`file-upload-${type}`}>
+            <Button variant="outline" asChild>
+              <span className="cursor-pointer">Browse Files</span>
+            </Button>
+            <input
+              id={`file-upload-${type}`}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
+          <p className="text-xs text-muted-foreground mt-4">
+            Supported: JPG, PNG, WebP, PDF
+          </p>
         </div>
-      </CardContent>
-    </Card>
+      ) : (
+        <Card className="border-2 border-primary/20">
+          <CardContent className="p-4 space-y-4">
+            {/* Preview */}
+            {preview ? (
+              <div className="relative group">
+                <img
+                  src={preview}
+                  alt="Document preview"
+                  className="w-full h-64 object-contain bg-muted rounded-lg"
+                />
+                <button
+                  onClick={handleRemove}
+                  disabled={isUploading}
+                  className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Remove file"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleRemove();
+                    }
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {selectedFile.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                <button
+                  onClick={handleRemove}
+                  disabled={isUploading}
+                  className="p-2 hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Remove file"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleRemove();
+                    }
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Upload Button */}
+            <Button
+              onClick={handleUpload}
+              disabled={isUploading}
+              className="w-full"
+              size="lg"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Upload Document
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 

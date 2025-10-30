@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { Toaster } from "@/components/ui/toaster";
 import LandingPage from "@/pages/LandingPage";
 import RenterRegistration from "@/pages/auth/RenterRegistration";
 import OwnerRegistration from "@/pages/auth/OwnerRegistration";
@@ -51,6 +52,7 @@ function App() {
             </>
           )}
         </Routes>
+        <Toaster />
       </div>
     </Router>
   );
