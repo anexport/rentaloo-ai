@@ -1,6 +1,14 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useVerification } from "@/hooks/useVerification";
-import { Shield, CheckCircle, ArrowLeft, Phone, Mail, MapPin, Info } from "lucide-react";
+import {
+  Shield,
+  CheckCircle,
+  ArrowLeft,
+  Phone,
+  Mail,
+  MapPin,
+  Info,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -54,7 +62,8 @@ const VerifyIdentity = () => {
     } catch (error) {
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "Please try again.",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       });
     }
@@ -63,25 +72,27 @@ const VerifyIdentity = () => {
   const handlePhoneVerify = async (phoneNumber: string, code: string) => {
     // Simulate verification (in production, this would call an API)
     return new Promise<void>((resolve, reject) => {
-      setTimeout(async () => {
+      setTimeout(() => {
         // Demo: accept code "123456"
         if (code === "123456") {
-          try {
-            // Refresh profile to update phoneVerified status
-            await fetchVerificationProfile();
-            toast({
-              title: "Phone verified successfully",
-              description: "Your phone number has been verified.",
+          // Refresh profile to update phoneVerified status
+          fetchVerificationProfile()
+            .then(() => {
+              toast({
+                title: "Phone verified successfully",
+                description: "Your phone number has been verified.",
+              });
+              resolve();
+            })
+            .catch((error) => {
+              toast({
+                title: "Verification incomplete",
+                description:
+                  "Phone verified but profile refresh failed. Please reload the page.",
+                variant: "destructive",
+              });
+              reject(error);
             });
-            resolve();
-          } catch (error) {
-            toast({
-              title: "Verification incomplete",
-              description: "Phone verified but profile refresh failed. Please reload the page.",
-              variant: "destructive",
-            });
-            reject(error);
-          }
         } else {
           reject(new Error("Invalid verification code. Try 123456 for demo."));
         }
@@ -125,7 +136,8 @@ const VerifyIdentity = () => {
             Verify Your Identity
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Increase your trust score and access more rental opportunities by completing verification
+            Increase your trust score and access more rental opportunities by
+            completing verification
           </p>
         </div>
 
@@ -149,7 +161,8 @@ const VerifyIdentity = () => {
                   <DialogHeader>
                     <DialogTitle>Why Verify Your Identity?</DialogTitle>
                     <DialogDescription>
-                      Verification helps build trust in our community and provides several benefits.
+                      Verification helps build trust in our community and
+                      provides several benefits.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 text-sm">
@@ -162,9 +175,12 @@ const VerifyIdentity = () => {
                       </ul>
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-1">Privacy & Security:</h4>
+                      <h4 className="font-semibold mb-1">
+                        Privacy & Security:
+                      </h4>
                       <p className="text-muted-foreground">
-                        Your documents are encrypted and only used for verification. They are never shared with other users.
+                        Your documents are encrypted and only used for
+                        verification. They are never shared with other users.
                       </p>
                     </div>
                   </div>
@@ -262,18 +278,27 @@ const VerifyIdentity = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4">
-                  <div className={`p-4 border-2 rounded-lg ${!profile?.identityVerified ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                  <div
+                    className={`p-4 border-2 rounded-lg ${
+                      !profile?.identityVerified
+                        ? "border-primary bg-primary/5"
+                        : "border-border"
+                    }`}
+                  >
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center gap-2">
                           <Shield className="h-5 w-5 text-primary" />
-                          <h3 className="font-semibold">Identity Verification</h3>
+                          <h3 className="font-semibold">
+                            Identity Verification
+                          </h3>
                           {profile?.identityVerified && (
                             <CheckCircle className="h-4 w-4 text-green-600" />
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Upload a government-issued ID (Driver's License, Passport, or State ID)
+                          Upload a government-issued ID (Driver's License,
+                          Passport, or State ID)
                         </p>
                       </div>
                     </div>
@@ -284,7 +309,13 @@ const VerifyIdentity = () => {
                     )}
                   </div>
 
-                  <div className={`p-4 border-2 rounded-lg ${!profile?.phoneVerified ? 'border-border' : 'border-border'}`}>
+                  <div
+                    className={`p-4 border-2 rounded-lg ${
+                      !profile?.phoneVerified
+                        ? "border-border"
+                        : "border-border"
+                    }`}
+                  >
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center gap-2">
@@ -310,7 +341,8 @@ const VerifyIdentity = () => {
                 <Alert>
                   <Shield className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Pro tip:</strong> Complete all verifications to unlock premium features and get priority booking approvals.
+                    <strong>Pro tip:</strong> Complete all verifications to
+                    unlock premium features and get priority booking approvals.
                   </AlertDescription>
                 </Alert>
               </CardContent>
@@ -330,7 +362,8 @@ const VerifyIdentity = () => {
                   <Alert>
                     <CheckCircle className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>Identity Verified!</strong> Your identity has been successfully verified.
+                      <strong>Identity Verified!</strong> Your identity has been
+                      successfully verified.
                     </AlertDescription>
                   </Alert>
                 ) : (
@@ -342,7 +375,9 @@ const VerifyIdentity = () => {
                     />
 
                     <div className="space-y-3">
-                      <h4 className="text-sm font-semibold">Accepted Documents:</h4>
+                      <h4 className="text-sm font-semibold">
+                        Accepted Documents:
+                      </h4>
                       <ul className="text-sm text-muted-foreground space-y-2">
                         <li className="flex items-start gap-2">
                           <CheckCircle className="h-4 w-4 mt-0.5 text-primary" />
@@ -362,7 +397,9 @@ const VerifyIdentity = () => {
                     <Alert>
                       <Shield className="h-4 w-4" />
                       <AlertDescription>
-                        <strong>Your privacy matters:</strong> Your documents are encrypted and only used for verification. They are never shared with other users.
+                        <strong>Your privacy matters:</strong> Your documents
+                        are encrypted and only used for verification. They are
+                        never shared with other users.
                       </AlertDescription>
                     </Alert>
                   </>
@@ -384,7 +421,8 @@ const VerifyIdentity = () => {
                   <Alert>
                     <CheckCircle className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>Phone Verified!</strong> Your phone number has been successfully verified.
+                      <strong>Phone Verified!</strong> Your phone number has
+                      been successfully verified.
                     </AlertDescription>
                   </Alert>
                 </CardContent>
@@ -400,12 +438,13 @@ const VerifyIdentity = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Phone verification helps secure your account and allows owners to contact you directly about bookings.
+                      Phone verification helps secure your account and allows
+                      owners to contact you directly about bookings.
                     </p>
                   </CardContent>
                 </Card>
 
-                <PhoneVerification 
+                <PhoneVerification
                   onVerify={handlePhoneVerify}
                   isVerifying={uploading}
                 />
