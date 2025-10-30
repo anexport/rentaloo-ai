@@ -21,9 +21,14 @@ import StatsOverview from "@/components/renter/StatsOverview";
 import QuickActions from "@/components/renter/QuickActions";
 import NotificationsPanel from "@/components/renter/NotificationsPanel";
 import { Separator } from "@/components/ui/separator";
+import { useVerification } from "@/hooks/useVerification";
+import VerificationProgressCard from "@/components/verification/VerificationProgressCard";
+import { getVerificationProgress } from "@/lib/verification";
+import { AlertTriangle } from "lucide-react";
 
 const RenterDashboard = () => {
   const { user } = useAuth();
+  const { profile, loading: verificationLoading } = useVerification();
   const [hasEquipment, setHasEquipment] = useState(false);
   const [pendingOwnerRequests, setPendingOwnerRequests] = useState(0);
 
@@ -70,13 +75,68 @@ const RenterDashboard = () => {
     checkEquipment();
   }, [user]);
 
+  const verificationIncomplete =
+    profile &&
+    (!profile.identityVerified ||
+      !profile.emailVerified ||
+      !profile.phoneVerified ||
+      !profile.addressVerified);
+  const progress = profile ? getVerificationProgress(profile) : 0;
+  const hasAnyVerification =
+    !!profile &&
+    (profile.identityVerified ||
+      profile.phoneVerified ||
+      profile.emailVerified ||
+      profile.addressVerified);
   return (
     <DashboardLayout>
       <PageHeader
         title="Dashboard Overview"
         description="Welcome back! Here's what's happening with your rentals."
       />
-
+      {/* High-Emphasis Banner for 0% progress and no uploads */}
+      {!verificationLoading &&
+        profile &&
+        progress === 0 &&
+        !hasAnyVerification && (
+          <div className="mb-8">
+            <Card className="border-destructive/40 bg-destructive/5 ring-1 ring-destructive/20">
+              <CardContent className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-full bg-destructive/10">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold text-destructive">
+                      Complete your verification
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Your account is unverified (0%). Verify now to start
+                      renting safely.
+                    </p>
+                  </div>
+                </div>
+                <Link to="/verification">
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="font-semibold shadow-lg ring-2 ring-primary/50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
+                    aria-label="Verify now"
+                    data-testid="verify-now-banner"
+                  >
+                    Verify now
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      {/* Show verification card if not fully verified */}
+      {verificationIncomplete && !verificationLoading && (
+        <div className="mb-8">
+          <VerificationProgressCard profile={profile} />
+        </div>
+      )}
       {/* Notifications Panel */}
       <div className="mb-6">
         <NotificationsPanel />
@@ -89,7 +149,9 @@ const RenterDashboard = () => {
 
       {/* Quick Actions */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-4">
+          Quick Actions
+        </h2>
         <QuickActions />
       </div>
 
@@ -123,7 +185,10 @@ const RenterDashboard = () => {
             </CardHeader>
             <CardContent>
               <Link to="/owner/dashboard">
-                <Button className="w-full" variant={pendingOwnerRequests > 0 ? "default" : "outline"}>
+                <Button
+                  className="w-full"
+                  variant={pendingOwnerRequests > 0 ? "default" : "outline"}
+                >
                   {pendingOwnerRequests > 0
                     ? "Review Requests"
                     : "Go to Owner Dashboard"}
@@ -140,7 +205,9 @@ const RenterDashboard = () => {
           <h2 className="text-xl font-semibold text-foreground">My Bookings</h2>
           {renterBookings.length > 3 && (
             <Link to="/renter/dashboard?tab=bookings">
-              <Button variant="ghost" size="sm">View All</Button>
+              <Button variant="ghost" size="sm">
+                View All
+              </Button>
             </Link>
           )}
         </div>

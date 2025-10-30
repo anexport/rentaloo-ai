@@ -368,7 +368,7 @@ const VerifyIdentity = () => {
                         size="sm"
                         className="font-medium"
                         aria-label="Verify identity now"
-                        onClick={() => setActiveTab("identity")}
+                        onClick={handleClickVerifyNow}
                       >
                         Verify now
                       </Button>
