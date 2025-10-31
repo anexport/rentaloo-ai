@@ -25,60 +25,38 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Database } from "../lib/database.types";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 
-type EquipmentFormData = {
-  title: string;
-  description: string;
-  category_id: string;
-  daily_rate: number;
-  condition: "new" | "excellent" | "good" | "fair";
-  location: string;
-  latitude?: number | undefined;
-  longitude?: number | undefined;
-};
-
 const equipmentFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   category_id: z.string().min(1, "Category is required"),
-  daily_rate: z.preprocess(
-    (val) => {
-      // Handle empty values and NaN from valueAsNumber: true
-      if (
-        val === "" ||
-        val === null ||
-        val === undefined ||
-        (typeof val === "number" && isNaN(val))
-      )
-        return undefined;
-      const num = typeof val === "number" ? val : Number(val);
-      return isNaN(num) ? undefined : num;
-    },
-    z
-      .union([z.undefined(), z.number()])
-      .superRefine((val, ctx) => {
-        // First check if it's undefined
-        if (val === undefined) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Daily rate is required",
-          });
-          return;
+  daily_rate: z
+    .any()
+    .transform((val) => {
+      if (val === "" || val === null || val === undefined) {
+        return Number.NaN;
+      }
+
+      if (typeof val === "number") {
+        return Number.isFinite(val) ? val : Number.NaN;
+      }
+
+      if (typeof val === "string") {
+        const trimmed = val.trim();
+        if (trimmed === "") {
+          return Number.NaN;
         }
-        // At this point, TypeScript knows val is number
-        // Check if it's >= 1
-        if (val < 1) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Daily rate must be at least $1",
-          });
-        }
-      })
-      .refine(
-        (val): val is number =>
-          val !== undefined && typeof val === "number" && val >= 1
-      )
-      .pipe(z.number())
-  ) as z.ZodType<number>,
+        const parsed = Number(trimmed);
+        return Number.isFinite(parsed) ? parsed : Number.NaN;
+      }
+
+      return Number.NaN;
+    })
+    .refine((n) => Number.isFinite(n), {
+      message: "Daily rate is required",
+    })
+    .refine((n) => n >= 1, {
+      message: "Daily rate must be at least $1",
+    }),
   condition: z.enum(["new", "excellent", "good", "fair"]),
   location: z.string().min(1, "Location is required"),
   latitude: z.preprocess((val) => {
@@ -92,7 +70,7 @@ const equipmentFormSchema = z.object({
       return undefined;
     const num = typeof val === "number" ? val : Number(val);
     return isNaN(num) ? undefined : num;
-  }, z.number().optional()) as z.ZodType<number | undefined>,
+  }, z.number().optional()),
   longitude: z.preprocess((val) => {
     // Handle empty values and NaN from valueAsNumber: true
     if (
@@ -104,8 +82,10 @@ const equipmentFormSchema = z.object({
       return undefined;
     const num = typeof val === "number" ? val : Number(val);
     return isNaN(num) ? undefined : num;
-  }, z.number().optional()) as z.ZodType<number | undefined>,
+  }, z.number().optional()),
 });
+
+export type EquipmentFormData = z.infer<typeof equipmentFormSchema>;
 
 interface EquipmentListingFormProps {
   equipment?: Database["public"]["Tables"]["equipment"]["Row"];
@@ -134,7 +114,7 @@ const EquipmentListingForm = ({
     setValue,
     watch,
   } = useForm<EquipmentFormData>({
-    resolver: zodResolver(equipmentFormSchema as any),
+    resolver: zodResolver<EquipmentFormData>(equipmentFormSchema),
     defaultValues: equipment
       ? {
           title: equipment.title,
@@ -218,9 +198,35 @@ const EquipmentListingForm = ({
     if (!equipment) return;
 
     try {
-      // Delete from storage
-      const path = photoUrl.split("/").slice(-2).join("/");
-      await supabase.storage.from("equipment-photos").remove([path]);
+      // Derive the original storage path (uploads use <userId>/<equipmentId>/<file>)
+      const marker = "/object/public/equipment-photos/";
+      let relativePath: string | null = null;
+
+      try {
+        const { pathname } = new URL(photoUrl);
+        const idx = pathname.indexOf(marker);
+        if (idx >= 0) {
+          relativePath = decodeURIComponent(
+            pathname.slice(idx + marker.length)
+          );
+        }
+      } catch (parseError) {
+        console.warn("Invalid photo URL provided for removal", {
+          photoUrl,
+          parseError,
+        });
+      }
+
+      if (relativePath) {
+        const { error: removeError } = await supabase.storage
+          .from("equipment-photos")
+          .remove([relativePath]);
+        if (removeError) {
+          throw removeError;
+        }
+      } else {
+        console.warn("Could not derive storage path for", photoUrl);
+      }
 
       // Delete from database
       await supabase
@@ -276,7 +282,7 @@ const EquipmentListingForm = ({
     setIsSubmitting(true);
 
     try {
-      const equipmentData = {
+      const baseEquipmentData = {
         owner_id: user.id,
         title: data.title,
         description: data.description,
@@ -286,7 +292,6 @@ const EquipmentListingForm = ({
         location: data.location,
         latitude: data.latitude || null,
         longitude: data.longitude || null,
-        is_available: true,
       };
 
       let equipmentId: string;
@@ -295,7 +300,7 @@ const EquipmentListingForm = ({
         // Update existing equipment
         const { error } = await supabase
           .from("equipment")
-          .update(equipmentData)
+          .update(baseEquipmentData)
           .eq("id", equipment.id);
 
         if (error) throw error;
@@ -304,7 +309,7 @@ const EquipmentListingForm = ({
         // Create new equipment
         const { data: newEquipment, error } = await supabase
           .from("equipment")
-          .insert(equipmentData)
+          .insert({ ...baseEquipmentData, is_available: true })
           .select()
           .single();
 

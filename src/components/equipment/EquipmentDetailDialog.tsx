@@ -362,7 +362,6 @@ const EquipmentDetailDialog = ({
                           "Your booking request has been submitted successfully!",
                       });
                     }}
-                    onCancel={undefined}
                     isEmbedded={true}
                   />
                 )}
@@ -434,6 +433,7 @@ const EquipmentDetailDialog = ({
                     });
                     return;
                   }
+                  setActiveTab("book");
                   if (!data?.category) {
                     toast({
                       variant: "destructive",
@@ -442,7 +442,6 @@ const EquipmentDetailDialog = ({
                     });
                     return;
                   }
-                  setActiveTab("book");
                 }}
               >
                 {!user
