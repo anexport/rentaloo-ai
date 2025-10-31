@@ -6,10 +6,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { MapPin } from "lucide-react";
+import {
+  MapPin,
+  Calendar as CalendarIcon,
+  Info,
+  MessageSquare,
+  Package,
+  CheckCircle2,
+} from "lucide-react";
+import { getCategoryIcon } from "@/lib/categoryIcons";
 import StarRating from "@/components/reviews/StarRating";
 import { fetchListingById } from "@/features/equipment/services/listings";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import AvailabilityCalendar from "@/components/AvailabilityCalendar";
+import EquipmentLocationMap from "./EquipmentLocationMap";
+import ReviewList from "@/components/reviews/ReviewList";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { createMaxWidthQuery } from "@/config/breakpoints";
 
 type EquipmentDetailDialogProps = {
   open: boolean;
@@ -22,7 +46,9 @@ const EquipmentDetailDialog = ({
   onOpenChange,
   listingId,
 }: EquipmentDetailDialogProps) => {
-  const { data, isLoading, refetch, isFetching } = useQuery({
+  const isMobile = useMediaQuery(createMaxWidthQuery("md"));
+
+  const { data, isLoading } = useQuery({
     queryKey: ["listing", listingId],
     queryFn: () => fetchListingById(listingId as string),
     enabled: !!listingId && open,
@@ -42,106 +68,330 @@ const EquipmentDetailDialog = ({
     return sum / validRatings.length;
   })();
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-5xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{data?.title ?? "Equipment details"}</DialogTitle>
-          <DialogDescription>
-            {data?.category?.name
-              ? `Category: ${data.category.name}`
-              : "Detailed information about this equipment."}
-          </DialogDescription>
-        </DialogHeader>
+  const photos = data?.photos || [];
+  const primaryPhoto = photos[0];
+  const secondaryPhotos = photos.slice(1, 5); // Up to 4 secondary photos
 
-        {/* Loading / missing states */}
-        {isLoading || isFetching ? (
-          <div className="py-12 text-center text-muted-foreground">
-            Loading...
-          </div>
-        ) : !data ? (
-          <div className="py-12 text-center text-muted-foreground">
-            Equipment not found.
-          </div>
-        ) : (
-          <div>
-            {/* Meta */}
-            <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" /> {data.location}
+  const getHeaderProps = () => {
+    const title = data?.title ?? "Equipment details";
+    const description = data?.category?.name
+      ? `Category: ${data.category.name}`
+      : "Detailed information about this equipment.";
+    return { title, description };
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="py-12 text-center text-muted-foreground">
+          Loading...
+        </div>
+      );
+    }
+
+    if (!data) {
+      return (
+        <div className="py-12 text-center text-muted-foreground">
+          Equipment not found.
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Header with meta info */}
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-foreground">
+                {data.title}
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" /> {data.location}
+                </div>
+                {avgRating > 0 && (
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={avgRating} size="sm" />
+                    <span className="font-medium">{avgRating.toFixed(1)}</span>
+                    {data.reviews && data.reviews.length > 0 && (
+                      <span>({data.reviews.length})</span>
+                    )}
+                  </div>
+                )}
+                <Badge variant="outline" className="capitalize">
+                  {data.condition}
+                </Badge>
               </div>
-              {avgRating > 0 && (
-                <div className="flex items-center gap-2">
-                  <StarRating rating={avgRating} size="sm" />
-                  <span>{avgRating.toFixed(1)}</span>
+            </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Photo Gallery - Airbnb style */}
+        {photos.length > 0 && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-[60%_40%] gap-2 h-[300px] sm:h-[400px] md:h-[500px]">
+              {/* Primary large image */}
+              <div className="relative rounded-lg overflow-hidden border border-border">
+                <img
+                  src={primaryPhoto.photo_url}
+                  alt={data.title}
+                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  loading="lazy"
+                />
+              </div>
+
+              {/* Secondary images grid */}
+              {secondaryPhotos.length > 0 && (
+                <div className="grid grid-cols-2 gap-2">
+                  {secondaryPhotos.map((photo, idx) => (
+                    <div
+                      key={photo.id}
+                      className="relative rounded-lg overflow-hidden border border-border group"
+                    >
+                      <img
+                        src={photo.photo_url}
+                        alt={`${data.title} - ${idx + 2}`}
+                        className="w-full h-full object-cover cursor-pointer group-hover:opacity-90 transition-opacity"
+                        loading="lazy"
+                      />
+                      {photos.length > 5 && idx === 3 && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-semibold">
+                          +{photos.length - 5} more
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {/* Fill empty cells if needed */}
+                  {secondaryPhotos.length < 4 &&
+                    Array.from({ length: 4 - secondaryPhotos.length }).map(
+                      (_, idx) => (
+                        <div
+                          key={`empty-${idx}`}
+                          className="rounded-lg border border-border bg-muted"
+                          aria-hidden="true"
+                        />
+                      )
+                    )}
                 </div>
               )}
             </div>
+          </div>
+        )}
 
-            {/* Gallery */}
-            {data.photos && data.photos.length > 0 && (
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <img
-                  src={data.photos[0].photo_url}
-                  alt={data.title}
-                  className="w-full h-64 object-cover rounded-md"
-                />
-                {data.photos.slice(1, 3).map((p) => (
-                  <img
-                    key={p.id}
-                    src={p.photo_url}
-                    alt={data.title}
-                    className="w-full h-64 object-cover rounded-md"
-                  />
-                ))}
-              </div>
-            )}
+        <Separator />
 
-            <div className="mt-4">
-              <Separator />
-            </div>
+        {/* Main content with tabs and sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+          {/* Main content tabs */}
+          <div className="space-y-6">
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger
+                  value="overview"
+                  className="flex items-center gap-1 sm:gap-2"
+                  aria-label="Overview"
+                >
+                  <Info className="h-4 w-4" />
+                  <span className="hidden sm:inline">Overview</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="availability"
+                  className="flex items-center gap-1 sm:gap-2"
+                  aria-label="Availability"
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Availability</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="location"
+                  className="flex items-center gap-1 sm:gap-2"
+                  aria-label="Location"
+                >
+                  <MapPin className="h-4 w-4" />
+                  <span className="hidden sm:inline">Location</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="reviews"
+                  className="flex items-center gap-1 sm:gap-2"
+                  aria-label="Reviews"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="hidden sm:inline">Reviews</span>
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Details */}
-            <section className="mt-4 grid md:grid-cols-[1fr_320px] gap-6">
-              <div>
-                <h2 className="text-lg font-semibold">About this item</h2>
-                <p className="mt-2 text-foreground leading-relaxed">
-                  {data.description}
-                </p>
-                <div className="mt-6">
-                  <h3 className="font-medium">Condition</h3>
-                  <p className="text-sm text-muted-foreground capitalize">
-                    {data.condition}
+              <TabsContent value="overview" className="space-y-6 mt-6">
+                <div>
+                  <h2 className="text-xl font-semibold mb-3">
+                    About this item
+                  </h2>
+                  <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                    {data.description}
                   </p>
                 </div>
 
-                <div className="mt-8">
-                  <h2 className="text-lg font-semibold">
-                    Where you'll pick up
-                  </h2>
-                  <div className="mt-3 h-52 w-full rounded-md border border-border bg-muted flex items-center justify-center text-muted-foreground">
-                    Map placeholder
-                  </div>
-                </div>
-              </div>
+                <Card>
+                  <div className="p-4">
+                    <div className="flex flex-wrap items-center gap-4">
+                      {/* Condition */}
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-muted-foreground font-medium">
+                            Condition
+                          </span>
+                          <Badge variant="outline" className="capitalize w-fit">
+                            {data.condition}
+                          </Badge>
+                        </div>
+                      </div>
 
-              <aside className="h-fit rounded-md border border-border p-4 bg-card">
-                <div className="text-2xl font-bold text-foreground">
-                  ${data.daily_rate}{" "}
-                  <span className="text-sm font-normal text-muted-foreground">
+                      {/* Vertical divider */}
+                      <div className="h-8 w-px bg-border" />
+
+                      {/* Category */}
+                      <div className="flex items-center gap-2">
+                        {data.category &&
+                          (() => {
+                            const CategoryIcon = getCategoryIcon(
+                              data.category.name
+                            );
+                            return (
+                              <CategoryIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                            );
+                          })()}
+                        {!data.category && (
+                          <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                        )}
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-muted-foreground font-medium">
+                            Category
+                          </span>
+                          <Badge variant="secondary" className="w-fit">
+                            {data.category?.name || "N/A"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="availability" className="mt-6">
+                <AvailabilityCalendar
+                  equipmentId={data.id}
+                  defaultDailyRate={data.daily_rate}
+                  viewOnly={true}
+                />
+              </TabsContent>
+
+              <TabsContent value="location" className="mt-6">
+                <EquipmentLocationMap
+                  location={data.location}
+                  latitude={data.latitude}
+                  longitude={data.longitude}
+                />
+              </TabsContent>
+
+              <TabsContent value="reviews" className="mt-6">
+                <ReviewList
+                  revieweeId={data.owner?.id}
+                  showSummary={true}
+                  showEquipment={false}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Sticky booking sidebar */}
+          <aside className="lg:sticky lg:top-6 h-fit">
+            <Card className="p-6 space-y-6">
+              <div>
+                <div className="text-3xl font-bold text-foreground">
+                  ${data.daily_rate}
+                  <span className="text-base font-normal text-muted-foreground">
+                    {" "}
                     / day
                   </span>
                 </div>
-                <div className="mt-2 text-sm text-muted-foreground">
-                  Category: {data.category?.name}
+                {avgRating > 0 && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <StarRating rating={avgRating} size="sm" />
+                    <span className="text-sm text-muted-foreground">
+                      {avgRating.toFixed(1)} ({data.reviews?.length || 0}{" "}
+                      reviews)
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Pickup Location</h3>
+                  <p className="text-sm text-muted-foreground flex items-start gap-2">
+                    <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                    {data.location}
+                  </p>
                 </div>
-                <div className="mt-4 text-sm text-muted-foreground">
-                  Contact the owner to arrange pickup after booking.
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Contact</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Contact the owner to arrange pickup after booking.
+                  </p>
                 </div>
-              </aside>
-            </section>
-          </div>
-        )}
+              </div>
+
+              <Button
+                className="w-full"
+                size="lg"
+                aria-label="Request to book this equipment"
+              >
+                Request to Book
+              </Button>
+            </Card>
+          </aside>
+        </div>
+      </div>
+    );
+  };
+
+  // Mobile: Use Sheet component
+  if (isMobile) {
+    const { title, description } = getHeaderProps();
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          side="bottom"
+          className="h-[90vh] max-h-[90vh] w-full overflow-y-auto px-0"
+        >
+          <SheetHeader className="px-6">
+            <SheetTitle>{title}</SheetTitle>
+            <SheetDescription>{description}</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 px-6 pb-6">{renderContent()}</div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: Use Dialog component
+  const { title, description } = getHeaderProps();
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        {renderContent()}
       </DialogContent>
     </Dialog>
   );
