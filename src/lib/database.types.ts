@@ -276,7 +276,9 @@ export type Database = {
       };
       equipment_photos: {
         Row: {
+          alt: string | null;
           created_at: string | null;
+          description: string | null;
           equipment_id: string;
           id: string;
           is_primary: boolean | null;
@@ -284,7 +286,9 @@ export type Database = {
           photo_url: string;
         };
         Insert: {
+          alt?: string | null;
           created_at?: string | null;
+          description?: string | null;
           equipment_id: string;
           id?: string;
           is_primary?: boolean | null;
@@ -292,7 +296,9 @@ export type Database = {
           photo_url: string;
         };
         Update: {
+          alt?: string | null;
           created_at?: string | null;
+          description?: string | null;
           equipment_id?: string;
           id?: string;
           is_primary?: boolean | null;

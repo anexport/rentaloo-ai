@@ -90,7 +90,7 @@ const EquipmentDetailPage = () => {
               <img
                 key={p.id}
                 src={p.photo_url}
-                alt={(p as any)?.alt || (p as any)?.description || `${data.title} - photo ${idx + 2}`}
+                alt={p.alt || p.description || `${data.title} - photo ${idx + 2}`}
                 className="w-full h-64 object-cover rounded-md"
               />
             ))}
