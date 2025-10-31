@@ -8,7 +8,7 @@ import StarRating from "@/components/reviews/StarRating";
 const EquipmentDetailPage = () => {
   const { id } = useParams();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["listing", id],
     queryFn: () => fetchListingById(id!),
     enabled: !!id,
@@ -26,6 +26,20 @@ const EquipmentDetailPage = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    // Optional: log for debugging
+    // Using console.error to avoid crashing UI
+    console.error("Failed to load equipment details:", error);
+    const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">
+          Failed to load equipment details{message ? `: ${message}` : "."}
+        </div>
       </div>
     );
   }
@@ -72,11 +86,11 @@ const EquipmentDetailPage = () => {
               alt={data.title}
               className="w-full h-64 object-cover rounded-md"
             />
-            {data.photos.slice(1, 3).map((p) => (
+            {data.photos.slice(1, 3).map((p, idx) => (
               <img
                 key={p.id}
                 src={p.photo_url}
-                alt={data.title}
+                alt={(p as any)?.alt || (p as any)?.description || `${data.title} - photo ${idx + 2}`}
                 className="w-full h-64 object-cover rounded-md"
               />
             ))}

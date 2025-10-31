@@ -17,6 +17,8 @@ function Slider({
     : Array.isArray(defaultValue)
     ? defaultValue.length
     : 1;
+  // Ensure at least one thumb even if arrays are empty
+  const safeThumbCount = Math.max(1, thumbCount);
 
   return (
     <SliderPrimitive.Root
@@ -44,7 +46,7 @@ function Slider({
           )}
         />
       </SliderPrimitive.Track>
-      {Array.from({ length: thumbCount }, (_, index) => (
+      {Array.from({ length: safeThumbCount }, (_, index) => (
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}

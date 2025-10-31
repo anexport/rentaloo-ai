@@ -59,8 +59,11 @@ export const fetchListings = async (
 
   if (filters.search && filters.search.trim().length > 0) {
     const term = filters.search.trim();
+    // Sanitize user input to avoid PostgREST filter injection by removing
+    // reserved separators used by the `.or()` filter grammar.
+    const sanitized = term.replace(/[(),]/g, "");
     query = query.or(
-      `title.ilike.%${term}%,description.ilike.%${term}%`
+      `title.ilike.%${sanitized}%,description.ilike.%${sanitized}%`
     );
   }
 
@@ -125,5 +128,4 @@ export const fetchListingById = async (id: string): Promise<Listing | null> => {
 
   return { ...base, reviews: reviews || [] };
 };
-
 
