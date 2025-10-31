@@ -73,22 +73,22 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
   };
 
   return (
-    <div className="w-full rounded-full border border-input bg-card shadow-md hover:shadow-lg transition-shadow">
+    <div className="w-full rounded-full border border-input bg-card shadow-md hover:shadow-lg transition-shadow overflow-hidden">
       <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] items-stretch divide-y md:divide-y-0 md:divide-x divide-border">
         {/* Location Popover */}
         <Popover open={locationOpen} onOpenChange={setLocationOpen}>
           <PopoverTrigger asChild>
             <button
-              className="relative px-6 py-4 text-left hover:bg-muted/50 transition-colors rounded-l-full focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
+              className="relative px-3 py-2 md:px-6 md:py-4 text-left hover:bg-muted/50 transition-colors rounded-t-full md:rounded-l-full md:rounded-t-none focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
               aria-label="Select location"
             >
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <div className="text-xs font-semibold text-foreground">
+              <div className="flex items-center gap-2 md:gap-3">
+                <MapPin className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] md:text-xs font-semibold text-foreground">
                     Where
                   </div>
-                  <div className="text-sm text-muted-foreground truncate">
+                  <div className="text-xs md:text-sm text-muted-foreground truncate">
                     {value.location || "Search destinations"}
                   </div>
                 </div>
@@ -121,16 +121,16 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         <Popover open={datesOpen} onOpenChange={setDatesOpen}>
           <PopoverTrigger asChild>
             <button
-              className="relative px-6 py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
+              className="relative px-3 py-2 md:px-6 md:py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
               aria-label="Select dates"
             >
-              <div className="flex items-center gap-3">
-                <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <div className="text-xs font-semibold text-foreground">
+              <div className="flex items-center gap-2 md:gap-3">
+                <CalendarIcon className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] md:text-xs font-semibold text-foreground">
                     When
                   </div>
-                  <div className="text-sm text-muted-foreground truncate">
+                  <div className="text-xs md:text-sm text-muted-foreground truncate">
                     {value.dateRange?.from ? (
                       value.dateRange.to ? (
                         <>
@@ -177,16 +177,16 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         <Popover open={equipmentOpen} onOpenChange={setEquipmentOpen}>
           <PopoverTrigger asChild>
             <button
-              className="relative px-6 py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
+              className="relative px-3 py-2 md:px-6 md:py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
               aria-label="Select equipment type"
             >
-              <div className="flex items-center gap-3">
-                <Package className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <div className="text-xs font-semibold text-foreground">
+              <div className="flex items-center gap-2 md:gap-3">
+                <Package className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] md:text-xs font-semibold text-foreground">
                     What
                   </div>
-                  <div className="text-sm text-muted-foreground truncate">
+                  <div className="text-xs md:text-sm text-muted-foreground truncate">
                     {value.equipmentType || "Any equipment"}
                   </div>
                 </div>
@@ -233,14 +233,14 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         </Popover>
 
         {/* Search Button */}
-        <div className="flex items-center justify-center p-2">
+        <div className="flex items-center justify-center p-2 md:p-2 rounded-b-full md:rounded-r-full md:rounded-b-none">
           <Button
             onClick={handleSearch}
-            className="h-12 w-12 rounded-full"
+            className="h-10 w-10 md:h-12 md:w-12 rounded-full"
             size="icon"
             aria-label="Search"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
         </div>
       </div>
