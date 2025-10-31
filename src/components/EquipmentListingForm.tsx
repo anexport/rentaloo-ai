@@ -29,11 +29,59 @@ const equipmentFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   category_id: z.string().min(1, "Category is required"),
-  daily_rate: z.number().min(1, "Daily rate must be at least $1"),
+  daily_rate: z.preprocess(
+    (val) => {
+      // Handle empty values and NaN from valueAsNumber: true
+      if (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val))) return undefined;
+      const num = typeof val === "number" ? val : Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.union([z.undefined(), z.number()]).superRefine((val, ctx) => {
+      // First check if it's undefined
+      if (val === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Daily rate is required",
+        });
+        return;
+      }
+      // Check if it's a valid number
+      if (typeof val !== "number" || isNaN(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Please enter a valid number",
+        });
+        return;
+      }
+      // Check if it's >= 1
+      if (val < 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Daily rate must be at least $1",
+        });
+      }
+    }) as z.ZodType<number>
+  ),
   condition: z.enum(["new", "excellent", "good", "fair"]),
   location: z.string().min(1, "Location is required"),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  latitude: z.preprocess(
+    (val) => {
+      // Handle empty values and NaN from valueAsNumber: true
+      if (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val))) return undefined;
+      const num = typeof val === "number" ? val : Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number().optional()
+  ),
+  longitude: z.preprocess(
+    (val) => {
+      // Handle empty values and NaN from valueAsNumber: true
+      if (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val))) return undefined;
+      const num = typeof val === "number" ? val : Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number().optional()
+  ),
 });
 
 type EquipmentFormData = z.infer<typeof equipmentFormSchema>;
