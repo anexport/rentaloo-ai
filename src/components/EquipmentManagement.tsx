@@ -55,6 +55,9 @@ const EquipmentManagement = () => {
   const fetchEquipment = async () => {
     if (!user) return;
 
+    // Reset failed images on refetch to allow retrying previously failed URLs
+    setFailedImages(new Set());
+
     try {
       const { data, error } = await supabase
         .from("equipment")
