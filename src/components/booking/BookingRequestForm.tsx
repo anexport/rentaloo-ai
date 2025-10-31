@@ -65,7 +65,7 @@ const BookingRequestForm = ({
   isEmbedded = false,
 }: BookingRequestFormProps) => {
   const { user } = useAuth();
-  const { getOrCreateConversation } = useMessaging();
+  const { getOrCreateConversation, sendMessage } = useMessaging();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calculation, setCalculation] = useState<BookingCalculation | null>(
     null
@@ -170,7 +170,37 @@ const BookingRequestForm = ({
       // Automatically create a conversation for this booking
       if (newBooking) {
         try {
-          await getOrCreateConversation([equipment.owner_id], newBooking.id);
+          const conversation = await getOrCreateConversation(
+            [equipment.owner_id],
+            newBooking.id
+          );
+
+          // Send initial message to the owner
+          if (conversation && calculation) {
+            const duration = formatBookingDuration(
+              data.start_date,
+              data.end_date
+            );
+            const startDateFormatted = formatBookingDate(data.start_date);
+            const endDateFormatted = formatBookingDate(data.end_date);
+
+            let messageContent = `Hi! I've requested to book your "${equipment.title}" from ${startDateFormatted} to ${endDateFormatted} (${duration}, $${calculation.total.toFixed(2)} total).`;
+
+            if (data.message && data.message.trim()) {
+              messageContent += `\n\n${data.message.trim()}`;
+            }
+
+            try {
+              await sendMessage({
+                conversation_id: conversation.id,
+                content: messageContent,
+                message_type: "text",
+              });
+            } catch (messageError) {
+              console.error("Error sending initial message:", messageError);
+              // Don't fail the booking if message sending fails
+            }
+          }
         } catch (convError) {
           console.error("Error creating conversation:", convError);
           // Don't fail the booking if conversation creation fails
