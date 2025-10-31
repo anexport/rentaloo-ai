@@ -1,10 +1,18 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Command,
@@ -21,9 +29,11 @@ import {
   Search,
   Package,
 } from "lucide-react";
-import { format, startOfDay } from "date-fns";
+import { format, startOfDay, addDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import type { SearchBarFilters } from "@/types/search";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { cn } from "@/lib/utils";
 
 type Props = {
   value: SearchBarFilters;
@@ -49,46 +59,415 @@ const EQUIPMENT_TYPES = [
   "Cycling",
 ];
 
+type SectionKey = "where" | "when" | "what";
+
+const MOBILE_SECTIONS: Array<{
+  key: SectionKey;
+  label: string;
+  icon: typeof MapPin;
+}> = [
+  { key: "where", label: "Where", icon: MapPin },
+  { key: "when", label: "When", icon: CalendarIcon },
+  { key: "what", label: "What", icon: Package },
+];
+
 const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [locationOpen, setLocationOpen] = useState(false);
   const [datesOpen, setDatesOpen] = useState(false);
   const [equipmentOpen, setEquipmentOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<SectionKey>("where");
+  const [isSelectingDates, setIsSelectingDates] = useState(false);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (value.location) count++;
+    if (value.dateRange?.from) count++;
+    if (value.equipmentType) count++;
+    return count;
+  }, [value.location, value.dateRange, value.equipmentType]);
+
+  const quickDateRanges = useMemo(
+    () => {
+      const today = startOfDay(new Date());
+      const dayOfWeek = today.getDay();
+
+      const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
+      const thisWeekendStart = addDays(today, daysUntilSaturday);
+      const thisWeekendEnd = addDays(thisWeekendStart, 1);
+
+      const nextWeekendStart = addDays(thisWeekendStart, 7);
+      const nextWeekendEnd = addDays(nextWeekendStart, 1);
+
+      const daysUntilMonday = (1 - dayOfWeek + 7) % 7;
+      const nextWeekStart = addDays(today, daysUntilMonday === 0 ? 7 : daysUntilMonday);
+      const nextWeekEnd = addDays(nextWeekStart, 4);
+
+      return [
+        {
+          label: "This weekend",
+          range: { from: thisWeekendStart, to: thisWeekendEnd } satisfies DateRange,
+        },
+        {
+          label: "Next weekend",
+          range: { from: nextWeekendStart, to: nextWeekendEnd } satisfies DateRange,
+        },
+        {
+          label: "Next week",
+          range: { from: nextWeekStart, to: nextWeekEnd } satisfies DateRange,
+        },
+      ];
+    },
+    []
+  );
 
   const handleLocationSelect = (location: string) => {
     onChange({ ...value, location });
     setLocationOpen(false);
+    setActiveSection("when");
   };
 
   const handleDateSelect = (range: DateRange | undefined) => {
+    if (!range?.from) {
+      onChange({ ...value, dateRange: undefined });
+      setIsSelectingDates(false);
+      return;
+    }
+
+    if (!isSelectingDates) {
+      setIsSelectingDates(true);
+      onChange({ ...value, dateRange: { from: range.from, to: undefined } });
+      return;
+    }
+
+    if (!range.to) {
+      onChange({ ...value, dateRange: { from: range.from, to: undefined } });
+      return;
+    }
+
+    setIsSelectingDates(false);
     onChange({ ...value, dateRange: range });
+    setActiveSection("what");
+  };
+
+  const handlePresetDateSelect = (range: DateRange) => {
+    onChange({ ...value, dateRange: range });
+    setIsSelectingDates(false);
+    setActiveSection("what");
   };
 
   const handleEquipmentSelect = (type: string) => {
     onChange({ ...value, equipmentType: type });
     setEquipmentOpen(false);
+    setSheetOpen(false);
+    setActiveSection("where");
   };
 
   const handleSearch = () => {
     onSubmit();
+    setSheetOpen(false);
+    setActiveSection("where");
   };
 
+  const handleClearAll = () => {
+    onChange({
+      ...value,
+      location: "",
+      dateRange: undefined,
+      equipmentType: undefined,
+    });
+    setActiveSection("where");
+    setIsSelectingDates(false);
+  };
+
+  const handleSheetOpenChange = (nextOpen: boolean) => {
+    setSheetOpen(nextOpen);
+    if (!nextOpen) {
+      setActiveSection("where");
+      setIsSelectingDates(false);
+    }
+  };
+
+  const getSearchSummary = () => {
+    const parts: string[] = [];
+    if (value.location) parts.push(value.location);
+    if (value.dateRange?.from) {
+      if (value.dateRange.to) {
+        parts.push(
+          `${format(value.dateRange.from, "MMM d")} - ${format(value.dateRange.to, "MMM d")}`
+        );
+      } else {
+        parts.push(format(value.dateRange.from, "MMM d"));
+      }
+    }
+    if (value.equipmentType) parts.push(value.equipmentType);
+    return parts.length > 0 ? parts.join(" · ") : "Search equipment";
+  };
+
+  // Mobile version with Sheet
+  if (!isDesktop) {
+    return (
+      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
+        <SheetTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full h-16 rounded-full justify-between px-5 py-4 text-left font-normal shadow-sm border-muted"
+            aria-label="Search equipment"
+          >
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">Search</span>
+                <span className="text-sm font-semibold text-foreground truncate">
+                  {value.location || "Where to?"}
+                </span>
+                <span className="text-xs text-muted-foreground truncate">
+                  {getSearchSummary()}
+                </span>
+              </div>
+            </div>
+            <Badge
+              variant="secondary"
+              className="ml-3 h-9 w-9 rounded-full p-0 flex items-center justify-center text-xs shrink-0"
+            >
+              {activeFilterCount > 0 ? activeFilterCount : <Search className="h-4 w-4" />}
+            </Badge>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="bottom" className="h-[85vh] p-0">
+          <div className="flex h-full flex-col">
+            <SheetHeader className="px-6 pt-6 pb-4 text-left">
+              <SheetTitle className="text-lg font-semibold">
+                Plan your next outing
+              </SheetTitle>
+              <p className="text-sm text-muted-foreground">
+                Browse gear by destination, dates, and activity.
+              </p>
+            </SheetHeader>
+            <div className="px-6 pb-4">
+              <div className="flex items-center rounded-full bg-muted p-1">
+                {MOBILE_SECTIONS.map((section) => {
+                  const Icon = section.icon;
+                  const isActive = activeSection === section.key;
+                  return (
+                    <button
+                      key={section.key}
+                      type="button"
+                      onClick={() => setActiveSection(section.key)}
+                      className={cn(
+                        "flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all",
+                        isActive
+                          ? "bg-background shadow-sm text-foreground"
+                          : "text-muted-foreground"
+                      )}
+                      aria-pressed={isActive}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {section.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              {activeSection === "where" && (
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      Where do you need gear?
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Search cities or choose a popular destination.
+                    </p>
+                  </div>
+                  <Command className="rounded-2xl border">
+                    <CommandInput placeholder="Try Yosemite National Park" />
+                    <CommandList>
+                      <CommandEmpty>No locations found.</CommandEmpty>
+                      <CommandGroup heading="Popular">
+                        {POPULAR_LOCATIONS.map((loc) => (
+                          <CommandItem
+                            key={loc}
+                            onSelect={() => handleLocationSelect(loc)}
+                            className="cursor-pointer"
+                          >
+                            <MapPin className="mr-2 h-4 w-4" />
+                            {loc}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                  <div className="flex flex-wrap gap-2">
+                    {POPULAR_LOCATIONS.map((loc) => (
+                      <Button
+                        key={`${loc}-chip`}
+                        variant={value.location === loc ? "default" : "secondary"}
+                        size="sm"
+                        className="rounded-full"
+                        onClick={() => handleLocationSelect(loc)}
+                      >
+                        {loc}
+                      </Button>
+                    ))}
+                  </div>
+                  {value.location && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
+                        {value.location}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onChange({ ...value, location: "" })}
+                        className="h-7 text-xs"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeSection === "when" && (
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      When will you pick it up?
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Add a flexible range to see availability.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {quickDateRanges.map((option) => (
+                      <Button
+                        key={option.label}
+                        variant={
+                          value.dateRange?.from &&
+                          value.dateRange.to &&
+                          startOfDay(value.dateRange.from).getTime() ===
+                            option.range.from?.getTime() &&
+                          startOfDay(value.dateRange.to).getTime() ===
+                            option.range.to?.getTime()
+                            ? "default"
+                            : "secondary"
+                        }
+                        size="sm"
+                        className="rounded-full"
+                        onClick={() => handlePresetDateSelect(option.range)}
+                      >
+                        {option.label}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="rounded-2xl border p-4">
+                    <Calendar
+                      mode="range"
+                      selected={value.dateRange}
+                      onSelect={handleDateSelect}
+                      numberOfMonths={1}
+                      disabled={(date) => startOfDay(date) < startOfDay(new Date())}
+                    />
+                  </div>
+                  {value.dateRange?.from && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
+                        {value.dateRange.to
+                          ? `${format(value.dateRange.from, "MMM d")} - ${format(value.dateRange.to, "MMM d")}`
+                          : format(value.dateRange.from, "MMM d")}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onChange({ ...value, dateRange: undefined })}
+                        className="h-7 text-xs"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeSection === "what" && (
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      What are you planning?
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Choose the gear category that fits your trip.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {EQUIPMENT_TYPES.map((type) => (
+                      <Button
+                        key={type}
+                        variant={
+                          value.equipmentType === type ? "default" : "outline"
+                        }
+                        className="h-20 flex flex-col items-start justify-between rounded-2xl border"
+                        onClick={() => handleEquipmentSelect(type)}
+                      >
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-semibold">{type}</span>
+                      </Button>
+                    ))}
+                  </div>
+                  {value.equipmentType && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
+                        {value.equipmentType}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          onChange({ ...value, equipmentType: undefined })
+                        }
+                        className="h-7 text-xs"
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <SheetFooter className="mt-auto gap-3 px-6 pb-6 pt-4 shadow-[0_-8px_24px_rgba(15,23,42,0.08)]">
+              <Button variant="ghost" onClick={handleClearAll} className="flex-1">
+                Clear all
+              </Button>
+              <Button onClick={handleSearch} className="flex-1">
+                Search
+              </Button>
+            </SheetFooter>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop version with Popover layout
   return (
     <div className="w-full rounded-full border border-input bg-card shadow-md hover:shadow-lg transition-shadow overflow-hidden">
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] items-stretch divide-y md:divide-y-0 md:divide-x divide-border">
+      <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-stretch divide-x divide-border">
         {/* Location Popover */}
         <Popover open={locationOpen} onOpenChange={setLocationOpen}>
           <PopoverTrigger asChild>
             <button
-              className="relative px-3 py-2 md:px-6 md:py-4 text-left hover:bg-muted/50 transition-colors rounded-t-full md:rounded-l-full md:rounded-t-none focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
+              className="relative px-6 py-4 text-left hover:bg-muted/50 transition-colors rounded-l-full focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
               aria-label="Select location"
             >
-              <div className="flex items-center gap-2 md:gap-3">
-                <MapPin className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] md:text-xs font-semibold text-foreground">
+                  <div className="text-xs font-semibold text-foreground">
                     Where
                   </div>
-                  <div className="text-xs md:text-sm text-muted-foreground truncate">
+                  <div className="text-sm text-muted-foreground truncate">
                     {value.location || "Search destinations"}
                   </div>
                 </div>
@@ -121,16 +500,16 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         <Popover open={datesOpen} onOpenChange={setDatesOpen}>
           <PopoverTrigger asChild>
             <button
-              className="relative px-3 py-2 md:px-6 md:py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
+              className="relative px-6 py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
               aria-label="Select dates"
             >
-              <div className="flex items-center gap-2 md:gap-3">
-                <CalendarIcon className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-3">
+                <CalendarIcon className="h-5 w-5 text-muted-foreground shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] md:text-xs font-semibold text-foreground">
+                  <div className="text-xs font-semibold text-foreground">
                     When
                   </div>
-                  <div className="text-xs md:text-sm text-muted-foreground truncate">
+                  <div className="text-sm text-muted-foreground truncate">
                     {value.dateRange?.from ? (
                       value.dateRange.to ? (
                         <>
@@ -177,16 +556,16 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         <Popover open={equipmentOpen} onOpenChange={setEquipmentOpen}>
           <PopoverTrigger asChild>
             <button
-              className="relative px-3 py-2 md:px-6 md:py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
+              className="relative px-6 py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
               aria-label="Select equipment type"
             >
-              <div className="flex items-center gap-2 md:gap-3">
-                <Package className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-3">
+                <Package className="h-5 w-5 text-muted-foreground shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] md:text-xs font-semibold text-foreground">
+                  <div className="text-xs font-semibold text-foreground">
                     What
                   </div>
-                  <div className="text-xs md:text-sm text-muted-foreground truncate">
+                  <div className="text-sm text-muted-foreground truncate">
                     {value.equipmentType || "Any equipment"}
                   </div>
                 </div>
@@ -212,6 +591,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                         handleEquipmentSelect(type);
                       }
                     }}
+                    aria-label={`Select ${type}`}
                   >
                     {type}
                   </Badge>
@@ -233,14 +613,14 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         </Popover>
 
         {/* Search Button */}
-        <div className="flex items-center justify-center p-2 md:p-2 rounded-b-full md:rounded-r-full md:rounded-b-none">
+        <div className="flex items-center justify-center p-2 rounded-r-full">
           <Button
             onClick={handleSearch}
-            className="h-10 w-10 md:h-12 md:w-12 rounded-full"
+            className="h-12 w-12 rounded-full"
             size="icon"
             aria-label="Search"
           >
-            <Search className="h-4 w-4 md:h-5 md:w-5" />
+            <Search className="h-5 w-5" />
           </Button>
         </div>
       </div>
