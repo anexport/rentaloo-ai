@@ -6,18 +6,19 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Eye, EyeOff, Calendar } from "lucide-react";
+import { Edit, Trash2, Eye, EyeOff, Calendar, MapPin } from "lucide-react";
 import EquipmentListingForm from "./EquipmentListingForm";
 import AvailabilityCalendar from "./AvailabilityCalendar";
 
 type EquipmentWithCategory =
   Database["public"]["Tables"]["equipment"]["Row"] & {
     category: Database["public"]["Tables"]["categories"]["Row"];
+    photos: Database["public"]["Tables"]["equipment_photos"]["Row"][];
   };
 
 const EquipmentManagement = () => {
@@ -47,7 +48,8 @@ const EquipmentManagement = () => {
         .select(
           `
           *,
-          category:categories(*)
+          category:categories(*),
+          photos:equipment_photos(*)
         `
         )
         .eq("owner_id", user.id)
@@ -55,7 +57,19 @@ const EquipmentManagement = () => {
 
       if (error) throw error;
 
-      setEquipment(data || []);
+      // Sort photos by order_index and is_primary
+      const equipmentWithSortedPhotos = (data || []).map((item) => ({
+        ...item,
+        photos: (item.photos || []).sort((a, b) => {
+          // Primary photos first
+          if (a.is_primary && !b.is_primary) return -1;
+          if (!a.is_primary && b.is_primary) return 1;
+          // Then by order_index
+          return (a.order_index || 0) - (b.order_index || 0);
+        }),
+      }));
+
+      setEquipment(equipmentWithSortedPhotos);
     } catch (error) {
       console.error("Error fetching equipment:", error);
     } finally {
@@ -196,94 +210,136 @@ const EquipmentManagement = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {equipment.map((item) => (
-            <Card key={item.id} className="overflow-hidden">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{item.title}</CardTitle>
-                    <CardDescription>{item.category.name}</CardDescription>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {equipment.map((item) => {
+            const primaryPhoto = item.photos?.find((p) => p.is_primary) || item.photos?.[0];
+            
+            return (
+              <Card
+                key={item.id}
+                className="overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
+              >
+                {/* Image Section - Airbnb Style */}
+                <div className="relative aspect-video bg-muted overflow-hidden">
+                  {primaryPhoto ? (
+                    <img
+                      src={primaryPhoto.photo_url}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                      <div className="text-center text-muted-foreground">
+                        <div className="text-4xl mb-2">📷</div>
+                        <p className="text-xs">No photo</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Availability Badge Overlay */}
+                  <div className="absolute top-3 right-3">
+                    <Badge
+                      variant={item.is_available ? "default" : "secondary"}
+                      className="shadow-md"
+                    >
+                      {item.is_available ? "Available" : "Unavailable"}
+                    </Badge>
                   </div>
-                  <Badge variant={item.is_available ? "default" : "secondary"}>
-                    {item.is_available ? "Available" : "Unavailable"}
-                  </Badge>
+                  
+                  {/* Category Badge Overlay */}
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="secondary" className="shadow-md bg-background/80 backdrop-blur-sm">
+                      {item.category.name}
+                    </Badge>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <p className="text-sm text-gray-600 line-clamp-2">
+
+                {/* Content Section */}
+                <CardContent className="p-4 space-y-3">
+                  {/* Title and Location */}
+                  <div className="space-y-1">
+                    <CardTitle className="text-base font-semibold line-clamp-1 leading-tight">
+                      {item.title}
+                    </CardTitle>
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span className="line-clamp-1">{item.location}</span>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                     {item.description}
                   </p>
 
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold">
-                      ${item.daily_rate}/day
-                    </span>
-                    <span className="text-sm text-gray-500 capitalize">
-                      {item.condition}
-                    </span>
-                  </div>
-
-                  <div className="text-sm text-gray-500">
-                    📍 {item.location}
-                  </div>
-
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(item)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          handleToggleAvailability(item.id, item.is_available)
-                        }
-                      >
-                        {item.is_available ? (
-                          <>
-                            <EyeOff className="h-4 w-4 mr-1" />
-                            Hide
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="h-4 w-4 mr-1" />
-                            Show
-                          </>
-                        )}
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteEquipment(item.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  {/* Price and Condition */}
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <div>
+                      <span className="text-lg font-semibold text-foreground">
+                        ${item.daily_rate}
+                      </span>
+                      <span className="text-sm text-muted-foreground">/day</span>
                     </div>
+                    <Badge variant="outline" className="capitalize text-xs">
+                      {item.condition}
+                    </Badge>
+                  </div>
+                </CardContent>
 
+                {/* Actions Footer */}
+                <CardFooter className="p-4 pt-0 flex-col gap-2 border-t">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleShowCalendar(item)}
+                    className="w-full"
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Manage Availability
+                  </Button>
+                  <div className="flex gap-2 w-full">
                     <Button
                       size="sm"
-                      variant="default"
-                      onClick={() => handleShowCalendar(item)}
-                      className="w-full"
+                      variant="outline"
+                      onClick={() => handleEdit(item)}
+                      className="flex-1"
                     >
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Manage Availability
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        handleToggleAvailability(item.id, item.is_available)
+                      }
+                      className="flex-1"
+                    >
+                      {item.is_available ? (
+                        <>
+                          <EyeOff className="h-4 w-4 mr-1" />
+                          Hide
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-4 w-4 mr-1" />
+                          Show
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeleteEquipment(item.id)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
