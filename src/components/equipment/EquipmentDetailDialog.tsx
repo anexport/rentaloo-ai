@@ -418,7 +418,6 @@ const EquipmentDetailDialog = ({
                 size="lg"
                 aria-label="Request to book this equipment"
                 onClick={() => {
-                  setActiveTab("book");
                   if (!user) {
                     toast({
                       variant: "destructive",
@@ -435,6 +434,7 @@ const EquipmentDetailDialog = ({
                     });
                     return;
                   }
+                  setActiveTab("book");
                   if (!data?.category) {
                     toast({
                       variant: "destructive",

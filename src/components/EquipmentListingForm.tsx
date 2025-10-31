@@ -45,14 +45,6 @@ const equipmentFormSchema = z.object({
         });
         return;
       }
-      // Check if it's a valid number
-      if (typeof val !== "number" || isNaN(val)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Please enter a valid number",
-        });
-        return;
-      }
       // Check if it's >= 1
       if (val < 1) {
         ctx.addIssue({

@@ -11,6 +11,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Edit, Trash2, Eye, EyeOff, Calendar, MapPin } from "lucide-react";
 import EquipmentListingForm from "./EquipmentListingForm";
 import AvailabilityCalendar from "./AvailabilityCalendar";
@@ -32,6 +40,11 @@ const EquipmentManagement = () => {
   const [showingCalendar, setShowingCalendar] = useState<
     Database["public"]["Tables"]["equipment"]["Row"] | null
   >(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [equipmentToDelete, setEquipmentToDelete] = useState<string | null>(
+    null
+  );
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
@@ -62,8 +75,10 @@ const EquipmentManagement = () => {
         ...item,
         photos: (item.photos || []).sort((a, b) => {
           // Primary photos first
-          if (a.is_primary && !b.is_primary) return -1;
-          if (!a.is_primary && b.is_primary) return 1;
+          const aPrimary = a.is_primary === true;
+          const bPrimary = b.is_primary === true;
+          if (aPrimary && !bPrimary) return -1;
+          if (!aPrimary && bPrimary) return 1;
           // Then by order_index
           return (a.order_index || 0) - (b.order_index || 0);
         }),
@@ -101,19 +116,27 @@ const EquipmentManagement = () => {
     }
   };
 
-  const handleDeleteEquipment = async (equipmentId: string) => {
-    if (!confirm("Are you sure you want to delete this equipment listing?"))
-      return;
+  const handleDeleteClick = (equipmentId: string) => {
+    setEquipmentToDelete(equipmentId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!equipmentToDelete) return;
 
     try {
       const { error } = await supabase
         .from("equipment")
         .delete()
-        .eq("id", equipmentId);
+        .eq("id", equipmentToDelete);
 
       if (error) throw error;
 
-      setEquipment((prev) => prev.filter((item) => item.id !== equipmentId));
+      setEquipment((prev) =>
+        prev.filter((item) => item.id !== equipmentToDelete)
+      );
+      setDeleteDialogOpen(false);
+      setEquipmentToDelete(null);
     } catch (error) {
       console.error("Error deleting equipment:", error);
     }
@@ -213,6 +236,10 @@ const EquipmentManagement = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {equipment.map((item) => {
             const primaryPhoto = item.photos?.find((p) => p.is_primary) || item.photos?.[0];
+            const imageHasError = primaryPhoto
+              ? failedImages.has(primaryPhoto.id)
+              : true;
+            const showImage = primaryPhoto && !imageHasError;
             
             return (
               <Card
@@ -221,13 +248,20 @@ const EquipmentManagement = () => {
               >
                 {/* Image Section - Airbnb Style */}
                 <div className="relative aspect-video bg-muted overflow-hidden">
-                  {primaryPhoto ? (
+                  {showImage ? (
                     <img
                       src={primaryPhoto.photo_url}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      onError={() => {
+                        if (primaryPhoto) {
+                          setFailedImages((prev) => new Set(prev).add(primaryPhoto.id));
+                        }
+                      }}
                     />
-                  ) : (
+                  ) : null}
+                  {!showImage && (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
                       <div className="text-center text-muted-foreground">
                         <div className="text-4xl mb-2">📷</div>
@@ -330,7 +364,7 @@ const EquipmentManagement = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleDeleteEquipment(item.id)}
+                      onClick={() => handleDeleteClick(item.id)}
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -342,6 +376,37 @@ const EquipmentManagement = () => {
           })}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Equipment Listing</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this equipment listing? This
+              action cannot be undone and will remove all associated photos and
+              booking history.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setEquipmentToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
