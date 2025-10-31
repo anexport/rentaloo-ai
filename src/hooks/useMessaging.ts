@@ -65,7 +65,7 @@ export const useMessaging = () => {
             .select(
               `
               profile_id,
-              profiles:profile_id (*)
+              profiles!conversation_participants_profile_id_fkey (*)
             `
             )
             .eq("conversation_id", conversation.id);
