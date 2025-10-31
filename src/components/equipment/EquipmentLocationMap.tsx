@@ -58,7 +58,7 @@ const EquipmentLocationMap = ({
                 Pickup Location
               </h3>
               <p className="text-sm text-muted-foreground">{location}</p>
-              {latitude && longitude && (
+              {latitude != null && longitude != null && (
                 <p className="text-xs text-muted-foreground mt-1 font-mono">
                   {latitude.toFixed(6)}, {longitude.toFixed(6)}
                 </p>
