@@ -29,6 +29,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Filter } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { createMinWidthQuery } from "@/config/breakpoints";
 
 export type FilterValues = {
   priceRange: [number, number];
@@ -67,7 +68,7 @@ const FiltersSheet = ({
   activeFilterCount,
 }: Props) => {
   const [localValue, setLocalValue] = useState<FilterValues>(value);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isDesktop = useMediaQuery(createMinWidthQuery("md"));
   const prevValueRef = useRef<FilterValues>(value);
 
   // Sync localValue with prop changes

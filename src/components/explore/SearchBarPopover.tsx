@@ -34,6 +34,7 @@ import type { DateRange } from "react-day-picker";
 import type { SearchBarFilters } from "@/types/search";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
+import { createMinWidthQuery } from "@/config/breakpoints";
 
 type Props = {
   value: SearchBarFilters;
@@ -72,7 +73,7 @@ const MOBILE_SECTIONS: Array<{
 ];
 
 const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isDesktop = useMediaQuery(createMinWidthQuery("md"));
   const [locationOpen, setLocationOpen] = useState(false);
   const [datesOpen, setDatesOpen] = useState(false);
   const [equipmentOpen, setEquipmentOpen] = useState(false);
@@ -88,39 +89,53 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     return count;
   }, [value.location, value.dateRange, value.equipmentType]);
 
-  const quickDateRanges = useMemo(
-    () => {
-      const today = startOfDay(new Date());
-      const dayOfWeek = today.getDay();
+  const quickDateRanges = useMemo(() => {
+    // Current date normalized to start of day
+    const today = startOfDay(new Date());
+    // Day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+    const dayOfWeek = today.getDay();
 
-      const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
-      const thisWeekendStart = addDays(today, daysUntilSaturday);
-      const thisWeekendEnd = addDays(thisWeekendStart, 1);
+    // Compute days until next Saturday (including today if today is Saturday)
+    const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
+    // This weekend: Saturday and Sunday
+    const thisWeekendStart = addDays(today, daysUntilSaturday);
+    const thisWeekendEnd = addDays(thisWeekendStart, 1);
 
-      const nextWeekendStart = addDays(thisWeekendStart, 7);
-      const nextWeekendEnd = addDays(nextWeekendStart, 1);
+    // Next weekend: exactly one week later (Saturday and Sunday)
+    const nextWeekendStart = addDays(thisWeekendStart, 7);
+    const nextWeekendEnd = addDays(nextWeekendStart, 1);
 
-      const daysUntilMonday = (1 - dayOfWeek + 7) % 7;
-      const nextWeekStart = addDays(today, daysUntilMonday === 0 ? 7 : daysUntilMonday);
-      const nextWeekEnd = addDays(nextWeekStart, 4);
+    // Compute days until next Monday (if today is Monday, treat as "next" week)
+    const daysUntilMonday = (1 - dayOfWeek + 7) % 7;
+    // Next week: Monday through Friday (Monday-as-today counts as "next" week)
+    const nextWeekStart = addDays(
+      today,
+      daysUntilMonday === 0 ? 7 : daysUntilMonday
+    );
+    // End of next work week (Friday)
+    const nextWeekEnd = addDays(nextWeekStart, 4);
 
-      return [
-        {
-          label: "This weekend",
-          range: { from: thisWeekendStart, to: thisWeekendEnd } satisfies DateRange,
-        },
-        {
-          label: "Next weekend",
-          range: { from: nextWeekendStart, to: nextWeekendEnd } satisfies DateRange,
-        },
-        {
-          label: "Next week",
-          range: { from: nextWeekStart, to: nextWeekEnd } satisfies DateRange,
-        },
-      ];
-    },
-    []
-  );
+    return [
+      {
+        label: "This weekend",
+        range: {
+          from: thisWeekendStart,
+          to: thisWeekendEnd,
+        } satisfies DateRange,
+      },
+      {
+        label: "Next weekend",
+        range: {
+          from: nextWeekendStart,
+          to: nextWeekendEnd,
+        } satisfies DateRange,
+      },
+      {
+        label: "Next week",
+        range: { from: nextWeekStart, to: nextWeekEnd } satisfies DateRange,
+      },
+    ];
+  }, []);
 
   const handleLocationSelect = (location: string) => {
     onChange({ ...value, location });
@@ -141,6 +156,8 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
       return;
     }
 
+    // Handle change start date mid-selection: user is selecting dates but picked a new from date,
+    // so reset to a one-sided range (to: undefined) and keep selection mode active
     if (!range.to) {
       onChange({ ...value, dateRange: { from: range.from, to: undefined } });
       return;
@@ -195,7 +212,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     if (value.dateRange?.from) {
       if (value.dateRange.to) {
         parts.push(
-          `${format(value.dateRange.from, "MMM d")} - ${format(value.dateRange.to, "MMM d")}`
+          `${format(value.dateRange.from, "MMM d")} - ${format(
+            value.dateRange.to,
+            "MMM d"
+          )}`
         );
       } else {
         parts.push(format(value.dateRange.from, "MMM d"));
@@ -218,7 +238,9 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
             <div className="flex items-center gap-4 flex-1 min-w-0">
               <Search className="h-5 w-5 text-muted-foreground shrink-0" />
               <div className="flex flex-col min-w-0">
-                <span className="text-xs uppercase tracking-wide text-muted-foreground">Search</span>
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Search
+                </span>
                 <span className="text-sm font-semibold text-foreground truncate">
                   {value.location || "Where to?"}
                 </span>
@@ -231,7 +253,11 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
               variant="secondary"
               className="ml-3 h-9 w-9 rounded-full p-0 flex items-center justify-center text-xs shrink-0"
             >
-              {activeFilterCount > 0 ? activeFilterCount : <Search className="h-4 w-4" />}
+              {activeFilterCount > 0 ? (
+                activeFilterCount
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
             </Badge>
           </Button>
         </SheetTrigger>
@@ -303,7 +329,9 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                     {POPULAR_LOCATIONS.map((loc) => (
                       <Button
                         key={`${loc}-chip`}
-                        variant={value.location === loc ? "default" : "secondary"}
+                        variant={
+                          value.location === loc ? "default" : "secondary"
+                        }
                         size="sm"
                         className="rounded-full"
                         onClick={() => handleLocationSelect(loc)}
@@ -314,7 +342,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                   </div>
                   {value.location && (
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
+                      <Badge
+                        variant="secondary"
+                        className="rounded-full px-3 py-1 text-xs"
+                      >
                         {value.location}
                       </Badge>
                       <Button
@@ -368,20 +399,30 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                       selected={value.dateRange}
                       onSelect={handleDateSelect}
                       numberOfMonths={1}
-                      disabled={(date) => startOfDay(date) < startOfDay(new Date())}
+                      disabled={(date) =>
+                        startOfDay(date) < startOfDay(new Date())
+                      }
                     />
                   </div>
                   {value.dateRange?.from && (
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
+                      <Badge
+                        variant="secondary"
+                        className="rounded-full px-3 py-1 text-xs"
+                      >
                         {value.dateRange.to
-                          ? `${format(value.dateRange.from, "MMM d")} - ${format(value.dateRange.to, "MMM d")}`
+                          ? `${format(
+                              value.dateRange.from,
+                              "MMM d"
+                            )} - ${format(value.dateRange.to, "MMM d")}`
                           : format(value.dateRange.from, "MMM d")}
                       </Badge>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onChange({ ...value, dateRange: undefined })}
+                        onClick={() =>
+                          onChange({ ...value, dateRange: undefined })
+                        }
                         className="h-7 text-xs"
                       >
                         Clear
@@ -410,6 +451,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                         }
                         className="h-20 flex flex-col items-start justify-between rounded-2xl border"
                         onClick={() => handleEquipmentSelect(type)}
+                        aria-label={`Select ${type}`}
                       >
                         <Package className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-semibold">{type}</span>
@@ -418,7 +460,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                   </div>
                   {value.equipmentType && (
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
+                      <Badge
+                        variant="secondary"
+                        className="rounded-full px-3 py-1 text-xs"
+                      >
                         {value.equipmentType}
                       </Badge>
                       <Button
@@ -437,7 +482,11 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
               )}
             </div>
             <SheetFooter className="mt-auto gap-3 px-6 pb-6 pt-4 shadow-[0_-8px_24px_rgba(15,23,42,0.08)]">
-              <Button variant="ghost" onClick={handleClearAll} className="flex-1">
+              <Button
+                variant="ghost"
+                onClick={handleClearAll}
+                className="flex-1"
+              >
                 Clear all
               </Button>
               <Button onClick={handleSearch} className="flex-1">

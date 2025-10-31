@@ -33,6 +33,7 @@ import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import EquipmentLocationMap from "./EquipmentLocationMap";
 import ReviewList from "@/components/reviews/ReviewList";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { createMaxWidthQuery } from "@/config/breakpoints";
 
 type EquipmentDetailDialogProps = {
   open: boolean;
@@ -45,9 +46,9 @@ const EquipmentDetailDialog = ({
   onOpenChange,
   listingId,
 }: EquipmentDetailDialogProps) => {
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useMediaQuery(createMaxWidthQuery("md"));
 
-  const { data, isLoading, isFetching } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["listing", listingId],
     queryFn: () => fetchListingById(listingId as string),
     enabled: !!listingId && open,
@@ -70,6 +71,14 @@ const EquipmentDetailDialog = ({
   const photos = data?.photos || [];
   const primaryPhoto = photos[0];
   const secondaryPhotos = photos.slice(1, 5); // Up to 4 secondary photos
+
+  const getHeaderProps = () => {
+    const title = data?.title ?? "Equipment details";
+    const description = data?.category?.name
+      ? `Category: ${data.category.name}`
+      : "Detailed information about this equipment.";
+    return { title, description };
+  };
 
   const renderContent = () => {
     if (isLoading) {
@@ -356,6 +365,7 @@ const EquipmentDetailDialog = ({
 
   // Mobile: Use Sheet component
   if (isMobile) {
+    const { title, description } = getHeaderProps();
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
@@ -363,12 +373,8 @@ const EquipmentDetailDialog = ({
           className="h-[90vh] max-h-[90vh] w-full overflow-y-auto px-0"
         >
           <SheetHeader className="px-6">
-            <SheetTitle>{data?.title ?? "Equipment details"}</SheetTitle>
-            <SheetDescription>
-              {data?.category?.name
-                ? `Category: ${data.category.name}`
-                : "Detailed information about this equipment."}
-            </SheetDescription>
+            <SheetTitle>{title}</SheetTitle>
+            <SheetDescription>{description}</SheetDescription>
           </SheetHeader>
           <div className="mt-6 px-6 pb-6">{renderContent()}</div>
         </SheetContent>
@@ -377,16 +383,13 @@ const EquipmentDetailDialog = ({
   }
 
   // Desktop: Use Dialog component
+  const { title, description } = getHeaderProps();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{data?.title ?? "Equipment details"}</DialogTitle>
-          <DialogDescription>
-            {data?.category?.name
-              ? `Category: ${data.category.name}`
-              : "Detailed information about this equipment."}
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {renderContent()}
       </DialogContent>
