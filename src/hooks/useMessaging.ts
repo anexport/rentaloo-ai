@@ -110,12 +110,13 @@ export const useMessaging = () => {
             ...conversation,
             participants,
             last_message: lastMessage,
+            booking_request: conversation.booking_request || undefined,
           };
         })
       );
 
       setConversations(conversationsWithDetails);
-      
+
       // Update user conversation IDs ref for filtering
       userConversationIdsRef.current = new Set(conversationIds);
     } catch (err) {
@@ -134,7 +135,7 @@ export const useMessaging = () => {
       // Update current conversation ID ref
       currentConversationIdRef.current = conversationId;
       setActiveConversationId(conversationId);
-      
+
       const { data, error } = await supabase
         .from("messages")
         .select(
@@ -335,9 +336,10 @@ export const useMessaging = () => {
         | { record?: Record<string, any>; new?: Record<string, any> }
         | undefined;
 
-      const record = (rawPayload?.record || rawPayload?.new || null) as
-        | { id?: string; conversation_id?: string }
-        | null;
+      const record = (rawPayload?.record || rawPayload?.new || null) as {
+        id?: string;
+        conversation_id?: string;
+      } | null;
 
       const conversationId = record?.conversation_id;
       const messageId = record?.id;
@@ -380,10 +382,7 @@ export const useMessaging = () => {
 
     channel.subscribe((status) => {
       if (status === "CHANNEL_ERROR") {
-        console.error(
-          "Realtime channel error for messages topic:",
-          topic
-        );
+        console.error("Realtime channel error for messages topic:", topic);
         setError("Failed to subscribe to message updates");
       }
     });
@@ -427,9 +426,9 @@ export const useMessaging = () => {
         | { record?: Record<string, any>; new?: Record<string, any> }
         | undefined;
 
-      const record = (rawPayload?.record || rawPayload?.new || null) as
-        | { conversation_id?: string }
-        | null;
+      const record = (rawPayload?.record || rawPayload?.new || null) as {
+        conversation_id?: string;
+      } | null;
 
       const conversationId = record?.conversation_id;
 
@@ -463,10 +462,7 @@ export const useMessaging = () => {
 
     channel.subscribe((status) => {
       if (status === "CHANNEL_ERROR") {
-        console.error(
-          "Realtime channel error for user topic:",
-          topic
-        );
+        console.error("Realtime channel error for user topic:", topic);
       }
     });
 

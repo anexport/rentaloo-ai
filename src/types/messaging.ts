@@ -9,7 +9,7 @@ export interface MessageWithSender extends Message {
 
 export interface ConversationWithDetails extends Conversation {
   participants: Database["public"]["Tables"]["profiles"]["Row"][];
-  last_message?: MessageWithSender;
+  last_message?: MessageWithSender | null;
   booking_request?: Database["public"]["Tables"]["booking_requests"]["Row"] & {
     equipment: Database["public"]["Tables"]["equipment"]["Row"];
   };

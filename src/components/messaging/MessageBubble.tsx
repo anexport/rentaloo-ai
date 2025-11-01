@@ -15,7 +15,9 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
   // System messages are centered and styled differently
   if (isSystemMessage) {
     // Determine message type based on content
-    const isApprovalMessage = message.content.toLowerCase().includes("approved");
+    const isApprovalMessage = message.content
+      .toLowerCase()
+      .includes("approved");
     const isCancellationMessage =
       message.content.toLowerCase().includes("cancelled") ||
       message.content.toLowerCase().includes("declined");

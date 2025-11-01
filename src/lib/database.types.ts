@@ -211,6 +211,42 @@ export type Database = {
           }
         ];
       };
+      conversation_participants: {
+        Row: {
+          conversation_id: string;
+          created_at: string | null;
+          id: string;
+          profile_id: string;
+        };
+        Insert: {
+          conversation_id: string;
+          created_at?: string | null;
+          id?: string;
+          profile_id: string;
+        };
+        Update: {
+          conversation_id?: string;
+          created_at?: string | null;
+          id?: string;
+          profile_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey";
+            columns: ["conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "conversations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_participants_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       equipment: {
         Row: {
           category_id: string;
