@@ -16,11 +16,13 @@ const messageSchema = z.object({
 
 interface MessageInputProps {
   onSendMessage: (content: string) => void;
+  onTyping?: (content: string) => void;
   disabled?: boolean;
 }
 
 const MessageInput = ({
   onSendMessage,
+  onTyping,
   disabled = false,
 }: MessageInputProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,6 +58,10 @@ const MessageInput = ({
           placeholder="Type your message..."
           disabled={disabled || isSubmitting}
           className="min-h-[40px] max-h-[120px] resize-none"
+          onChange={(e) => {
+            register("content").onChange(e);
+            onTyping?.(e.target.value);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();

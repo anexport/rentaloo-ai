@@ -548,6 +548,7 @@ export type Database = {
           created_at: string | null;
           email: string;
           id: string;
+          last_seen_at: string | null;
           role: Database["public"]["Enums"]["user_role"];
           updated_at: string | null;
         };
@@ -555,6 +556,7 @@ export type Database = {
           created_at?: string | null;
           email: string;
           id?: string;
+          last_seen_at?: string | null;
           role: Database["public"]["Enums"]["user_role"];
           updated_at?: string | null;
         };
@@ -562,6 +564,7 @@ export type Database = {
           created_at?: string | null;
           email?: string;
           id?: string;
+          last_seen_at?: string | null;
           role?: Database["public"]["Enums"]["user_role"];
           updated_at?: string | null;
         };

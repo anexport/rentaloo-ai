@@ -33,3 +33,10 @@ export interface NewMessage {
   content: string;
   message_type?: MessageType;
 }
+
+export interface TypingStatus {
+  userId: string;
+  conversationId: string;
+  isTyping: boolean;
+  timestamp: string;
+}

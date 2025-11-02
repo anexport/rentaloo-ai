@@ -124,13 +124,16 @@ export const useMessaging = () => {
       // Get participants and last message for each conversation
       const conversationsWithDetails = await Promise.all(
         (data || []).map(async (conversation) => {
-          // Get participants
+          // Get participants with last_seen_at
           const { data: participantLinks } = await supabase
             .from("conversation_participants")
             .select(
               `
               profile_id,
-              profiles!conversation_participants_profile_id_fkey (*)
+              profiles!conversation_participants_profile_id_fkey (
+                *,
+                last_seen_at
+              )
             `
             )
             .eq("conversation_id", conversation.id);
@@ -231,6 +234,12 @@ export const useMessaging = () => {
           .from("conversations")
           .update({ updated_at: new Date().toISOString() })
           .eq("id", messageData.conversation_id);
+
+        // Update last_seen_at when sending a message
+        await supabase
+          .from("profiles")
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq("id", user.id);
 
         // Refresh conversations to update last message
         await fetchConversations();
@@ -416,6 +425,16 @@ export const useMessaging = () => {
         setMessages((prev) => {
           if (prev.some((m) => m.id === fullMessage.id)) {
             return prev;
+          }
+          // Update last_seen_at when receiving a message
+          if (user?.id) {
+            supabase
+              .from("profiles")
+              .update({ last_seen_at: new Date().toISOString() })
+              .eq("id", user.id)
+              .then(() => {
+                // Silently handle - don't block message rendering
+              });
           }
           return [...prev, fullMessage as MessageWithSender];
         });
