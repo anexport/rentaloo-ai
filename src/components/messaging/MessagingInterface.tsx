@@ -261,9 +261,7 @@ const MessagingInterface = ({
       }
 
       if (filter === "unread") {
-        const lastMessage = conversation.last_message
-        if (!lastMessage) return false
-        return lastMessage.sender_id !== user?.id
+        return (conversation.unread_count ?? 0) > 0
       }
 
       return true
