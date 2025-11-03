@@ -389,14 +389,34 @@ export const useMessaging = () => {
           .order("created_at", { ascending: true });
 
         if (error) throw error;
+
+        // Guard: Check if user switched conversations while network call was in flight
+        if (currentConversationIdRef.current !== conversationId) {
+          // User switched to a different conversation, skip updating state
+          return;
+        }
+
         setMessages(data || []);
 
         // Mark conversation as read when viewing it
         if (user?.id) {
+          // Guard: Check again before marking as read (conversation may have changed)
+          if (currentConversationIdRef.current !== conversationId) {
+            // User switched to a different conversation, skip marking as read
+            return;
+          }
+
           try {
             await supabase.rpc("mark_conversation_read", {
               p_conversation: conversationId,
             });
+
+            // Guard: Check one more time after RPC call completes
+            if (currentConversationIdRef.current !== conversationId) {
+              // User switched conversations during the RPC call, skip refresh
+              return;
+            }
+
             // Refresh conversations to update unread count
             void fetchConversations();
           } catch (readError) {
