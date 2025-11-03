@@ -1,92 +1,83 @@
-import { useState, useEffect, useRef, useMemo } from "react"
-import { useMessaging } from "../../hooks/useMessaging"
-import { useAuth } from "../../hooks/useAuth"
-import { usePresence } from "../../hooks/usePresence"
-import type { ConversationWithDetails } from "../../types/messaging"
-import {
-  MessageSquare,
-  ArrowLeft,
-  Menu,
-  Search,
-  Filter,
-} from "lucide-react"
-import { Button } from "../ui/button"
-import { Avatar, AvatarFallback } from "../ui/avatar"
-import ConversationList from "./ConversationList"
-import ConversationSearch from "./ConversationSearch"
-import MessageBubble from "./MessageBubble"
-import MessageInput from "./MessageInput"
-import { OnlineStatusIndicator } from "./OnlineStatusIndicator"
-import { LastSeenBadge } from "./LastSeenBadge"
-import { TypingIndicator } from "./TypingIndicator"
-import { supabase } from "../../lib/supabase"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "../ui/sheet"
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useMessaging } from "../../hooks/useMessaging";
+import { useAuth } from "../../hooks/useAuth";
+import { usePresence } from "../../hooks/usePresence";
+import type { ConversationWithDetails } from "../../types/messaging";
+import { MessageSquare, ArrowLeft, Menu, Search, Filter } from "lucide-react";
+import { Button } from "../ui/button";
+import { Avatar, AvatarFallback } from "../ui/avatar";
+import ConversationList from "./ConversationList";
+import ConversationSearch from "./ConversationSearch";
+import MessageBubble from "./MessageBubble";
+import MessageInput from "./MessageInput";
+import { OnlineStatusIndicator } from "./OnlineStatusIndicator";
+import { LastSeenBadge } from "./LastSeenBadge";
+import { TypingIndicator } from "./TypingIndicator";
+import { supabase } from "../../lib/supabase";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "../ui/resizable"
-import { ScrollArea } from "../ui/scroll-area"
+} from "../ui/resizable";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select"
-import { Badge } from "../ui/badge"
-import { cn } from "@/lib/utils"
+} from "../ui/select";
+import { Badge } from "../ui/badge";
+import { cn } from "@/lib/utils";
 
 interface MessagingInterfaceProps {
-  initialConversationId?: string
-  onClose?: () => void
+  initialConversationId?: string;
+  onClose?: () => void;
 }
 
-type ConversationFilter = "all" | "unread" | "bookings"
+type ConversationFilter = "all" | "unread" | "bookings";
 
 const MessagingInterface = ({
   initialConversationId,
   onClose,
 }: MessagingInterfaceProps) => {
-  const { user } = useAuth()
-  const { isOnline } = usePresence()
+  const { user } = useAuth();
+  const { isOnline } = usePresence();
   const { conversations, messages, loading, fetchMessages, sendMessage } =
-    useMessaging()
+    useMessaging();
 
   const [selectedConversation, setSelectedConversation] =
-    useState<ConversationWithDetails | null>(null)
-  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set())
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
-  const [filter, setFilter] = useState<ConversationFilter>("all")
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const typingTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map())
-  const typingChannelRef = useRef<any>(null)
+    useState<ConversationWithDetails | null>(null);
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [filter, setFilter] = useState<ConversationFilter>("all");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map()
+  );
+  const typingChannelRef = useRef<any>(null);
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   // Keyboard shortcut: Cmd/Ctrl + K to open conversation search
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== "k") return
+      if (event.key.toLowerCase() !== "k") return;
 
       if (event.metaKey || event.ctrlKey) {
-        const target = event.target as HTMLElement | null
+        const target = event.target as HTMLElement | null;
         if (target) {
-          const tagName = target.tagName
-          const editable = target.getAttribute("contenteditable")
+          const tagName = target.tagName;
+          const editable = target.getAttribute("contenteditable");
           if (
             editable === "true" ||
             ["INPUT", "TEXTAREA", "SELECT"].includes(tagName)
@@ -95,41 +86,41 @@ const MessagingInterface = ({
           }
         }
 
-        event.preventDefault()
-        setIsSearchOpen((prev) => !prev)
+        event.preventDefault();
+        setIsSearchOpen((prev) => !prev);
       }
-    }
+    };
 
-    window.addEventListener("keydown", handleKeydown)
+    window.addEventListener("keydown", handleKeydown);
     return () => {
-      window.removeEventListener("keydown", handleKeydown)
-    }
-  }, [])
+      window.removeEventListener("keydown", handleKeydown);
+    };
+  }, []);
 
   // Set initial conversation
   useEffect(() => {
     if (initialConversationId && conversations.length > 0) {
       const conversation = conversations.find(
         (c) => c.id === initialConversationId
-      )
+      );
       if (conversation) {
-        setSelectedConversation(conversation)
-        fetchMessages(conversation.id)
-        setIsMobileSidebarOpen(false)
+        setSelectedConversation(conversation);
+        fetchMessages(conversation.id);
+        setIsMobileSidebarOpen(false);
       }
     }
-  }, [initialConversationId, conversations, fetchMessages])
+  }, [initialConversationId, conversations, fetchMessages]);
 
   const handleSelectConversation = async (
     conversation: ConversationWithDetails
   ) => {
-    setSelectedConversation(conversation)
-    await fetchMessages(conversation.id)
-    setIsMobileSidebarOpen(false)
-  }
+    setSelectedConversation(conversation);
+    await fetchMessages(conversation.id);
+    setIsMobileSidebarOpen(false);
+  };
 
   const handleSendMessage = async (content: string) => {
-    if (!selectedConversation) return
+    if (!selectedConversation) return;
 
     // Stop typing indicator
     if (typingChannelRef.current && user?.id) {
@@ -141,23 +132,25 @@ const MessagingInterface = ({
           conversation_id: selectedConversation.id,
           is_typing: false,
         },
-      })
+      });
     }
 
     await sendMessage({
       conversation_id: selectedConversation.id,
       content,
       message_type: "text",
-    })
-  }
+    });
+  };
 
   const handleTyping = (content: string) => {
-    if (!selectedConversation || !user?.id || !typingChannelRef.current) return
+    if (!selectedConversation || !user?.id || !typingChannelRef.current) return;
 
     // Clear existing timeout
-    const existingTimeout = typingTimeoutRef.current.get(selectedConversation.id)
+    const existingTimeout = typingTimeoutRef.current.get(
+      selectedConversation.id
+    );
     if (existingTimeout) {
-      clearTimeout(existingTimeout)
+      clearTimeout(existingTimeout);
     }
 
     // Broadcast typing status
@@ -169,7 +162,7 @@ const MessagingInterface = ({
         conversation_id: selectedConversation.id,
         is_typing: content.length > 0,
       },
-    })
+    });
 
     // Set timeout to stop typing after 3 seconds of inactivity
     if (content.length > 0) {
@@ -182,91 +175,91 @@ const MessagingInterface = ({
             conversation_id: selectedConversation.id,
             is_typing: false,
           },
-        })
-        typingTimeoutRef.current.delete(selectedConversation.id)
-      }, 3000)
-      typingTimeoutRef.current.set(selectedConversation.id, timeout)
+        });
+        typingTimeoutRef.current.delete(selectedConversation.id);
+      }, 3000);
+      typingTimeoutRef.current.set(selectedConversation.id, timeout);
     }
-  }
+  };
 
   // Set up typing indicator channel
   useEffect(() => {
     if (!selectedConversation || !user) {
       if (typingChannelRef.current) {
-        supabase.removeChannel(typingChannelRef.current)
-        typingChannelRef.current = null
+        supabase.removeChannel(typingChannelRef.current);
+        typingChannelRef.current = null;
       }
-      setTypingUsers(new Set())
-      return
+      setTypingUsers(new Set());
+      return;
     }
 
-    const topic = `room:${selectedConversation.id}:typing`
+    const topic = `room:${selectedConversation.id}:typing`;
     const channel = supabase.channel(topic, {
       config: {
         broadcast: { self: true, ack: true },
         private: true,
       },
-    })
+    });
 
-    typingChannelRef.current = channel
+    typingChannelRef.current = channel;
 
     channel
       .on("broadcast", { event: "typing" }, (payload) => {
         const data = payload.payload as {
-          user_id: string
-          conversation_id: string
-          is_typing: boolean
-        }
+          user_id: string;
+          conversation_id: string;
+          is_typing: boolean;
+        };
 
         if (
           data.conversation_id === selectedConversation.id &&
           data.user_id !== user.id
         ) {
           setTypingUsers((prev) => {
-            const updated = new Set(prev)
+            const updated = new Set(prev);
             if (data.is_typing) {
-              updated.add(data.user_id)
+              updated.add(data.user_id);
             } else {
-              updated.delete(data.user_id)
+              updated.delete(data.user_id);
             }
-            return updated
-          })
+            return updated;
+          });
         }
       })
-      .subscribe()
+      .subscribe();
 
     return () => {
       // Clean up timeouts
-      typingTimeoutRef.current.forEach((timeout) => clearTimeout(timeout))
-      typingTimeoutRef.current.clear()
+      typingTimeoutRef.current.forEach((timeout) => clearTimeout(timeout));
+      typingTimeoutRef.current.clear();
 
       if (typingChannelRef.current) {
-        supabase.removeChannel(typingChannelRef.current)
-        typingChannelRef.current = null
+        supabase.removeChannel(typingChannelRef.current);
+        typingChannelRef.current = null;
       }
-      setTypingUsers(new Set())
-    }
-  }, [selectedConversation, user])
+      setTypingUsers(new Set());
+    };
+  }, [selectedConversation, user]);
 
   const otherParticipant = selectedConversation?.participants.find(
     (p) => p.id !== user?.id
-  )
+  );
 
   const filteredConversations = useMemo(() => {
-    if (filter === "all") return conversations
+    if (filter === "all") return conversations;
 
     return conversations.filter((conversation) => {
       if (filter === "bookings") {
-        return Boolean(conversation.booking_request)
+        return Boolean(conversation.booking_request);
       }
 
       if (filter === "unread") {
-        return (conversation.unread_count ?? 0) > 0
+        return (conversation.unread_count ?? 0) > 0;
       }
 
-      return true
-    })
-  }, [conversations, filter, user?.id])
+      return true;
+    });
+  }, [conversations, filter, user?.id]);
 
   const conversationSidebar = (
     <div className="flex h-full flex-col bg-card/60">
@@ -277,9 +270,7 @@ const MessagingInterface = ({
               <MessageSquare className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold leading-tight">
-                Messages
-              </h2>
+              <h2 className="text-lg font-semibold leading-tight">Messages</h2>
               <p className="text-muted-foreground text-xs">
                 Stay in sync with your renters
               </p>
@@ -301,9 +292,7 @@ const MessagingInterface = ({
           <div className="flex items-center gap-2">
             <Select
               value={filter}
-              onValueChange={(value) =>
-                setFilter(value as ConversationFilter)
-              }
+              onValueChange={(value) => setFilter(value as ConversationFilter)}
             >
               <SelectTrigger
                 className="h-9 flex-1"
@@ -340,7 +329,7 @@ const MessagingInterface = ({
         />
       </ScrollArea>
     </div>
-  )
+  );
 
   const renderMessagePane = (isMobile: boolean) => {
     if (!selectedConversation) {
@@ -359,7 +348,7 @@ const MessagingInterface = ({
             )}
           </div>
         </div>
-      )
+      );
     }
 
     return (
@@ -406,9 +395,7 @@ const MessagingInterface = ({
               {otherParticipant && (
                 <LastSeenBadge
                   isOnline={isOnline(otherParticipant.id)}
-                  lastSeenAt={
-                    (otherParticipant as any).last_seen_at || null
-                  }
+                  lastSeenAt={otherParticipant.last_seen_at || null}
                   className="mt-1"
                 />
               )}
@@ -485,8 +472,8 @@ const MessagingInterface = ({
           />
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div
@@ -495,10 +482,7 @@ const MessagingInterface = ({
         "min-h-[520px]"
       )}
     >
-      <Sheet
-        open={isMobileSidebarOpen}
-        onOpenChange={setIsMobileSidebarOpen}
-      >
+      <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
         <SheetContent side="left" className="w-[90vw] max-w-sm p-0 md:hidden">
           <SheetHeader className="border-b border-border px-4 py-4">
             <SheetTitle className="flex items-center gap-2 text-base">
@@ -510,9 +494,7 @@ const MessagingInterface = ({
         </SheetContent>
       </Sheet>
 
-      <div className="flex h-full md:hidden">
-        {renderMessagePane(true)}
-      </div>
+      <div className="flex h-full md:hidden">{renderMessagePane(true)}</div>
 
       <div className="hidden h-full md:block">
         <ResizablePanelGroup
@@ -542,7 +524,7 @@ const MessagingInterface = ({
         onSelect={handleSelectConversation}
       />
     </div>
-  )
-}
+  );
+};
 
-export default MessagingInterface
+export default MessagingInterface;

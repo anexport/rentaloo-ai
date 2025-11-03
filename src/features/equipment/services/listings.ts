@@ -3,7 +3,8 @@ import type { Database } from "@/lib/database.types";
 
 export type EquipmentRow = Database["public"]["Tables"]["equipment"]["Row"];
 export type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
-export type EquipmentPhotoRow = Database["public"]["Tables"]["equipment_photos"]["Row"];
+export type EquipmentPhotoRow =
+  Database["public"]["Tables"]["equipment_photos"]["Row"];
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 export type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
 
@@ -20,7 +21,7 @@ export type ListingsFilters = {
   priceMin?: number;
   priceMax?: number;
   location?: string;
-  condition?: string; // e.g., "new" | "excellent" | "good" | "fair"
+  condition?: Database["public"]["Enums"]["equipment_condition"] | "all";
 };
 
 export const fetchListings = async (
@@ -73,7 +74,9 @@ export const fetchListings = async (
   const listings = (data || []) as unknown as Listing[];
 
   // Collect all unique owner IDs
-  const ownerIds = [...new Set(listings.map((item) => item.owner?.id).filter(Boolean))] as string[];
+  const ownerIds = [
+    ...new Set(listings.map((item) => item.owner?.id).filter(Boolean)),
+  ] as string[];
 
   // Fetch all reviews in a single query
   let reviewsMap = new Map<string, Array<Pick<ReviewRow, "rating">>>();
@@ -128,4 +131,3 @@ export const fetchListingById = async (id: string): Promise<Listing | null> => {
 
   return { ...base, reviews: reviews || [] };
 };
-

@@ -15,6 +15,8 @@ export interface ConversationWithDetails
     equipment: Database["public"]["Tables"]["equipment"]["Row"];
   };
   unread_count?: number;
+  last_read_at?: string | null;
+  last_read_timestamp?: string | null;
 }
 
 export interface MessageFormData {

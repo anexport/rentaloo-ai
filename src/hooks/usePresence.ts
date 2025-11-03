@@ -14,7 +14,18 @@ interface PresenceState {
   isOnline: (userId: string) => boolean;
 }
 
-const PRESENCE_HEARTBEAT_INTERVAL = 30000; // 30 seconds
+// Explicit types for Supabase presence payloads
+type SupabasePresenceState = Record<string, UserPresence[]>;
+
+interface PresenceJoinPayload {
+  newPresences: UserPresence[];
+}
+
+interface PresenceLeavePayload {
+  leftPresences: UserPresence[];
+}
+
+const PRESENCE_HEARTBEAT_INTERVAL = 300000; // 5 minutes
 
 export const usePresence = () => {
   const { user } = useAuth();
@@ -70,12 +81,13 @@ export const usePresence = () => {
 
     // Handle presence sync (initial state)
     channel.on("presence", { event: "sync" }, () => {
-      const state = channel.presenceState();
+      const rawState = channel.presenceState();
+      const state = rawState as unknown as SupabasePresenceState;
       const userIds = new Set<string>();
 
       // Extract user IDs from presence state
       Object.keys(state).forEach((key) => {
-        const presences = state[key] as unknown as Array<UserPresence>;
+        const presences = state[key];
         if (presences && presences.length > 0) {
           presences.forEach((presence) => {
             if (presence.user_id) {
@@ -89,34 +101,34 @@ export const usePresence = () => {
     });
 
     // Handle users joining
-    channel.on("presence", { event: "join" }, ({ newPresences }) => {
+    channel.on("presence", { event: "join" }, (payload) => {
+      const typedPayload = payload as unknown as PresenceJoinPayload;
+      const { newPresences } = typedPayload;
       setOnlineUsers((prev) => {
         const updated = new Set(prev);
         if (newPresences) {
-          (newPresences as unknown as Array<UserPresence>).forEach(
-            (presence) => {
-              if (presence.user_id) {
-                updated.add(presence.user_id);
-              }
+          newPresences.forEach((presence) => {
+            if (presence.user_id) {
+              updated.add(presence.user_id);
             }
-          );
+          });
         }
         return updated;
       });
     });
 
     // Handle users leaving
-    channel.on("presence", { event: "leave" }, ({ leftPresences }) => {
+    channel.on("presence", { event: "leave" }, (payload) => {
+      const typedPayload = payload as unknown as PresenceLeavePayload;
+      const { leftPresences } = typedPayload;
       setOnlineUsers((prev) => {
         const updated = new Set(prev);
         if (leftPresences) {
-          (leftPresences as unknown as Array<UserPresence>).forEach(
-            (presence) => {
-              if (presence.user_id) {
-                updated.delete(presence.user_id);
-              }
+          leftPresences.forEach((presence) => {
+            if (presence.user_id) {
+              updated.delete(presence.user_id);
             }
-          );
+          });
         }
         return updated;
       });

@@ -198,8 +198,10 @@ export const useMessaging = () => {
       const participantIds = new Set<string>();
       const lastMessageIds = new Set<string>();
       const bookingRequestIds = new Set<string>();
+      const conversationIds = new Set<string>();
 
       conversationList.forEach((conversation) => {
+        conversationIds.add(conversation.id);
         conversation.participants.forEach((participant: any) => {
           if (participant?.id) {
             participantIds.add(participant.id);
@@ -216,43 +218,58 @@ export const useMessaging = () => {
       });
 
       const resolveEmpty = () =>
-        Promise.resolve({ data: [], error: null } as { data: any[]; error: null });
+        Promise.resolve({ data: [], error: null } as {
+          data: any[];
+          error: null;
+        });
 
-      const [profilesResult, messagesResult, bookingRequestsResult] =
-        await Promise.all([
-          participantIds.size
-            ? supabase
-                .from("profiles")
-                .select("*")
-                .in("id", Array.from(participantIds))
-            : resolveEmpty(),
-          lastMessageIds.size
-            ? supabase
-                .from("messages")
-                .select(
-                  `
+      const [
+        profilesResult,
+        messagesResult,
+        bookingRequestsResult,
+        participantsResult,
+      ] = await Promise.all([
+        participantIds.size
+          ? supabase
+              .from("profiles")
+              .select("*")
+              .in("id", Array.from(participantIds))
+          : resolveEmpty(),
+        lastMessageIds.size
+          ? supabase
+              .from("messages")
+              .select(
+                `
                 *,
                 sender:profiles(*)
               `
-                )
-                .in("id", Array.from(lastMessageIds))
-            : resolveEmpty(),
-          bookingRequestIds.size
-            ? supabase
-                .from("booking_requests")
-                .select(
-                  `
+              )
+              .in("id", Array.from(lastMessageIds))
+          : resolveEmpty(),
+        bookingRequestIds.size
+          ? supabase
+              .from("booking_requests")
+              .select(
+                `
                 *,
                 equipment:equipment(*)
               `
-                )
-                .in("id", Array.from(bookingRequestIds))
-            : resolveEmpty(),
-        ]);
+              )
+              .in("id", Array.from(bookingRequestIds))
+          : resolveEmpty(),
+        conversationIds.size && user?.id
+          ? supabase
+              .from("conversation_participants")
+              .select("conversation_id, last_read_at")
+              .in("conversation_id", Array.from(conversationIds))
+              .eq("profile_id", user.id)
+          : resolveEmpty(),
+      ]);
 
       if (profilesResult.error) throw profilesResult.error;
       if (messagesResult.error) throw messagesResult.error;
       if (bookingRequestsResult.error) throw bookingRequestsResult.error;
+      if (participantsResult?.error) throw participantsResult.error;
 
       const profileMap = new Map(
         (profilesResult.data || []).map((profile: any) => [profile.id, profile])
@@ -267,6 +284,12 @@ export const useMessaging = () => {
             ...booking,
             equipment: booking.equipment || undefined,
           },
+        ])
+      );
+      const participantMap = new Map(
+        (participantsResult?.data || []).map((participant: any) => [
+          participant.conversation_id,
+          participant,
         ])
       );
 
@@ -295,22 +318,28 @@ export const useMessaging = () => {
 
         const bookingRequestId = conversation.booking_request_id;
         const bookingRequest = bookingRequestId
-          ? bookingRequestMap.get(bookingRequestId) || conversation.booking_request
+          ? bookingRequestMap.get(bookingRequestId) ||
+            conversation.booking_request
           : undefined;
+
+        const participantData = participantMap.get(conversation.id);
+        const lastReadAt = participantData?.last_read_at || null;
 
         return {
           ...conversation,
           participants: fullParticipants,
           last_message: lastMessage,
           booking_request: bookingRequest,
+          last_read_at: lastReadAt,
+          last_read_timestamp: lastReadAt, // Alias for compatibility
         };
       });
 
       setConversations(conversationsWithDetails);
 
       // Update user conversation IDs ref for filtering
-      const conversationIds = Array.from(conversationMap.keys());
-      userConversationIdsRef.current = new Set(conversationIds);
+      const conversationIdsArray: string[] = Array.from(conversationMap.keys());
+      userConversationIdsRef.current = new Set(conversationIdsArray);
     } catch (err) {
       console.error("Error fetching conversations:", err);
       setError(
@@ -322,44 +351,49 @@ export const useMessaging = () => {
   }, [user]);
 
   // Fetch messages for a specific conversation
-  const fetchMessages = useCallback(async (conversationId: string) => {
-    try {
-      // Update current conversation ID ref
-      currentConversationIdRef.current = conversationId;
-      setActiveConversationId(conversationId);
+  const fetchMessages = useCallback(
+    async (conversationId: string) => {
+      try {
+        // Update current conversation ID ref
+        currentConversationIdRef.current = conversationId;
+        setActiveConversationId(conversationId);
 
-      const { data, error } = await supabase
-        .from("messages")
-        .select(
-          `
+        const { data, error } = await supabase
+          .from("messages")
+          .select(
+            `
           *,
           sender:profiles(*)
         `
-        )
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
+          )
+          .eq("conversation_id", conversationId)
+          .order("created_at", { ascending: true });
 
-      if (error) throw error;
-      setMessages(data || []);
+        if (error) throw error;
+        setMessages(data || []);
 
-      // Mark conversation as read when viewing it
-      if (user?.id) {
-        try {
-          await supabase.rpc("mark_conversation_read", {
-            p_conversation: conversationId,
-          });
-          // Refresh conversations to update unread count
-          void fetchConversations();
-        } catch (readError) {
-          console.error("Error marking conversation as read:", readError);
-          // Don't throw - this is not critical
+        // Mark conversation as read when viewing it
+        if (user?.id) {
+          try {
+            await supabase.rpc("mark_conversation_read", {
+              p_conversation: conversationId,
+            });
+            // Refresh conversations to update unread count
+            void fetchConversations();
+          } catch (readError) {
+            console.error("Error marking conversation as read:", readError);
+            // Don't throw - this is not critical
+          }
         }
+      } catch (err) {
+        console.error("Error fetching messages:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch messages"
+        );
       }
-    } catch (err) {
-      console.error("Error fetching messages:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch messages");
-    }
-  }, [user?.id, fetchConversations]);
+    },
+    [user?.id, fetchConversations]
+  );
 
   // Send a new message
   const sendMessage = useCallback(
