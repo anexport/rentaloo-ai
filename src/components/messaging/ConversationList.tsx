@@ -20,7 +20,7 @@ interface ConversationListProps {
   loading?: boolean
 }
 
-const getInitials = (value?: string | null) => {
+const getFirstCharacter = (value?: string | null) => {
   if (!value) return "?"
   const trimmed = value.trim()
   if (!trimmed) return "?"
