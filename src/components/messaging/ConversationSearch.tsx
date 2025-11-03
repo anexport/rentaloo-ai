@@ -91,7 +91,7 @@ const ConversationSearch = ({
               value={[
                 item.title,
                 item.lastMessage,
-                item.booking?.equipment.title ?? "",
+                item.booking?.equipment?.title ?? "",
                 item.booking?.status ?? "",
               ]
                 .filter(Boolean)
@@ -121,7 +121,9 @@ const ConversationSearch = ({
                   <div className="mt-2 flex items-center gap-2">
                     {item.booking && (
                       <Badge variant="outline" className="text-xs font-medium">
-                        {item.booking.status} · {item.booking.equipment.title}
+                        {[item.booking.status, item.booking.equipment?.title]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </Badge>
                     )}
                   </div>
