@@ -73,7 +73,7 @@ const ConversationList = ({
 
           const otherParticipantName =
             otherParticipant?.email || "Unknown user"
-          const otherParticipantInitials = getInitials(
+          const otherParticipantInitials = getFirstCharacter(
             otherParticipant?.email
           )
           const lastSeenAt =

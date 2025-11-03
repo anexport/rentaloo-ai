@@ -216,18 +216,21 @@ export type Database = {
           conversation_id: string;
           created_at: string | null;
           id: string;
+          last_read_at: string | null;
           profile_id: string;
         };
         Insert: {
           conversation_id: string;
           created_at?: string | null;
           id?: string;
+          last_read_at?: string | null;
           profile_id: string;
         };
         Update: {
           conversation_id?: string;
           created_at?: string | null;
           id?: string;
+          last_read_at?: string | null;
           profile_id?: string;
         };
         Relationships: [
