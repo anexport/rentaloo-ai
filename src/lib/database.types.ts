@@ -733,10 +733,41 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      messaging_conversation_summaries: {
+        Row: {
+          id: string;
+          booking_request_id: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          last_message_id: string | null;
+          last_message_sender_id: string | null;
+          last_message_content: string | null;
+          last_message_type: string | null;
+          last_message_created_at: string | null;
+          participant_id: string;
+          participant_email: string;
+          last_seen_at: string | null;
+          booking_status: Database["public"]["Enums"]["booking_status"] | null;
+          start_date: string | null;
+          end_date: string | null;
+          total_amount: number | null;
+          equipment_title: string | null;
+          unread_count: number;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
-      [_ in never]: never;
+      update_last_seen: {
+        Args: {};
+        Returns: void;
+      };
+      mark_conversation_read: {
+        Args: {
+          p_conversation: string;
+        };
+        Returns: void;
+      };
     };
     Enums: {
       booking_status: "pending" | "approved" | "declined" | "cancelled";

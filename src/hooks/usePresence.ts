@@ -28,10 +28,7 @@ export const usePresence = () => {
     if (!user?.id) return;
 
     try {
-      await supabase
-        .from("profiles")
-        .update({ last_seen_at: new Date().toISOString() })
-        .eq("id", user.id);
+      await supabase.rpc("update_last_seen");
     } catch (error) {
       console.error("Error updating last_seen_at:", error);
     }

@@ -79,9 +79,12 @@ const ConversationList = ({
           const lastSeenAt =
             (otherParticipant as { last_seen_at?: string } | undefined)
               ?.last_seen_at || null
+          // Use unread_count from conversation if available, otherwise fallback to sender check
           const unread =
-            conversation.last_message?.sender_id !== undefined &&
-            conversation.last_message.sender_id !== user?.id
+            conversation.unread_count !== undefined
+              ? conversation.unread_count > 0
+              : conversation.last_message?.sender_id !== undefined &&
+                conversation.last_message.sender_id !== user?.id
 
           return (
             <ConversationListItem

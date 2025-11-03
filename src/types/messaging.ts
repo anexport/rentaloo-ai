@@ -14,6 +14,7 @@ export interface ConversationWithDetails
   booking_request?: Database["public"]["Tables"]["booking_requests"]["Row"] & {
     equipment: Database["public"]["Tables"]["equipment"]["Row"];
   };
+  unread_count?: number;
 }
 
 export interface MessageFormData {
