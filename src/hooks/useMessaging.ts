@@ -85,11 +85,30 @@ export const useMessaging = () => {
     if (!user) return;
 
     try {
-      // Query the view filtered by current user as participant
+      // First, get all conversation IDs where the user is a participant
+      const { data: userConversations, error: convError } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("profile_id", user.id);
+
+      if (convError) throw convError;
+
+      if (!userConversations || userConversations.length === 0) {
+        setConversations([]);
+        userConversationIdsRef.current = new Set();
+        setLoading(false);
+        return;
+      }
+
+      const userConversationIdArray = userConversations.map(
+        (uc) => uc.conversation_id
+      );
+
+      // Fetch all rows from the view for these conversations (includes all participants)
       const { data: summaries, error } = await supabase
         .from("messaging_conversation_summaries")
         .select("*")
-        .eq("participant_id", user.id)
+        .in("id", userConversationIdArray)
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
