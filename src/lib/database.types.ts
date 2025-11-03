@@ -764,6 +764,7 @@ export type Database = {
       };
       mark_conversation_read: {
         Args: {
+          /** UUID of the conversation to mark as read */
           p_conversation: string;
         };
         Returns: void;
