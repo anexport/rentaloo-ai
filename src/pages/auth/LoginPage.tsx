@@ -57,7 +57,7 @@ const LoginPage = () => {
           navigate("/");
         }
       }
-    } catch (error) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);

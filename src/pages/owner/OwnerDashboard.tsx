@@ -5,7 +5,6 @@ import {
   BarChart3,
   Calendar,
   Star,
-  Settings,
   MessageSquare,
   Shield,
 } from "lucide-react";
@@ -17,10 +16,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Database } from "../../lib/database.types";
 import EquipmentManagement from "@/components/EquipmentManagement";
 import BookingRequestCard from "@/components/booking/BookingRequestCard";
 import { useBookingRequests } from "@/hooks/useBookingRequests";
@@ -29,9 +26,10 @@ import ReviewList from "@/components/reviews/ReviewList";
 import EscrowDashboard from "@/components/payment/EscrowDashboard";
 import TransactionHistory from "@/components/payment/TransactionHistory";
 import UserMenu from "@/components/UserMenu";
+import { Link } from "react-router-dom";
 
 const OwnerDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     totalListings: 0,
     pendingRequests: 0,
@@ -115,10 +113,10 @@ const OwnerDashboard = () => {
       <header className="bg-card shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-2 hover:opacity-90">
               <Mountain className="h-8 w-8 text-primary" />
               <h1 className="text-xl font-bold text-foreground">RentAloo</h1>
-            </div>
+            </Link>
             <div className="flex items-center space-x-4">
               <UserMenu />
             </div>

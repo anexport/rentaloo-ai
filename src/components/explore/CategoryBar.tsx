@@ -18,7 +18,6 @@ type Props = {
 
 const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -31,7 +30,6 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
         
         if (error) {
           console.error("Error fetching categories:", error);
-          setError(error.message);
           toast({
             title: "Error loading categories",
             description: "Failed to load categories. Please try again later.",
@@ -42,11 +40,9 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
         }
         
         setCategories(data || []);
-        setError(null);
       } catch (err) {
         console.error("Unexpected error fetching categories:", err);
         const message = err instanceof Error ? err.message : "An unexpected error occurred";
-        setError(message);
         toast({
           title: "Error loading categories",
           description: message,
@@ -115,5 +111,4 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
 };
 
 export default CategoryBar;
-
 

@@ -24,7 +24,6 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { Database } from "../lib/database.types";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const profileSchema = z.object({

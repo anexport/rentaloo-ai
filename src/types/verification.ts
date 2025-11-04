@@ -1,5 +1,3 @@
-import type { Database } from "../lib/database.types";
-
 export type VerificationStatus =
   | "unverified"
   | "pending"

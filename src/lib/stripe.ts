@@ -26,6 +26,9 @@ export const createPaymentIntent = async (
   bookingRequestId: string,
   metadata: Record<string, string>
 ): Promise<{ clientSecret: string; paymentIntentId: string }> => {
+  void amount;
+  void bookingRequestId;
+  void metadata;
   // In production, call your backend API endpoint:
   // const response = await fetch('/api/payments/create-intent', {
   //   method: 'POST',

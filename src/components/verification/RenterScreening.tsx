@@ -10,15 +10,9 @@ import {
 
 interface RenterScreeningProps {
   renterId: string;
-  renterName: string;
-  renterEmail: string;
 }
 
-const RenterScreening = ({
-  renterId,
-  renterName,
-  renterEmail,
-}: RenterScreeningProps) => {
+const RenterScreening = ({ renterId }: RenterScreeningProps) => {
   const { profile, loading } = useVerification({ userId: renterId });
 
   if (loading) {

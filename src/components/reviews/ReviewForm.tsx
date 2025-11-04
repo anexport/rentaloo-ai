@@ -5,7 +5,6 @@ import * as z from "zod";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import type { ReviewFormData } from "../../types/review";
-import { isValidRating, isValidComment } from "../../lib/reviews";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -213,4 +212,3 @@ const ReviewForm = ({
 };
 
 export default ReviewForm;
-

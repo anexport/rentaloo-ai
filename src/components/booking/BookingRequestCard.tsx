@@ -463,8 +463,6 @@ const BookingRequestCard = ({
             </div>
             <RenterScreening
               renterId={bookingRequest.renter_id}
-              renterName={bookingRequest.renter.email}
-              renterEmail={bookingRequest.renter.email}
             />
           </div>
         </div>

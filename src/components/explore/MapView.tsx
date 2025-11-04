@@ -4,10 +4,9 @@ import type { Listing } from "@/features/equipment/services/listings";
 
 type Props = {
   listings: Listing[];
-  onMarkerClick?: (listing: Listing) => void;
 };
 
-const MapView = ({ listings, onMarkerClick }: Props) => {
+const MapView = ({ listings }: Props) => {
   return (
     <Card className="h-full w-full bg-muted flex flex-col items-center justify-center p-8 text-center">
       <MapPin className="h-16 w-16 text-muted-foreground mb-4" />
@@ -23,4 +22,3 @@ const MapView = ({ listings, onMarkerClick }: Props) => {
 };
 
 export default MapView;
-

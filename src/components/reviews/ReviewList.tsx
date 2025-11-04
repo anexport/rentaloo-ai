@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ReviewWithDetails, ReviewFilter } from "../../types/review";
+import type { ReviewFilter } from "../../types/review";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
@@ -145,4 +145,3 @@ const ReviewList = ({
 };
 
 export default ReviewList;
-

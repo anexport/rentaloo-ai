@@ -60,13 +60,21 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-border px-4">
           {!collapsed && (
-            <Link to="/renter/dashboard" className="flex items-center space-x-2">
+            <Link
+              to="/"
+              className="flex items-center space-x-2 rounded-sm hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            >
               <Mountain className="h-6 w-6 text-primary" />
               <span className="text-lg font-bold text-foreground">RentAloo</span>
             </Link>
           )}
           {collapsed && (
-            <Mountain className="h-6 w-6 text-primary mx-auto" />
+            <Link
+              to="/"
+              className="mx-auto flex rounded-sm hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            >
+              <Mountain className="h-6 w-6 text-primary" />
+            </Link>
           )}
         </div>
 
@@ -168,4 +176,3 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 };
 
 export default Sidebar;
-

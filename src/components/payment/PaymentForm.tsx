@@ -63,8 +63,9 @@ const PaymentForm = ({
     },
   });
 
-  const onSubmit = async (_data: z.infer<typeof paymentFormSchema>) => {
+  const onSubmit = async (formData: z.infer<typeof paymentFormSchema>) => {
     setError(null);
+    void formData;
 
     try {
       // In a production environment, this would:
