@@ -58,7 +58,7 @@ unread AS (
   FROM public.conversation_participants cp
     JOIN public.messages m
       ON m.conversation_id = cp.conversation_id
-      AND m.created_at > COALESCE(cp.last_read_at, cp.created_at, m.created_at - INTERVAL '100 years')
+      AND m.created_at > COALESCE(cp.last_read_at, cp.created_at)
       AND m.sender_id <> cp.profile_id
   GROUP BY cp.conversation_id, cp.profile_id
 )

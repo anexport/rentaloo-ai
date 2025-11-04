@@ -6,6 +6,14 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+// Profile summary type used for conversation participants
+export type ProfileSummary = {
+  id: string;
+  email: string | null;
+  last_seen_at: string | null;
+  [key: string]: any;
+};
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -184,21 +192,21 @@ export type Database = {
           booking_request_id: string | null;
           created_at: string | null;
           id: string;
-          participants: string[];
+          participants: ProfileSummary[] | null;
           updated_at: string | null;
         };
         Insert: {
           booking_request_id?: string | null;
           created_at?: string | null;
           id?: string;
-          participants: string[];
+          participants?: string[] | null;
           updated_at?: string | null;
         };
         Update: {
           booking_request_id?: string | null;
           created_at?: string | null;
           id?: string;
-          participants?: string[];
+          participants?: string[] | null;
           updated_at?: string | null;
         };
         Relationships: [

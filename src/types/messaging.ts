@@ -1,4 +1,4 @@
-import type { Database } from "../lib/database.types";
+import type { Database, ProfileSummary } from "../lib/database.types";
 
 export type Message = Database["public"]["Tables"]["messages"]["Row"];
 export type Conversation = Database["public"]["Tables"]["conversations"]["Row"];
@@ -9,7 +9,7 @@ export interface MessageWithSender extends Message {
 
 export interface ConversationWithDetails
   extends Omit<Conversation, "participants"> {
-  participants: Database["public"]["Tables"]["profiles"]["Row"][];
+  participants: ProfileSummary[];
   last_message?: MessageWithSender | null;
   booking_request?: Database["public"]["Tables"]["booking_requests"]["Row"] & {
     equipment: Database["public"]["Tables"]["equipment"]["Row"];

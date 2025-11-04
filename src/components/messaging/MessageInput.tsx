@@ -95,8 +95,20 @@ const MessageInput = ({
       onTyping?.("");
     } catch (error) {
       console.error("Error sending message:", error);
-      setSendError("We couldn’t send your message. Try again in a moment.");
+      setSendError("We couldn't send your message. Try again in a moment.");
     }
+  };
+
+  const syncValueAndSubmit = () => {
+    const value = textareaRef.current?.value || "";
+    setValue("content", value, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+    setTimeout(() => {
+      handleSubmit(onSubmit)();
+    }, 0);
   };
 
   const {
@@ -252,33 +264,13 @@ const MessageInput = ({
                     (event.metaKey || event.ctrlKey)
                   ) {
                     event.preventDefault();
-                    // Sync the current textarea value to form state immediately
-                    const currentValue = textareaRef.current?.value || "";
-                    setValue("content", currentValue, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                      shouldTouch: true,
-                    });
-                    // Use setTimeout to ensure form state updates before validation
-                    setTimeout(() => {
-                      handleSubmit(onSubmit)();
-                    }, 0);
+                    syncValueAndSubmit();
                     return;
                   }
 
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
-                    // Sync the current textarea value to form state immediately
-                    const currentValue = textareaRef.current?.value || "";
-                    setValue("content", currentValue, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                      shouldTouch: true,
-                    });
-                    // Use setTimeout to ensure form state updates before validation
-                    setTimeout(() => {
-                      handleSubmit(onSubmit)();
-                    }, 0);
+                    syncValueAndSubmit();
                   }
                 }}
                 aria-invalid={Boolean(errors.content)}

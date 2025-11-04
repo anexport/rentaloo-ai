@@ -170,11 +170,21 @@ const ConversationList = ({
               typeof window !== "undefined" &&
               window.localStorage
             ) {
-              const storageKey = `conversation_read_${user.id}_${conversation.id}`;
-              const persistedReadState =
-                window.localStorage.getItem(storageKey);
-              if (persistedReadState !== null) {
-                return persistedReadState === "false"; // false means unread
+              try {
+                const storageKey = `conversation_read_${user.id}_${conversation.id}`;
+                const persistedReadState =
+                  window.localStorage.getItem(storageKey);
+                if (persistedReadState !== null) {
+                  return persistedReadState === "false"; // false means unread
+                }
+              } catch (error) {
+                // localStorage access can throw in some browsers/contexts
+                // (e.g., private mode, disabled storage, iframe restrictions)
+                console.warn(
+                  "[ConversationList] localStorage access failed, treating as no persisted state",
+                  { error, conversationId: conversation.id, userId: user?.id }
+                );
+                // Continue to next fallback - do not return a value
               }
             }
 

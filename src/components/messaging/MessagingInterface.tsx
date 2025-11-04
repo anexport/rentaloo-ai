@@ -182,6 +182,15 @@ const MessagingInterface = ({
     }
   };
 
+  // Cleanup timeouts on component unmount
+  useEffect(() => {
+    return () => {
+      // Clear all pending timeouts when component unmounts
+      typingTimeoutRef.current.forEach((timeout) => clearTimeout(timeout));
+      typingTimeoutRef.current.clear();
+    };
+  }, []);
+
   // Set up typing indicator channel
   useEffect(() => {
     if (!selectedConversation || !user) {
