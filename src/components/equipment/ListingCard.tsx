@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { MapPin, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import StarRating from "@/components/reviews/StarRating";
-import type { Listing } from "@/features/equipment/services/listings";
+import type { Listing } from "@/components/equipment/services/listings";
 
 type Props = {
   listing: Listing;

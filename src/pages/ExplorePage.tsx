@@ -14,7 +14,7 @@ import ExploreHeader from "@/components/layout/ExploreHeader";
 import {
   fetchListings,
   type ListingsFilters,
-} from "@/features/equipment/services/listings";
+} from "@/components/equipment/services/listings";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 

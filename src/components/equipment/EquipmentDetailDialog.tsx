@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import StarRating from "@/components/reviews/StarRating";
-import { fetchListingById } from "@/features/equipment/services/listings";
+import { fetchListingById } from "@/components/equipment/services/listings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,7 @@ import { createMaxWidthQuery } from "@/config/breakpoints";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import BookingRequestForm from "@/components/booking/BookingRequestForm";
-import type { Listing } from "@/features/equipment/services/listings";
+import type { Listing } from "@/components/equipment/services/listings";
 
 type EquipmentDetailDialogProps = {
   open: boolean;
