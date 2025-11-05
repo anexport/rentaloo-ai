@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -71,7 +71,8 @@ const BookingRequestForm = ({
     null
   );
   const [conflicts, setConflicts] = useState<BookingConflict[]>([]);
-  const [existingBookings, setExistingBookings] = useState<any[]>([]);
+  const [loadingConflicts, setLoadingConflicts] = useState(false);
+  const requestIdRef = useRef(0);
 
   const {
     register,
@@ -91,27 +92,8 @@ const BookingRequestForm = ({
   const watchedStartDate = watch("start_date");
   const watchedEndDate = watch("end_date");
 
-  // Fetch existing bookings and availability for conflict checking
-  useEffect(() => {
-    const fetchExistingBookings = async () => {
-      const { data, error } = await supabase
-        .from("booking_requests")
-        .select("start_date, end_date, status")
-        .eq("equipment_id", equipment.id)
-        .in("status", ["pending", "approved"]);
-
-      if (error) {
-        console.error("Error fetching existing bookings:", error);
-        return;
-      }
-
-      setExistingBookings(data || []);
-    };
-
-    fetchExistingBookings();
-  }, [equipment.id]);
-
   // Calculate pricing and check conflicts when dates change
+  // Using database function for optimal performance (leverages index)
   useEffect(() => {
     if (watchedStartDate && watchedEndDate) {
       const newCalculation = calculateBookingTotal(
@@ -121,21 +103,47 @@ const BookingRequestForm = ({
       );
       setCalculation(newCalculation);
 
-      const newConflicts = checkBookingConflicts(
-        equipment.id,
-        watchedStartDate,
-        watchedEndDate,
-        existingBookings
-      );
-      setConflicts(newConflicts);
+      // Increment request ID to mark this request as the latest
+      requestIdRef.current += 1;
+      const currentRequestId = requestIdRef.current;
+
+      // Use async database function for conflict checking with proper error handling and race condition protection
+      const checkConflicts = async () => {
+        setLoadingConflicts(true);
+        try {
+          const result = await checkBookingConflicts(
+            equipment.id,
+            watchedStartDate,
+            watchedEndDate
+          );
+
+          // Only apply results if this is still the latest request
+          if (currentRequestId === requestIdRef.current) {
+            setConflicts(result);
+          }
+        } catch (error) {
+          // Only log errors if this is still the latest request
+          if (currentRequestId === requestIdRef.current) {
+            console.error("Error checking booking conflicts:", error);
+            // Optionally set error state or show user-friendly message
+            setConflicts([]);
+          }
+        } finally {
+          // Only update loading state if this is still the latest request
+          if (currentRequestId === requestIdRef.current) {
+            setLoadingConflicts(false);
+          }
+        }
+      };
+
+      checkConflicts();
+
+      // Cleanup: mark request as stale on unmount or dependency change
+      return () => {
+        requestIdRef.current += 1;
+      };
     }
-  }, [
-    watchedStartDate,
-    watchedEndDate,
-    equipment.daily_rate,
-    equipment.id,
-    existingBookings,
-  ]);
+  }, [watchedStartDate, watchedEndDate, equipment.daily_rate, equipment.id]);
 
   const onSubmit = async (data: BookingFormData) => {
     if (!user || conflicts.length > 0) return;
@@ -184,7 +192,11 @@ const BookingRequestForm = ({
             const startDateFormatted = formatBookingDate(data.start_date);
             const endDateFormatted = formatBookingDate(data.end_date);
 
-            let messageContent = `Hi! I've requested to book your "${equipment.title}" from ${startDateFormatted} to ${endDateFormatted} (${duration}, $${calculation.total.toFixed(2)} total).`;
+            let messageContent = `Hi! I've requested to book your "${
+              equipment.title
+            }" from ${startDateFormatted} to ${endDateFormatted} (${duration}, $${calculation.total.toFixed(
+              2
+            )} total).`;
 
             if (data.message && data.message.trim()) {
               messageContent += `\n\n${data.message.trim()}`;
@@ -219,7 +231,7 @@ const BookingRequestForm = ({
   const hasConflicts = conflicts.length > 0;
   const isOwnEquipment = user?.id === equipment.owner_id;
   const canSubmit = Boolean(
-    !hasConflicts && calculation && user && !isOwnEquipment
+    !hasConflicts && !loadingConflicts && calculation && user && !isOwnEquipment
   );
 
   const formContent = (

@@ -86,8 +86,8 @@ const AvailabilityCalendar = ({
     setSelectedDate(date);
     const existing = getAvailabilityForDate(date);
     if (existing) {
-      setCustomPrice(existing.custom_price?.toString() || "");
-      setIsBlocked(existing.is_blocked || false);
+      setCustomPrice(existing.custom_rate?.toString() || "");
+      setIsBlocked(existing.is_available === false);
     } else {
       setCustomPrice("");
       setIsBlocked(false);
@@ -106,8 +106,7 @@ const AvailabilityCalendar = ({
         equipment_id: equipmentId,
         date: dateStr,
         is_available: !isBlocked,
-        is_blocked: isBlocked,
-        custom_price: customPrice ? parseFloat(customPrice) : null,
+        custom_rate: customPrice ? parseFloat(customPrice) : null,
       };
 
       if (existing) {
@@ -219,11 +218,11 @@ const AvailabilityCalendar = ({
       if (isPast) {
         bgColor = "bg-muted/50";
         textColor = "text-muted-foreground";
-      } else if (dateAvailability?.is_blocked) {
+      } else if (dateAvailability?.is_available === false) {
         bgColor = "bg-red-100 dark:bg-red-950";
         textColor = "text-red-700 dark:text-red-300";
         border = "border border-red-300 dark:border-red-700";
-      } else if (dateAvailability?.custom_price) {
+      } else if (dateAvailability?.custom_rate) {
         bgColor = "bg-blue-100 dark:bg-blue-950";
         textColor = "text-blue-700 dark:text-blue-300";
         border = "border border-blue-300 dark:border-blue-700";
@@ -245,11 +244,11 @@ const AvailabilityCalendar = ({
           <div className="font-medium">{day}</div>
           {dateAvailability && (
             <div className="text-xs mt-1">
-              {dateAvailability.is_blocked ? (
+              {dateAvailability.is_available === false ? (
                 <Ban className="h-3 w-3 mx-auto" />
-              ) : dateAvailability.custom_price ? (
+              ) : dateAvailability.custom_rate ? (
                 <span className="font-bold">
-                  ${dateAvailability.custom_price}
+                  ${dateAvailability.custom_rate}
                 </span>
               ) : null}
             </div>
