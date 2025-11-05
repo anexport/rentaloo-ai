@@ -11,6 +11,9 @@ export interface GeolocationPosition {
   lon: number;
 }
 
+// Whitelist of trusted loopback hostnames for development
+const TRUSTED_LOOPBACK_HOSTNAMES = ['localhost', '127.0.0.1', '::1'];
+
 /**
  * Checks if the current context supports geolocation
  * @returns An object with information about geolocation support
@@ -18,13 +21,13 @@ export interface GeolocationPosition {
 export function checkGeolocationSupport() {
   const isSupported = 'geolocation' in navigator;
   const isSecureContext = window.isSecureContext;
-  const isLocalhost = window.location.hostname === 'localhost';
-  const isSecureOrigin = isSecureContext || isLocalhost;
+  const isTrustedLoopback = TRUSTED_LOOPBACK_HOSTNAMES.includes(window.location.hostname);
+  const isSecureOrigin = isSecureContext || isTrustedLoopback;
   
   return {
     isSupported,
     isSecureContext,
-    isLocalhost,
+    isLocalhost: isTrustedLoopback,
     isSecureOrigin,
     protocol: window.location.protocol,
     hostname: window.location.hostname,
@@ -44,10 +47,11 @@ export async function getCurrentPosition(options: GeolocationOptions = {}): Prom
   }
 
   // Check if the context is secure (required for geolocation)
-  if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+  const isTrustedLoopback = TRUSTED_LOOPBACK_HOSTNAMES.includes(window.location.hostname);
+  if (!window.isSecureContext && !isTrustedLoopback) {
     throw { 
       code: 'insecure_origin' as GeolocationErrorCode, 
-      message: 'Geolocation requires a secure context (HTTPS) or localhost' 
+      message: 'Geolocation requires a secure context (HTTPS) or trusted loopback hostname' 
     };
   }
 
