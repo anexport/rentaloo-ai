@@ -23,10 +23,10 @@ export async function suggestLocations(
   query: string,
   opts: NominatimSearchOptions = {}
 ): Promise<Suggestion[]> {
-  const k = key(query, opts.language, opts.countrycodes);
-  const hit = cache.get(k);
-  if (hit && Date.now() - hit.ts < CACHE_TTL_MS) return hit.items;
+  const cached = getCachedSuggestions(query, opts);
+  if (cached) return cached;
 
+  const k = key(query, opts.language, opts.countrycodes);
   const items = await searchNominatim(query, opts);
   cache.set(k, { ts: Date.now(), items });
   return items;

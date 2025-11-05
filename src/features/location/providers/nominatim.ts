@@ -156,7 +156,6 @@ export async function searchNominatim(
   if (email) url.searchParams.set('email', email);
 
   const requestUrl = url.toString();
-  console.log(`[Nominatim] Searching for: "${q}"`, { url: requestUrl });
   
   try {
     const res = await fetch(requestUrl, { 
@@ -186,10 +185,7 @@ export async function searchNominatim(
       throw new Error(errorMessage);
     }
 
-    console.log(`[Nominatim] Response for "${q}": ${payload.length} items`, payload);
-    
     if (payload.length === 0) {
-      console.log(`[Nominatim] No results found for "${q}"`);
       return [];
     }
 
@@ -200,7 +196,6 @@ export async function searchNominatim(
       lon: Number(it.lon),
     }));
     
-    console.log(`[Nominatim] Mapped results for "${q}":`, mapped);
     return mapped;
   } catch (error: any) {
     if (error?.name === 'AbortError') {
