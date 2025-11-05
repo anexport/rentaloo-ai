@@ -122,11 +122,17 @@ const BookingRequestForm = ({
             setConflicts(result);
           }
         } catch (error) {
-          // Only log errors if this is still the latest request
+          // Only apply error handling if this is still the latest request
           if (currentRequestId === requestIdRef.current) {
             console.error("Error checking booking conflicts:", error);
-            // Optionally set error state or show user-friendly message
-            setConflicts([]);
+            // Set persistent fallback conflict to prevent submission
+            // This prevents the form from being submittable when availability check fails
+            setConflicts([
+              {
+                type: "unavailable",
+                message: "Could not verify availability — please try again",
+              },
+            ]);
           }
         } finally {
           // Only update loading state if this is still the latest request

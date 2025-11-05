@@ -1,5 +1,19 @@
 export type GeolocationErrorCode = 'denied' | 'timeout' | 'unavailable' | 'unsupported' | 'insecure_origin';
 
+export class GeolocationError extends Error {
+  readonly code: GeolocationErrorCode;
+
+  constructor(code: GeolocationErrorCode, message: string) {
+    super(message);
+    this.name = 'GeolocationError';
+    this.code = code;
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, GeolocationError);
+    }
+  }
+}
+
 export interface GeolocationOptions {
   enableHighAccuracy?: boolean;
   timeoutMs?: number;
@@ -43,16 +57,13 @@ export async function getCurrentPosition(options: GeolocationOptions = {}): Prom
 
   // Check if geolocation is supported
   if (!('geolocation' in navigator)) {
-    throw { code: 'unsupported' as GeolocationErrorCode, message: 'Geolocation is not supported by your browser' };
+    throw new GeolocationError('unsupported', 'Geolocation is not supported by your browser');
   }
 
   // Check if the context is secure (required for geolocation)
   const isTrustedLoopback = TRUSTED_LOOPBACK_HOSTNAMES.includes(window.location.hostname);
   if (!window.isSecureContext && !isTrustedLoopback) {
-    throw { 
-      code: 'insecure_origin' as GeolocationErrorCode, 
-      message: 'Geolocation requires a secure context (HTTPS) or trusted loopback hostname' 
-    };
+    throw new GeolocationError('insecure_origin', 'Geolocation requires a secure context (HTTPS) or trusted loopback hostname');
   }
 
   // Always attempt the geolocation request - the browser will:
@@ -91,7 +102,7 @@ export async function getCurrentPosition(options: GeolocationOptions = {}): Prom
             break;
         }
 
-        reject({ code: errorCode, message });
+        reject(new GeolocationError(errorCode, message));
       },
       {
         enableHighAccuracy,

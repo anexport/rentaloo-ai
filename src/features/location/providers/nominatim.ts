@@ -43,11 +43,14 @@ export async function reverseGeocodeNominatim(
     url.searchParams.set("addressdetails", "1");
     url.searchParams.set("accept-language", language);
 
+    // Add email contact info via query parameter (browsers cannot set User-Agent header)
+    const email = import.meta.env.VITE_NOMINATIM_EMAIL;
+    if (email) {
+      url.searchParams.set("email", email);
+    }
+
     const response = await fetch(url.toString(), {
       signal,
-      headers: {
-        "User-Agent": "rentaloo-ai/0.0.0",
-      },
     });
 
     if (!response.ok) {

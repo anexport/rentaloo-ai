@@ -5,10 +5,12 @@
 
 -- Update function to handle booking cancellation/decline with proper availability recomputation
 CREATE OR REPLACE FUNCTION handle_booking_cancellation()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
   -- Only process if status changed from 'approved' to 'declined' or 'cancelled'
-  IF (NEW.status = 'declined' OR NEW.status = 'cancelled') 
+  IF (NEW.status = 'declined' OR NEW.status = 'cancelled')  
      AND OLD.status = 'approved' THEN
     
     -- Mark dates as available again in availability_calendar

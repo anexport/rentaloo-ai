@@ -43,23 +43,17 @@ END $$;
 -- 4. Create function to handle booking completion
 CREATE OR REPLACE FUNCTION handle_booking_completion()
 RETURNS TRIGGER AS $$
-DECLARE
-  booking_date DATE;
 BEGIN
   -- Mark dates as available again when booking is completed
   -- Use text comparison since enum value might not be committed yet
   IF NEW.status::text = 'completed' AND (OLD.status IS NULL OR OLD.status::text != 'completed') THEN
-    booking_date := OLD.start_date;
-    
-    WHILE booking_date <= OLD.end_date LOOP
-      -- Update availability calendar entry to available
-      UPDATE availability_calendar
-      SET is_available = true
-      WHERE equipment_id = OLD.equipment_id
-        AND date = booking_date;
-      
-      booking_date := booking_date + INTERVAL '1 day';
-    END LOOP;
+    -- Update availability calendar entries using set-based operation
+    -- Join with generate_series to update all dates in the range at once
+    UPDATE availability_calendar
+    SET is_available = true
+    FROM generate_series(OLD.start_date, OLD.end_date, '1 day'::interval) AS date_series
+    WHERE availability_calendar.equipment_id = OLD.equipment_id
+      AND availability_calendar.date = date_series::date;
   END IF;
   
   RETURN NEW;
@@ -103,7 +97,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Grant necessary permissions
-GRANT EXECUTE ON FUNCTION handle_booking_completion() TO authenticated;
+-- Security: handle_booking_completion() is trigger-only and should not be directly executable by users
+-- It runs as SECURITY DEFINER within the trigger context, executed by the database system
+-- Only the database trigger (trigger_booking_completion) should invoke this function
+REVOKE EXECUTE ON FUNCTION handle_booking_completion() FROM authenticated;
+
+-- Grant necessary permissions for functions that are meant to be called directly
 GRANT EXECUTE ON FUNCTION check_booking_conflicts(UUID, DATE, DATE, UUID) TO authenticated;
 
