@@ -8,6 +8,23 @@ export interface NominatimResult {
   label: string;
 }
 
+export interface NominatimSearchItem {
+  place_id: string | number;
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
+export interface NominatimSearchOptions {
+  signal?: AbortSignal;
+  language?: string;
+  baseUrl?: string;
+  limit?: number;           // default 5
+  countrycodes?: string;    // optional bias, e.g., "us,gb"
+  viewbox?: string;         // optional bias: "left,top,right,bottom"
+  bounded?: '1' | '0';
+}
+
 export interface NominatimAddress {
   city?: string;
   town?: string;
@@ -106,5 +123,90 @@ export async function reverseGeocodeNominatim(
       lon,
     });
     return null;
+  }
+}
+
+export async function searchNominatim(
+  query: string,
+  opts: NominatimSearchOptions = {}
+): Promise<Array<{ id: string; label: string; lat: number; lon: number }>> {
+  const q = query.trim();
+  if (!q) return [];
+
+  const {
+    signal,
+    language = 'en',
+    baseUrl = import.meta.env.VITE_NOMINATIM_BASE || 'https://nominatim.openstreetmap.org',
+    limit = 5,
+    countrycodes,
+    viewbox,
+    bounded,
+  } = opts;
+
+  const url = new URL(`${baseUrl}/search`);
+  url.searchParams.set('format', 'jsonv2');
+  url.searchParams.set('q', q);
+  url.searchParams.set('addressdetails', '1');
+  url.searchParams.set('limit', String(limit));
+  url.searchParams.set('accept-language', language);
+  if (countrycodes) url.searchParams.set('countrycodes', countrycodes);
+  if (viewbox) url.searchParams.set('viewbox', viewbox);
+  if (bounded) url.searchParams.set('bounded', bounded);
+  const email = import.meta.env.VITE_NOMINATIM_EMAIL;
+  if (email) url.searchParams.set('email', email);
+
+  const requestUrl = url.toString();
+  
+  try {
+    const res = await fetch(requestUrl, { 
+      signal,
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => '');
+      console.error('Nominatim search failed', { 
+        status: res.status, 
+        statusText: res.statusText,
+        url: requestUrl,
+        response: errorText
+      });
+      throw new Error(`Nominatim search failed with status ${res.status}: ${res.statusText}`);
+    }
+
+    type Payload = NominatimSearchItem[] | { error?: string; message?: string };
+    const payload = (await res.json()) as Payload;
+    
+    if (!Array.isArray(payload)) {
+      const errorMessage = payload?.error || payload?.message || 'Unexpected Nominatim response';
+      console.error('Nominatim search returned error payload', { url: requestUrl, error: errorMessage, payload });
+      throw new Error(errorMessage);
+    }
+
+    if (payload.length === 0) {
+      return [];
+    }
+
+    const mapped = payload.map((it) => ({
+      id: String(it.place_id),
+      label: it.display_name,
+      lat: Number(it.lat),
+      lon: Number(it.lon),
+    }));
+    
+    return mapped;
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      throw error;
+    }
+    console.error('Nominatim search request failed', { 
+      url: requestUrl, 
+      query: q,
+      error: error?.message || error,
+      errorName: error?.name
+    });
+    throw error;
   }
 }
