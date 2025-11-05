@@ -432,10 +432,6 @@ CREATE POLICY "users can read last_seen_at in conversations" ON profiles
         )
     );
 
--- Note: "Users can view profiles of conversation participants" policy uses USING (true)
--- so it doesn't need auth.uid() optimization, but it's kept for completeness
--- This policy is intentionally separate for logical clarity
-
 -- Booking history policies
 DROP POLICY IF EXISTS "Users can view their own booking history" ON booking_history;
 CREATE POLICY "Users can view their own booking history" ON booking_history
