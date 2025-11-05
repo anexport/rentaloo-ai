@@ -293,11 +293,15 @@ const MessageInput = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    type="submit"
+                    type="button"
                     size="sm"
                     className="gap-2 px-4"
                     disabled={disabled || isSubmitting}
                     aria-label="Send message"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      syncValueAndSubmit();
+                    }}
                   >
                     {isSubmitting ? (
                       <>

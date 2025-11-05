@@ -48,7 +48,80 @@ export const calculateBookingTotal = (
   };
 };
 
-export const checkBookingConflicts = (
+/**
+ * Check for booking conflicts using database function for optimal performance
+ * This leverages the idx_booking_requests_conflict_check index
+ */
+export const checkBookingConflicts = async (
+  equipmentId: string,
+  startDate: string,
+  endDate: string,
+  excludeBookingId?: string
+): Promise<BookingConflict[]> => {
+  const conflicts: BookingConflict[] = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const days = Math.ceil(
+    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  // Check minimum rental period (1 day)
+  if (days < 1) {
+    conflicts.push({
+      type: "minimum_days",
+      message: "Minimum rental period is 1 day",
+    });
+  }
+
+  // Check maximum rental period (30 days)
+  if (days > 30) {
+    conflicts.push({
+      type: "maximum_days",
+      message: "Maximum rental period is 30 days",
+    });
+  }
+
+  // Use database function for conflict checking (leverages index)
+  // RPC returns true when dates are available (no conflicts), false when conflicts exist
+  const { supabase } = await import("./supabase");
+  const { data: isAvailable, error } = await supabase.rpc(
+    "check_booking_conflicts",
+    {
+      p_equipment_id: equipmentId,
+      p_start_date: startDate,
+      p_end_date: endDate,
+      p_exclude_booking_id: excludeBookingId || null,
+    }
+  );
+
+  if (error) {
+    console.error("Error checking booking conflicts:", error);
+    // Fallback: return conflict to be safe
+    return [
+      ...conflicts,
+      {
+        type: "overlap",
+        message: "Unable to verify availability. Please try again.",
+      },
+    ];
+  }
+
+  // If dates are not available (conflicts exist), add overlap conflict
+  if (!isAvailable) {
+    conflicts.push({
+      type: "overlap",
+      message: "Selected dates overlap with existing bookings",
+    });
+  }
+
+  return conflicts;
+};
+
+/**
+ * Legacy synchronous version for backward compatibility
+ * @deprecated Use the async version instead for better performance
+ */
+export const checkBookingConflictsSync = (
   equipmentId: string,
   startDate: string,
   endDate: string,

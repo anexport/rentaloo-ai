@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchListingById } from "@/features/equipment/services/listings";
+import { fetchListingById } from "@/components/equipment/services/listings";
 import { Separator } from "@/components/ui/separator";
 import { MapPin } from "lucide-react";
 import StarRating from "@/components/reviews/StarRating";
@@ -34,7 +34,8 @@ const EquipmentDetailPage = () => {
     // Optional: log for debugging
     // Using console.error to avoid crashing UI
     console.error("Failed to load equipment details:", error);
-    const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+    const message =
+      error instanceof Error ? error.message : "An unexpected error occurred.";
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-muted-foreground">
@@ -90,7 +91,9 @@ const EquipmentDetailPage = () => {
               <img
                 key={p.id}
                 src={p.photo_url}
-                alt={p.alt || p.description || `${data.title} - photo ${idx + 2}`}
+                alt={
+                  p.alt || p.description || `${data.title} - photo ${idx + 2}`
+                }
                 className="w-full h-64 object-cover rounded-md"
               />
             ))}

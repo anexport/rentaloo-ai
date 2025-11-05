@@ -28,6 +28,7 @@ import {
   MapPin,
   Search,
   Package,
+  Crosshair,
 } from "lucide-react";
 import { format, startOfDay, addDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
@@ -35,6 +36,14 @@ import type { SearchBarFilters } from "@/types/search";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 import { createMinWidthQuery } from "@/config/breakpoints";
+import { useToast } from "@/hooks/useToast";
+import { reverseGeocode } from "@/features/location/geocoding";
+import {
+  getCurrentPosition,
+  checkGeolocationSupport,
+  type GeolocationErrorCode
+} from "@/features/location/useGeolocation";
+import { ToastAction } from "@/components/ui/toast";
 
 type Props = {
   value: SearchBarFilters;
@@ -80,6 +89,8 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionKey>("where");
   const [isSelectingDates, setIsSelectingDates] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const { toast } = useToast();
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -206,6 +217,90 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     }
   };
 
+  const handleUseCurrentLocation = async () => {
+    if (isLocating) return;
+
+    setIsLocating(true);
+
+    try {
+      const { lat, lon } = await getCurrentPosition();
+      const controller = new AbortController();
+      const label = await reverseGeocode(lat, lon, {
+        signal: controller.signal,
+        language: navigator.language || "en",
+      });
+      const place = label ?? "Near you";
+
+      // Use existing location flow
+      handleLocationSelect(place);
+
+      toast({
+        title: "Location set",
+        description: "Using your current location.",
+      });
+    } catch (error) {
+      const errorCode = (error as any)?.code as GeolocationErrorCode;
+      const errorMessage = (error as any)?.message;
+
+      switch (errorCode) {
+        case "denied":
+          toast({
+            title: "Location permission denied",
+            description: errorMessage || "You've previously denied location access. Click the location icon (📍) in your browser's address bar to allow access, then try again.",
+            variant: "destructive",
+            action: (
+              <ToastAction
+                altText="Try again"
+                onClick={() => handleUseCurrentLocation()}
+              >
+                Try Again
+              </ToastAction>
+            ),
+          });
+          break;
+        case "timeout":
+          toast({
+            title: "Location timeout",
+            description: errorMessage || "Couldn't get your location. Check signal and try again.",
+            variant: "destructive",
+            action: (
+              <ToastAction
+                altText="Try again"
+                onClick={() => handleUseCurrentLocation()}
+              >
+                Try Again
+              </ToastAction>
+            ),
+          });
+          break;
+        case "insecure_origin": {
+          const geoSupport = checkGeolocationSupport();
+          toast({
+            title: "Location unavailable",
+            description: `Location requires HTTPS or localhost. Current: ${geoSupport.protocol}//${geoSupport.hostname}`,
+            variant: "destructive",
+          });
+          break;
+        }
+        case "unavailable":
+          toast({
+            title: "Location unavailable",
+            description: errorMessage || "Location isn't available right now. Try entering a city.",
+            variant: "destructive",
+          });
+          break;
+        default:
+          toast({
+            title: "Location error",
+            description: errorMessage || "Something went wrong. Try entering a city manually.",
+            variant: "destructive",
+          });
+      }
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
   const getSearchSummary = () => {
     const parts: string[] = [];
     if (value.location) parts.push(value.location);
@@ -307,6 +402,19 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                       Search cities or choose a popular destination.
                     </p>
                   </div>
+                  <Button
+                    variant="secondary"
+                    className="w-full justify-start"
+                    onClick={handleUseCurrentLocation}
+                    disabled={isLocating}
+                    aria-label="Use current location"
+                    aria-busy={isLocating}
+                  >
+                    <Crosshair className="mr-2 h-4 w-4" />
+                    {isLocating
+                      ? "Detecting your location..."
+                      : "Use current location"}
+                  </Button>
                   <Command className="rounded-2xl border">
                     <CommandInput placeholder="Try Yosemite National Park" />
                     <CommandList>
@@ -524,6 +632,21 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0" align="start">
+            <div className="p-3 border-b">
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-9"
+                onClick={handleUseCurrentLocation}
+                disabled={isLocating}
+                aria-label="Use current location"
+                aria-busy={isLocating}
+              >
+                <Crosshair className="mr-2 h-4 w-4" />
+                {isLocating
+                  ? "Detecting your location..."
+                  : "Use current location"}
+              </Button>
+            </div>
             <Command>
               <CommandInput placeholder="Search locations..." />
               <CommandList>
