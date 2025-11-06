@@ -107,7 +107,11 @@ const UserMenu = () => {
             {displayName}
           </p>
           <p className="text-xs text-gray-500 truncate mt-0.5">
-            {userRole === "owner" ? "Equipment Owner" : "Renter"}
+            {userRole == null
+              ? "Loading..."
+              : userRole === "owner"
+                ? "Equipment Owner"
+                : "Renter"}
           </p>
         </div>
 

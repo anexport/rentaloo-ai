@@ -493,7 +493,7 @@ const BookingRequestCard = ({
       {/* Payment Modal */}
       {showPayment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6">
+          <div className="bg-background rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border shadow-lg">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Complete Payment</h2>
               <Button
@@ -522,7 +522,7 @@ const BookingRequestCard = ({
       {/* Renter Screening Modal */}
       {showRenterScreening && isOwner && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
+          <div className="bg-background rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border shadow-lg">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">
                 Renter Verification Profile

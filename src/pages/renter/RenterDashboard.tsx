@@ -77,36 +77,36 @@ const RenterDashboard = () => {
 
       try {
         const { count, error: countError } = await supabase
-          .from("equipment")
-          .select("*", { count: "exact", head: true })
-          .eq("owner_id", user.id);
+        .from("equipment")
+        .select("*", { count: "exact", head: true })
+        .eq("owner_id", user.id);
 
         if (countError) throw countError;
 
-        setHasEquipment((count || 0) > 0);
+      setHasEquipment((count || 0) > 0);
 
-        // If they have equipment, check for pending requests
-        if (count && count > 0) {
+      // If they have equipment, check for pending requests
+      if (count && count > 0) {
           const { data: equipment, error: equipmentError } = await supabase
-            .from("equipment")
-            .select("id")
-            .eq("owner_id", user.id);
+          .from("equipment")
+          .select("id")
+          .eq("owner_id", user.id);
 
           if (equipmentError) throw equipmentError;
 
-          if (equipment && equipment.length > 0) {
-            const equipmentIds = equipment.map((eq) => eq.id);
+        if (equipment && equipment.length > 0) {
+          const equipmentIds = equipment.map((eq) => eq.id);
 
             const { count: pendingCount, error: pendingError } = await supabase
-              .from("booking_requests")
-              .select("*", { count: "exact", head: true })
-              .in("equipment_id", equipmentIds)
-              .eq("status", "pending");
+            .from("booking_requests")
+            .select("*", { count: "exact", head: true })
+            .in("equipment_id", equipmentIds)
+            .eq("status", "pending");
 
             if (pendingError) throw pendingError;
 
-            setPendingOwnerRequests(pendingCount || 0);
-          }
+          setPendingOwnerRequests(pendingCount || 0);
+        }
         }
       } catch (err) {
         console.error("Failed to check equipment:", err);

@@ -56,14 +56,16 @@ export const usePresence = () => {
     if (!user?.id) {
       // Cleanup if user logs out
       if (channelRef.current) {
+        const capturedChannel = channelRef.current;
+        channelRef.current = null;
         void (async () => {
           try {
-            await channelRef.current!.untrack();
+            await capturedChannel.untrack();
           } catch (error) {
             console.error("Error untracking presence:", error);
+          } finally {
+            supabase.removeChannel(capturedChannel);
           }
-          supabase.removeChannel(channelRef.current!);
-          channelRef.current = null;
         })();
       }
       if (heartbeatIntervalRef.current) {
@@ -165,7 +167,7 @@ export const usePresence = () => {
     });
 
     // Handle page visibility changes
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (document.hidden) {
         // Page is hidden, stop tracking
         if (heartbeatIntervalRef.current) {
@@ -173,7 +175,11 @@ export const usePresence = () => {
           heartbeatIntervalRef.current = null;
         }
         if (channelRef.current) {
-          void channelRef.current.untrack();
+          try {
+            await channelRef.current.untrack();
+          } catch (error) {
+            console.error("Error untracking presence on visibility change:", error);
+          }
         }
       } else {
         // Page is visible again, resume tracking
@@ -202,14 +208,16 @@ export const usePresence = () => {
       }
 
       if (channelRef.current) {
+        const capturedChannel = channelRef.current;
+        channelRef.current = null;
         void (async () => {
           try {
-            await channelRef.current!.untrack();
+            await capturedChannel.untrack();
           } catch (error) {
             console.error("Error untracking presence:", error);
+          } finally {
+            supabase.removeChannel(capturedChannel);
           }
-          supabase.removeChannel(channelRef.current!);
-          channelRef.current = null;
         })();
       }
     };

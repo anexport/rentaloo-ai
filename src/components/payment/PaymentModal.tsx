@@ -56,21 +56,21 @@ const PaymentModal = ({
 
       {/* Modal Content */}
       <div
-        className={`relative bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto ${
+        className={`relative bg-background rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto border border-border ${
           isClosing ? "animate-slideDown" : "animate-slideUp"
         }`}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <div>
             <h2 id="payment-modal-title" className="text-2xl font-bold">
               Complete Payment
             </h2>
-            <p className="text-sm text-gray-600 mt-1">{equipmentTitle}</p>
+            <p className="text-sm text-muted-foreground mt-1">{equipmentTitle}</p>
           </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Close payment modal"
           >
             <X className="h-6 w-6" />

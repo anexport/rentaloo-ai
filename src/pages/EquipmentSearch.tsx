@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Mountain,
   Search,
@@ -108,7 +108,14 @@ const EquipmentSearch = () => {
   const [selectedCondition, setSelectedCondition] = useState<string>("all");
   const [locationSearch, setLocationSearch] = useState("");
 
+  // Track current invocation ID to prevent stale responses from overwriting state
+  const currentInvocationIdRef = useRef(0);
+
   const loadData = useCallback(async () => {
+    // Increment and capture the current invocation ID
+    currentInvocationIdRef.current += 1;
+    const invocationId = currentInvocationIdRef.current;
+
     setLoading(true);
     setError(null);
     try {
@@ -116,20 +123,36 @@ const EquipmentSearch = () => {
         fetchEquipment(),
         fetchCategories(),
       ]);
-      setEquipment(equipmentData);
-      setCategories(categoriesData);
+
+      // Only update state if this is still the latest invocation
+      if (invocationId === currentInvocationIdRef.current) {
+        setEquipment(equipmentData);
+        setCategories(categoriesData);
+      }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load equipment";
-      setError(errorMessage);
-      console.error("Error loading data:", err);
+      // Only update state if this is still the latest invocation
+      if (invocationId === currentInvocationIdRef.current) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load equipment";
+        setError(errorMessage);
+        console.error("Error loading data:", err);
+      }
     } finally {
-      setLoading(false);
+      // Only update loading state if this is still the latest invocation
+      if (invocationId === currentInvocationIdRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     void loadData();
+
+    // Cleanup: invalidate the current invocation ID on unmount
+    // This prevents late responses from mutating state after unmount
+    return () => {
+      currentInvocationIdRef.current += 1;
+    };
   }, [loadData]);
 
   const filteredEquipment = equipment.filter((item) => {

@@ -53,12 +53,17 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
         .select("rating")
         .eq("reviewee_id", targetUserId);
 
-      // Fetch completed bookings count
-      // Note: bookings table doesn't have a 'status' column, it has 'return_status'
+      // Fetch completed bookings count for the target user
+      // User can be either renter or owner, so we need to check both relationships
+      // Query from booking_requests and join to bookings to filter by return_status
       const { count: bookingsCount } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .eq("return_status", "completed");
+        .from("booking_requests")
+        .select(
+          "id, bookings!inner(return_status), equipment:equipment!inner(owner_id)",
+          { count: "exact", head: true }
+        )
+        .eq("bookings.return_status", "completed")
+        .or(`renter_id.eq.${targetUserId},equipment.owner_id.eq.${targetUserId}`);
 
       // Calculate trust score
       const accountAgeDays = calculateAccountAge(profileData.created_at);

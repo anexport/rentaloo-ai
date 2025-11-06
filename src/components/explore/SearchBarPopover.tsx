@@ -317,16 +317,17 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         | GeolocationPositionError
         | { code?: number | GeolocationErrorCode; message?: string };
       const rawCode = geolocationError?.code;
-      const errorCode: GeolocationErrorCode | undefined =
-        typeof rawCode === "string"
-          ? rawCode
-          : rawCode === 1
-            ? "denied"
-            : rawCode === 2
-              ? "timeout"
-              : rawCode === 3
-                ? "unavailable"
-                : undefined;
+      let errorCode: GeolocationErrorCode | undefined;
+      if (typeof rawCode === "string") {
+        errorCode = rawCode;
+      } else if (typeof rawCode === "number") {
+        const codeMap: Record<number, GeolocationErrorCode> = {
+          1: "denied",
+          2: "timeout",
+          3: "unavailable",
+        };
+        errorCode = codeMap[rawCode];
+      }
       const errorMessage = geolocationError?.message;
 
       switch (errorCode) {

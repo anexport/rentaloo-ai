@@ -25,7 +25,7 @@ type PaymentWithRelations = Database["public"]["Tables"]["payments"]["Row"] & {
 const PaymentConfirmation = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [payment, setPayment] = useState<PaymentWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +36,17 @@ const PaymentConfirmation = () => {
 
   useEffect(() => {
     const fetchPaymentDetails = async () => {
+      // Wait for auth to finish loading
+      if (authLoading) {
+        return;
+      }
+
+      // Early authentication check - avoid unnecessary queries
+      if (!user) {
+        void navigate("/");
+        return;
+      }
+
       if (!paymentId && !paymentIntentId) {
         void navigate("/");
         return;
@@ -127,7 +138,7 @@ const PaymentConfirmation = () => {
     };
 
     void fetchPaymentDetails();
-  }, [paymentId, paymentIntentId, navigate, user]);
+  }, [paymentId, paymentIntentId, navigate, user, authLoading]);
 
   if (loading) {
     return (

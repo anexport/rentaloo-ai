@@ -1,10 +1,11 @@
 import React, { createContext, useEffect, useState } from "react";
-import type { User, Session, AuthError } from "@supabase/supabase-js";
+import type { User, Session, AuthError, PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 type UserMetadata = { role: "renter" | "owner" } & Record<string, unknown>;
+type UpdateProfileError = AuthError | PostgrestError;
 
 interface AuthContextType {
   user: User | null;
@@ -22,7 +23,7 @@ interface AuthContextType {
   signOut: () => Promise<{ error: AuthError | null }>;
   updateProfile: (
     updates: ProfileUpdate
-  ) => Promise<{ error: AuthError | null }>;
+  ) => Promise<{ error: UpdateProfileError | null }>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -138,7 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           message: "User not authenticated",
           name: "AuthError",
           status: 401,
-        } as AuthError,
+        },
       };
     }
     try {
@@ -146,9 +147,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .from("profiles")
         .update(updates)
         .eq("id", user.id);
-      return { error: error as AuthError | null };
+      if (error) {
+        return { error };
+      }
+      return { error: null };
     } catch (error) {
-      return { error: error as AuthError };
+      return {
+        error: {
+          message: (error as Error).message,
+          name: "AuthError",
+          status: 500,
+        },
+      };
     }
   };
 
