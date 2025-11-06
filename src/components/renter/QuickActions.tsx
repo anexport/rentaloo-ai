@@ -1,14 +1,22 @@
 import { Link } from "react-router-dom";
 import { Search, MessageSquare, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
 import { supabase } from "@/lib/supabase";
 
 const QuickActions = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [upcomingBookings, setUpcomingBookings] = useState(0);
 
@@ -16,29 +24,72 @@ const QuickActions = () => {
     const fetchCounts = async () => {
       if (!user) return;
 
-      // Fetch unread messages count (simplified - you may need to adjust based on your messaging schema)
-      const { count: messagesCount } = await supabase
-        .from("messages")
-        .select("*", { count: "exact", head: true })
-        .eq("receiver_id", user.id)
-        .eq("read", false);
+      // Prepare both fetch promises
+      const messagesPromise = supabase.rpc("get_unread_messages_count");
 
-      setUnreadMessages(messagesCount || 0);
-
-      // Fetch upcoming bookings (approved bookings with future start dates)
       const today = new Date().toISOString().split("T")[0];
-      const { count: bookingsCount } = await supabase
+      const bookingsPromise = supabase
         .from("booking_requests")
         .select("*", { count: "exact", head: true })
         .eq("renter_id", user.id)
         .eq("status", "approved")
         .gte("start_date", today);
 
-      setUpcomingBookings(bookingsCount || 0);
+      // Run both fetches in parallel
+      const results = await Promise.allSettled([
+        messagesPromise,
+        bookingsPromise,
+      ]);
+
+      // Handle messages result independently
+      const messagesResult = results[0];
+      if (messagesResult.status === "fulfilled") {
+        const { data: messagesCount, error: messagesError } = messagesResult.value;
+        if (messagesError) {
+          console.error("Failed to fetch messages count:", messagesError);
+          toast({
+            title: "Failed to load messages count",
+            description: "Unable to fetch unread messages. Please try again later.",
+            variant: "destructive",
+          });
+        } else {
+          setUnreadMessages(messagesCount || 0);
+        }
+      } else {
+        console.error("Messages fetch rejected:", messagesResult.reason);
+        toast({
+          title: "Failed to load messages count",
+          description: "Unable to fetch unread messages. Please try again later.",
+          variant: "destructive",
+        });
+      }
+
+      // Handle bookings result independently
+      const bookingsResult = results[1];
+      if (bookingsResult.status === "fulfilled") {
+        const { count: bookingsCount, error: bookingsError } = bookingsResult.value;
+        if (bookingsError) {
+          console.error("Failed to fetch bookings count:", bookingsError);
+          toast({
+            title: "Failed to load bookings count",
+            description: "Unable to fetch upcoming bookings. Please try again later.",
+            variant: "destructive",
+          });
+        } else {
+          setUpcomingBookings(bookingsCount || 0);
+        }
+      } else {
+        console.error("Bookings fetch rejected:", bookingsResult.reason);
+        toast({
+          title: "Failed to load bookings count",
+          description: "Unable to fetch upcoming bookings. Please try again later.",
+          variant: "destructive",
+        });
+      }
     };
 
-    fetchCounts();
-  }, [user]);
+    void fetchCounts();
+  }, [user, toast]);
 
   const actions = [
     {
@@ -72,7 +123,10 @@ const QuickActions = () => {
       {actions.map((action) => {
         const Icon = action.icon;
         return (
-          <Card key={action.title} className="hover:shadow-md transition-shadow">
+          <Card
+            key={action.title}
+            className="hover:shadow-md transition-shadow"
+          >
             <CardHeader>
               <div className="flex items-center justify-between mb-2">
                 <Icon className="h-6 w-6 text-primary" />
@@ -102,4 +156,3 @@ const QuickActions = () => {
 };
 
 export default QuickActions;
-

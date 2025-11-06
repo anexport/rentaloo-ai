@@ -49,6 +49,8 @@ const interestOptions = [
   "Running",
 ];
 
+const experienceLevels = ["beginner", "intermediate", "advanced"] as const;
+
 const RenterRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -91,13 +93,13 @@ const RenterRegistration = () => {
         location: data.location,
         interests: data.interests,
         experienceLevel: data.experienceLevel,
-      } as any);
+      });
 
       if (error) {
         console.error("Registration error:", error.message);
         // Handle error (show toast notification)
       } else {
-        navigate("/renter/dashboard");
+        void navigate("/renter/dashboard");
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -131,7 +133,12 @@ const RenterRegistration = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                void handleSubmit(onSubmit)(e);
+              }}
+              className="space-y-4"
+            >
               {/* Full Name */}
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
@@ -229,7 +236,7 @@ const RenterRegistration = () => {
               <div className="space-y-2">
                 <Label>Experience Level</Label>
                 <div className="grid grid-cols-3 gap-2">
-                  {["beginner", "intermediate", "advanced"].map((level) => (
+                  {experienceLevels.map((level) => (
                     <Button
                       key={level}
                       type="button"
@@ -239,7 +246,7 @@ const RenterRegistration = () => {
                           : "outline"
                       }
                       size="sm"
-                      onClick={() => setValue("experienceLevel", level as any)}
+                      onClick={() => setValue("experienceLevel", level)}
                       className="capitalize"
                     >
                       {level}

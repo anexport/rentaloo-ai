@@ -80,7 +80,7 @@ export const useReviews = (options: UseReviewsOptions = {}) => {
   }, [options.revieweeId, options.reviewerId, options.bookingId]);
 
   useEffect(() => {
-    fetchReviews();
+    void fetchReviews();
   }, [fetchReviews]);
 
   const submitReview = useCallback(

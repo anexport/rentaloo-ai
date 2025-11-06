@@ -146,7 +146,7 @@ const EquipmentListingForm = ({
       setCategories(data || []);
     };
 
-    fetchCategories();
+    void fetchCategories();
   }, []);
 
   // Fetch existing photos if editing
@@ -168,7 +168,7 @@ const EquipmentListingForm = ({
       setExistingPhotos((data || []).map((p) => p.photo_url));
     };
 
-    fetchExistingPhotos();
+    void fetchExistingPhotos();
   }, [equipment]);
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,13 +242,13 @@ const EquipmentListingForm = ({
   };
 
   const uploadPhotos = async (equipmentId: string) => {
-    if (photos.length === 0) return;
+    if (photos.length === 0 || !user) return;
 
     for (let i = 0; i < photos.length; i++) {
       const file = photos[i];
       const fileExt = file.name.split(".").pop();
       const fileName = `${
-        user!.id
+        user.id
       }/${equipmentId}/${Date.now()}_${i}.${fileExt}`;
 
       // Upload to storage
@@ -314,6 +314,9 @@ const EquipmentListingForm = ({
           .single();
 
         if (error) throw error;
+        if (!newEquipment) {
+          throw new Error("Failed to create equipment");
+        }
         equipmentId = newEquipment.id;
       }
 
@@ -342,7 +345,12 @@ const EquipmentListingForm = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(onSubmit)(e);
+          }}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="title">Equipment Title *</Label>
@@ -418,7 +426,12 @@ const EquipmentListingForm = ({
               <Label htmlFor="condition">Condition *</Label>
               <Select
                 value={watch("condition")}
-                onValueChange={(value) => setValue("condition", value as any)}
+                onValueChange={(value) =>
+                  setValue(
+                    "condition",
+                    value as Database["public"]["Enums"]["equipment_condition"]
+                  )
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select condition" />
@@ -492,7 +505,9 @@ const EquipmentListingForm = ({
                     />
                     <button
                       type="button"
-                      onClick={() => removeExistingPhoto(url)}
+                      onClick={() => {
+                        void removeExistingPhoto(url);
+                      }}
                       className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <X className="h-4 w-4" />

@@ -74,7 +74,7 @@ const ExplorePage = () => {
   });
 
   const handleSubmitSearch = () => {
-    refetch();
+    void refetch();
   };
 
   const activeFilterCount = useMemo(() => {
@@ -137,7 +137,12 @@ const ExplorePage = () => {
               <div className="text-muted-foreground mb-4">
                 Failed to load equipment. Please try again.
               </div>
-              <Button onClick={() => refetch()} aria-label="Retry">
+              <Button
+                onClick={() => {
+                  void refetch();
+                }}
+                aria-label="Retry"
+              >
                 Retry
               </Button>
             </div>

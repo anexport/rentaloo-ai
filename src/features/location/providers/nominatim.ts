@@ -19,10 +19,10 @@ export interface NominatimSearchOptions {
   signal?: AbortSignal;
   language?: string;
   baseUrl?: string;
-  limit?: number;           // default 5
-  countrycodes?: string;    // optional bias, e.g., "us,gb"
-  viewbox?: string;         // optional bias: "left,top,right,bottom"
-  bounded?: '1' | '0';
+  limit?: number; // default 5
+  countrycodes?: string; // optional bias, e.g., "us,gb"
+  viewbox?: string; // optional bias: "left,top,right,bottom"
+  bounded?: "1" | "0";
 }
 
 export interface NominatimAddress {
@@ -135,8 +135,9 @@ export async function searchNominatim(
 
   const {
     signal,
-    language = 'en',
-    baseUrl = import.meta.env.VITE_NOMINATIM_BASE || 'https://nominatim.openstreetmap.org',
+    language = "en",
+    baseUrl = import.meta.env.VITE_NOMINATIM_BASE ||
+      "https://nominatim.openstreetmap.org",
     limit = 5,
     countrycodes,
     viewbox,
@@ -144,44 +145,51 @@ export async function searchNominatim(
   } = opts;
 
   const url = new URL(`${baseUrl}/search`);
-  url.searchParams.set('format', 'jsonv2');
-  url.searchParams.set('q', q);
-  url.searchParams.set('addressdetails', '1');
-  url.searchParams.set('limit', String(limit));
-  url.searchParams.set('accept-language', language);
-  if (countrycodes) url.searchParams.set('countrycodes', countrycodes);
-  if (viewbox) url.searchParams.set('viewbox', viewbox);
-  if (bounded) url.searchParams.set('bounded', bounded);
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("q", q);
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("limit", String(limit));
+  url.searchParams.set("accept-language", language);
+  if (countrycodes) url.searchParams.set("countrycodes", countrycodes);
+  if (viewbox) url.searchParams.set("viewbox", viewbox);
+  if (bounded) url.searchParams.set("bounded", bounded);
   const email = import.meta.env.VITE_NOMINATIM_EMAIL;
-  if (email) url.searchParams.set('email', email);
+  if (email) url.searchParams.set("email", email);
 
   const requestUrl = url.toString();
-  
+
   try {
-    const res = await fetch(requestUrl, { 
+    const res = await fetch(requestUrl, {
       signal,
       headers: {
-        'Accept': 'application/json',
-      }
+        Accept: "application/json",
+      },
     });
-    
+
     if (!res.ok) {
-      const errorText = await res.text().catch(() => '');
-      console.error('Nominatim search failed', { 
-        status: res.status, 
+      const errorText = await res.text().catch(() => "");
+      console.error("Nominatim search failed", {
+        status: res.status,
         statusText: res.statusText,
         url: requestUrl,
-        response: errorText
+        response: errorText,
       });
-      throw new Error(`Nominatim search failed with status ${res.status}: ${res.statusText}`);
+      throw new Error(
+        `Nominatim search failed with status ${res.status}: ${res.statusText}`
+      );
     }
 
     type Payload = NominatimSearchItem[] | { error?: string; message?: string };
     const payload = (await res.json()) as Payload;
-    
+
     if (!Array.isArray(payload)) {
-      const errorMessage = payload?.error || payload?.message || 'Unexpected Nominatim response';
-      console.error('Nominatim search returned error payload', { url: requestUrl, error: errorMessage, payload });
+      const errorMessage =
+        payload?.error || payload?.message || "Unexpected Nominatim response";
+      console.error("Nominatim search returned error payload", {
+        url: requestUrl,
+        error: errorMessage,
+        payload,
+      });
       throw new Error(errorMessage);
     }
 
@@ -195,17 +203,46 @@ export async function searchNominatim(
       lat: Number(it.lat),
       lon: Number(it.lon),
     }));
-    
+
     return mapped;
-  } catch (error: any) {
-    if (error?.name === 'AbortError') {
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "name" in error &&
+      error.name === "AbortError"
+    ) {
       throw error;
     }
-    console.error('Nominatim search request failed', { 
-      url: requestUrl, 
+
+    // Narrow error type before accessing properties
+    let errorMessage: string;
+    let errorName: string | undefined;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorName = error.name;
+    } else if (
+      error &&
+      typeof error === "object" &&
+      "message" in error &&
+      typeof error.message === "string"
+    ) {
+      errorMessage = error.message;
+      errorName =
+        "name" in error && typeof error.name === "string"
+          ? error.name
+          : undefined;
+    } else {
+      errorMessage = String(error);
+      errorName = undefined;
+    }
+
+    console.error("Nominatim search request failed", {
+      url: requestUrl,
       query: q,
-      error: error?.message || error,
-      errorName: error?.name
+      error: errorMessage,
+      errorName,
     });
     throw error;
   }

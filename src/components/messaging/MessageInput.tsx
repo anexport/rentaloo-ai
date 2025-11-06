@@ -34,7 +34,7 @@ const messageSchema = z.object({
 });
 
 interface MessageInputProps {
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string) => Promise<void> | void;
   onTyping?: (content: string) => void;
   disabled?: boolean;
 }
@@ -107,7 +107,7 @@ const MessageInput = ({
       shouldTouch: true,
     });
     setTimeout(() => {
-      handleSubmit(onSubmit)();
+      void handleSubmit(onSubmit)();
     }, 0);
   };
 
@@ -122,7 +122,9 @@ const MessageInput = ({
   return (
     <Card className="border border-border bg-card/95 p-0 shadow-sm">
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={(e) => {
+          void handleSubmit(onSubmit)(e);
+        }}
         className="space-y-3 p-3"
         aria-label="Compose message"
       >
@@ -134,7 +136,9 @@ const MessageInput = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={handleSubmit(onSubmit)}
+                onClick={() => {
+                  void handleSubmit(onSubmit)();
+                }}
                 disabled={isSubmitting || disabled}
               >
                 Retry
@@ -252,9 +256,11 @@ const MessageInput = ({
                 placeholder="Ask about availability, confirm plans, or share updates…"
                 disabled={disabled || isSubmitting}
                 className="max-h-[200px] min-h-[44px] text-sm leading-6"
-                onBlur={onBlur}
+                onBlur={(e) => {
+                  void onBlur(e);
+                }}
                 onChange={(event) => {
-                  onChange(event);
+                  void onChange(event);
                   adjustTextareaSize();
                   onTyping?.(event.target.value);
                 }}

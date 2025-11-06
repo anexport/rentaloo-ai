@@ -16,13 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  User,
-  Building2,
-  Save,
-  ArrowLeft,
-  CheckCircle,
-} from "lucide-react";
+import { User, Building2, Save, ArrowLeft, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -104,7 +98,10 @@ const ProfileSettings = () => {
 
           if (ownerProfile) {
             setOwnerProfileId(ownerProfile.id);
-            const businessInfo = ownerProfile.business_info as any;
+            const businessInfo = ownerProfile.business_info as {
+              name?: string;
+              description?: string;
+            } | null;
             setValue("business_name", businessInfo?.name || "");
             setValue("business_description", businessInfo?.description || "");
           }
@@ -116,7 +113,7 @@ const ProfileSettings = () => {
       }
     };
 
-    fetchProfile();
+    void fetchProfile();
   }, [user, setValue]);
 
   const onSubmit = async (data: ProfileFormData) => {
@@ -221,7 +218,12 @@ const ProfileSettings = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={(e) => {
+                void handleSubmit(onSubmit)(e);
+              }}
+              className="space-y-6"
+            >
               {userRole === "renter" && (
                 <>
                   <div className="space-y-2">

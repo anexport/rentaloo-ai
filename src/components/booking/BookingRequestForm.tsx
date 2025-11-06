@@ -29,7 +29,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, DollarSign, Clock, AlertCircle } from "lucide-react";
+import { Calendar, Clock, AlertCircle } from "lucide-react";
 
 const bookingFormSchema = z
   .object({
@@ -56,6 +56,11 @@ interface BookingRequestFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
   isEmbedded?: boolean;
+  onCalculationChange?: (
+    calculation: BookingCalculation | null,
+    startDate: string,
+    endDate: string
+  ) => void;
 }
 
 const BookingRequestForm = ({
@@ -63,6 +68,7 @@ const BookingRequestForm = ({
   onSuccess,
   onCancel,
   isEmbedded = false,
+  onCalculationChange,
 }: BookingRequestFormProps) => {
   const { user } = useAuth();
   const { getOrCreateConversation, sendMessage } = useMessaging();
@@ -102,6 +108,7 @@ const BookingRequestForm = ({
         watchedEndDate
       );
       setCalculation(newCalculation);
+      onCalculationChange?.(newCalculation, watchedStartDate, watchedEndDate);
 
       // Increment request ID to mark this request as the latest
       requestIdRef.current += 1;
@@ -142,14 +149,18 @@ const BookingRequestForm = ({
         }
       };
 
-      checkConflicts();
+      void checkConflicts();
 
       // Cleanup: mark request as stale on unmount or dependency change
       return () => {
         requestIdRef.current += 1;
       };
+    } else {
+      // Reset calculation when no dates are selected
+      setCalculation(null);
+      onCalculationChange?.(null, "", "");
     }
-  }, [watchedStartDate, watchedEndDate, equipment.daily_rate, equipment.id]);
+  }, [watchedStartDate, watchedEndDate, equipment.daily_rate, equipment.id, onCalculationChange]);
 
   const onSubmit = async (data: BookingFormData) => {
     if (!user || conflicts.length > 0) return;
@@ -252,8 +263,6 @@ const BookingRequestForm = ({
       hasConflicts={hasConflicts}
       conflicts={conflicts}
       isOwnEquipment={isOwnEquipment}
-      calculation={calculation}
-      formatBookingDuration={formatBookingDuration}
       formatBookingDate={formatBookingDate}
       onCancel={onCancel}
       canSubmit={canSubmit}
@@ -294,8 +303,6 @@ interface BookingFormContentProps {
   hasConflicts: boolean;
   conflicts: BookingConflict[];
   isOwnEquipment: boolean;
-  calculation: BookingCalculation | null;
-  formatBookingDuration: (startDate: string, endDate: string) => string;
   formatBookingDate: (date: string) => string;
   onCancel?: () => void;
   canSubmit: boolean;
@@ -313,15 +320,18 @@ export const BookingFormContent = ({
   hasConflicts,
   conflicts,
   isOwnEquipment,
-  calculation,
-  formatBookingDuration,
   formatBookingDate,
   onCancel,
   canSubmit,
   isSubmitting,
 }: BookingFormContentProps) => {
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        void handleSubmit(onSubmit)(e);
+      }}
+      className="space-y-6"
+    >
       {/* Equipment Info */}
       <div className="bg-muted p-4 rounded-lg">
         <h3 className="font-semibold text-lg text-foreground">
@@ -390,43 +400,6 @@ export const BookingFormContent = ({
             You cannot book your own equipment. This equipment belongs to you.
           </AlertDescription>
         </Alert>
-      )}
-
-      {/* Pricing Breakdown */}
-      {calculation && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center space-x-2">
-              <DollarSign className="h-5 w-5" />
-              <span>Pricing Breakdown</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between">
-              <span>Duration:</span>
-              <span>
-                {formatBookingDuration(watchedStartDate, watchedEndDate)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Daily Rate:</span>
-              <span>${calculation.daily_rate}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Subtotal ({calculation.days} days):</span>
-              <span>${calculation.subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Service Fee (5%):</span>
-              <span>${calculation.fees.toFixed(2)}</span>
-            </div>
-            <hr />
-            <div className="flex justify-between font-semibold text-lg">
-              <span>Total:</span>
-              <span>${calculation.total.toFixed(2)}</span>
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       {/* Message to Owner */}

@@ -83,7 +83,7 @@ const EquipmentDetailPage = () => {
         {data.photos && data.photos.length > 0 && (
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <img
-              src={data.photos[0].photo_url}
+              src={data.photos[0]?.photo_url || ""}
               alt={data.title}
               className="w-full h-64 object-cover rounded-md"
             />

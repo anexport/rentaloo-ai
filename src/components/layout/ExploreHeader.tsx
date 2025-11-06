@@ -43,7 +43,7 @@ const ExploreHeader = ({ scrolled: controlledScrolled }: Props) => {
         });
         return;
       }
-      navigate("/");
+      void navigate("/");
     } catch (err) {
       console.error("Unexpected sign out error:", err);
       const message = err instanceof Error ? err.message : "An unexpected error occurred";
@@ -114,7 +114,12 @@ const ExploreHeader = ({ scrolled: controlledScrolled }: Props) => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        void handleSignOut();
+                      }}
+                      className="cursor-pointer"
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign out
                     </DropdownMenuItem>
@@ -189,7 +194,13 @@ const ExploreHeader = ({ scrolled: controlledScrolled }: Props) => {
                           Settings
                         </Link>
                       </Button>
-                      <Button variant="ghost" className="justify-start" onClick={handleSignOut}>
+                      <Button
+                        variant="ghost"
+                        className="justify-start"
+                        onClick={() => {
+                          void handleSignOut();
+                        }}
+                      >
                         <LogOut className="mr-2 h-4 w-4" />
                         Sign out
                       </Button>

@@ -225,7 +225,7 @@ const DocumentUpload = ({
 
             {/* Upload Button */}
             <Button
-              onClick={handleUpload}
+              onClick={() => void handleUpload()}
               disabled={isUploading}
               className="w-full"
               size="lg"

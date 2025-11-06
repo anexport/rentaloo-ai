@@ -66,7 +66,7 @@ const TransactionHistory = ({ userType }: TransactionHistoryProps) => {
       }
     };
 
-    fetchTransactions();
+    void fetchTransactions();
   }, [user, userType]);
 
   const filteredTransactions = transactions.filter((tx) => {

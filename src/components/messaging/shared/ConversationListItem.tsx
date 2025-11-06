@@ -1,26 +1,26 @@
-import { formatDistanceToNow } from "date-fns"
-import { Card } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+import { formatDistanceToNow } from "date-fns";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
-import type { ConversationWithDetails } from "@/types/messaging"
-import { OnlineStatusIndicator } from "../OnlineStatusIndicator"
-import { LastSeenBadge } from "../LastSeenBadge"
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import type { ConversationWithDetails } from "@/types/messaging";
+import { OnlineStatusIndicator } from "../OnlineStatusIndicator";
+import { LastSeenBadge } from "../LastSeenBadge";
 
 interface ConversationListItemProps {
-  conversation: ConversationWithDetails
-  isSelected?: boolean
-  onSelect: (conversation: ConversationWithDetails) => void
-  otherParticipantName: string
-  otherParticipantInitials: string
-  isOnline: boolean
-  lastSeenAt?: string | null
-  unread: boolean
+  conversation: ConversationWithDetails;
+  isSelected?: boolean;
+  onSelect: (conversation: ConversationWithDetails) => void;
+  otherParticipantName: string;
+  otherParticipantInitials: string;
+  isOnline: boolean;
+  lastSeenAt?: string | null;
+  unread: boolean;
 }
 
 export const ConversationListItem = ({
@@ -36,22 +36,25 @@ export const ConversationListItem = ({
   const lastActivityTimestamp =
     conversation.last_message?.created_at ||
     conversation.updated_at ||
-    conversation.created_at
+    conversation.created_at;
 
-  let lastActivityLabel = "Just now"
+  let lastActivityLabel = "Just now";
 
   try {
     if (lastActivityTimestamp) {
-      lastActivityLabel = formatDistanceToNow(new Date(lastActivityTimestamp), {
-        addSuffix: true,
-      })
+      const date = new Date(lastActivityTimestamp);
+      if (!isNaN(date.getTime())) {
+        lastActivityLabel = formatDistanceToNow(date, {
+          addSuffix: true,
+        });
+      }
     }
   } catch (error) {
-    console.error("Error formatting conversation timestamp:", error)
-    lastActivityLabel = "—"
+    console.error("Error formatting conversation timestamp:", error);
+    lastActivityLabel = "—";
   }
 
-  const bookingRequest = conversation.booking_request
+  const bookingRequest = conversation.booking_request;
 
   return (
     <button
@@ -119,7 +122,8 @@ export const ConversationListItem = ({
                         {bookingRequest.start_date} → {bookingRequest.end_date}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Total {new Intl.NumberFormat("en-US", {
+                        Total{" "}
+                        {new Intl.NumberFormat("en-US", {
                           style: "currency",
                           currency: "USD",
                         }).format(bookingRequest.total_amount)}
@@ -138,5 +142,5 @@ export const ConversationListItem = ({
         </div>
       </Card>
     </button>
-  )
-}
+  );
+};

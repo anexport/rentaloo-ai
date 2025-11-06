@@ -27,7 +27,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn, user } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -43,18 +43,19 @@ const LoginPage = () => {
     setError(null);
 
     try {
-      const { error } = await signIn(data.email, data.password);
+      const { error, user: returnedUser } = await signIn(data.email, data.password);
 
       if (error) {
         setError(error.message);
       } else {
-        // Redirect based on user role
-        if (user?.user_metadata?.role === "renter") {
-          navigate("/renter/dashboard");
-        } else if (user?.user_metadata?.role === "owner") {
-          navigate("/owner/dashboard");
+        // Redirect based on user role from returned user
+        const role = returnedUser?.user_metadata?.role;
+        if (role === "renter") {
+          void navigate("/renter/dashboard");
+        } else if (role === "owner") {
+          void navigate("/owner/dashboard");
         } else {
-          navigate("/");
+          void navigate("/");
         }
       }
     } catch {
@@ -87,7 +88,12 @@ const LoginPage = () => {
             <CardDescription>Sign in to your RentAloo account</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                void handleSubmit(onSubmit)(e);
+              }}
+              className="space-y-4"
+            >
               {/* Error Message */}
               {error && (
                 <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">

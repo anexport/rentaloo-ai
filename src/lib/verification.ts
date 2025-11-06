@@ -99,7 +99,7 @@ export const getVerificationProgress = (
   profile: UserVerificationProfile
 ): number => {
   let completed = 0;
-  let total = 4; // identity, phone, email, address
+  const total = 4; // identity, phone, email, address
 
   if (profile.identityVerified) completed++;
   if (profile.phoneVerified) completed++;

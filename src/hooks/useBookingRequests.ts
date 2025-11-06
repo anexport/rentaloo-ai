@@ -1,7 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
-import type { BookingRequestWithDetails } from "../types/booking";
+import type {
+  BookingRequestWithDetails,
+  BookingStatus,
+} from "../types/booking";
+import type { Database } from "@/lib/database.types";
+
+type BookingRequestRow =
+  Database["public"]["Tables"]["booking_requests"]["Row"];
+type EquipmentRow = Database["public"]["Tables"]["equipment"]["Row"];
+type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+
+type BookingRequestWithRelations = BookingRequestRow & {
+  equipment: EquipmentRow & {
+    category: CategoryRow;
+    owner: ProfileRow;
+  };
+  renter: ProfileRow;
+};
 
 export const useBookingRequests = (userRole?: "renter" | "owner") => {
   const { user } = useAuth();
@@ -11,7 +29,7 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBookingRequests = async () => {
+  const fetchBookingRequests = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -57,12 +75,14 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
         if (fetchError) throw fetchError;
 
         // Transform the data to flatten the owner from equipment
-        const transformedData = (data || []).map((item: any) => ({
-          ...item,
-          owner: item.equipment?.owner || null,
-        }));
+        const transformedData: BookingRequestWithDetails[] = (data || []).map(
+          (item: BookingRequestWithRelations) => ({
+            ...item,
+            owner: item.equipment?.owner || null,
+          })
+        );
 
-        setBookingRequests(transformedData || []);
+        setBookingRequests(transformedData);
       } else if (userRole === "renter") {
         // For renters, filter by renter_id
         const { data, error: fetchError } = await supabase
@@ -84,12 +104,14 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
         if (fetchError) throw fetchError;
 
         // Transform the data to flatten the owner from equipment
-        const transformedData = (data || []).map((item: any) => ({
-          ...item,
-          owner: item.equipment?.owner || null,
-        }));
+        const transformedData: BookingRequestWithDetails[] = (data || []).map(
+          (item: BookingRequestWithRelations) => ({
+            ...item,
+            owner: item.equipment?.owner || null,
+          })
+        );
 
-        setBookingRequests(transformedData || []);
+        setBookingRequests(transformedData);
       } else {
         // No filter - get all (shouldn't happen normally)
         const { data, error: fetchError } = await supabase
@@ -110,12 +132,14 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
         if (fetchError) throw fetchError;
 
         // Transform the data to flatten the owner from equipment
-        const transformedData = (data || []).map((item: any) => ({
-          ...item,
-          owner: item.equipment?.owner || null,
-        }));
+        const transformedData: BookingRequestWithDetails[] = (data || []).map(
+          (item: BookingRequestWithRelations) => ({
+            ...item,
+            owner: item.equipment?.owner || null,
+          })
+        );
 
-        setBookingRequests(transformedData || []);
+        setBookingRequests(transformedData);
       }
     } catch (err) {
       console.error("Error fetching booking requests:", err);
@@ -125,7 +149,7 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, userRole]);
 
   const createBookingRequest = async (bookingData: {
     equipment_id: string;
@@ -158,7 +182,10 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
     }
   };
 
-  const updateBookingStatus = async (bookingId: string, status: string) => {
+  const updateBookingStatus = async (
+    bookingId: string,
+    status: BookingStatus
+  ) => {
     try {
       const { error } = await supabase
         .from("booking_requests")
@@ -193,9 +220,9 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
 
   useEffect(() => {
     if (user) {
-      fetchBookingRequests();
+      void fetchBookingRequests();
     }
-  }, [user, userRole]);
+  }, [user, fetchBookingRequests]);
 
   return {
     bookingRequests,

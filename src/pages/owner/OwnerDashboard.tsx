@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import EquipmentManagement from "@/components/EquipmentManagement";
 import BookingRequestCard from "@/components/booking/BookingRequestCard";
@@ -45,23 +45,12 @@ const OwnerDashboard = () => {
     fetchBookingRequests,
   } = useBookingRequests("owner");
 
-  useEffect(() => {
-    if (user) {
-      fetchStats();
-    }
-  }, [user]);
+  // Memoize the status change callback to prevent effect re-runs
+  const handleBookingStatusChange = useCallback(() => {
+    void fetchBookingRequests();
+  }, [fetchBookingRequests]);
 
-  useEffect(() => {
-    // Always update pendingRequests based on bookingRequests, even when empty
-    const pendingCount = bookingRequests.filter((r) => r.status === "pending").length;
-
-    setStats((prev) => ({
-      ...prev,
-      pendingRequests: pendingCount,
-    }));
-  }, [bookingRequests]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -71,23 +60,8 @@ const OwnerDashboard = () => {
         .select("*", { count: "exact", head: true })
         .eq("owner_id", user.id);
 
-      // Fetch pending booking requests
-      // First get equipment IDs owned by this user
-      const { data: equipmentData } = await supabase
-        .from("equipment")
-        .select("id")
-        .eq("owner_id", user.id);
-
-      let pendingCount = 0;
-      if (equipmentData && equipmentData.length > 0) {
-        const equipmentIds = equipmentData.map((eq) => eq.id);
-        const { count } = await supabase
-          .from("booking_requests")
-          .select("*", { count: "exact", head: true })
-          .in("equipment_id", equipmentIds)
-          .eq("status", "pending");
-        pendingCount = count || 0;
-      }
+      // Fetch booking requests to ensure they're loaded before the effect runs
+      await fetchBookingRequests();
 
       // Fetch total earnings (this would need to be calculated from completed bookings)
       const { data: earningsData } = await supabase
@@ -96,16 +70,35 @@ const OwnerDashboard = () => {
         .eq("profile_id", user.id)
         .single();
 
-      setStats({
+      setStats((prev) => ({
+        ...prev,
         totalListings: equipmentCount || 0,
-        pendingRequests: pendingCount || 0,
         totalEarnings: earningsData?.earnings_total || 0,
         averageRating: 0, // This would need to be calculated from reviews
-      });
+        // pendingRequests is not set here - it's derived from bookingRequests in useEffect
+      }));
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
-  };
+  }, [user, fetchBookingRequests]);
+
+  useEffect(() => {
+    if (user) {
+      void fetchStats();
+    }
+  }, [user, fetchStats]);
+
+  useEffect(() => {
+    // Always update pendingRequests based on bookingRequests, even when empty
+    const pendingCount = bookingRequests.filter(
+      (r) => r.status === "pending"
+    ).length;
+
+    setStats((prev) => ({
+      ...prev,
+      pendingRequests: pendingCount,
+    }));
+  }, [bookingRequests]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -113,7 +106,10 @@ const OwnerDashboard = () => {
       <header className="bg-card shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2 hover:opacity-90">
+            <Link
+              to="/"
+              className="flex items-center space-x-2 hover:opacity-90"
+            >
               <Mountain className="h-8 w-8 text-primary" />
               <h1 className="text-xl font-bold text-foreground">RentAloo</h1>
             </Link>
@@ -386,7 +382,7 @@ const OwnerDashboard = () => {
                   <BookingRequestCard
                     key={request.id}
                     bookingRequest={request}
-                    onStatusChange={fetchBookingRequests}
+                    onStatusChange={handleBookingStatusChange}
                     showActions={true}
                   />
                 ))}

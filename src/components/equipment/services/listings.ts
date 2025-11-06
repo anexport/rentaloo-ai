@@ -79,7 +79,7 @@ export const fetchListings = async (
   ] as string[];
 
   // Fetch all reviews in a single query
-  let reviewsMap = new Map<string, Array<Pick<ReviewRow, "rating">>>();
+  const reviewsMap = new Map<string, Array<Pick<ReviewRow, "rating">>>();
   if (ownerIds.length > 0) {
     const { data: reviews } = await supabase
       .from("reviews")

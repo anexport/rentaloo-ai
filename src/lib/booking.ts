@@ -125,7 +125,11 @@ export const checkBookingConflictsSync = (
   equipmentId: string,
   startDate: string,
   endDate: string,
-  existingBookings: any[]
+  existingBookings: Array<{
+    start_date: string;
+    end_date: string;
+    status: string;
+  }>
 ): BookingConflict[] => {
   const conflicts: BookingConflict[] = [];
   const start = new Date(startDate);

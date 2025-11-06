@@ -2,18 +2,19 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useMessaging } from "../../hooks/useMessaging";
 import { useAuth } from "../../hooks/useAuth";
 import { usePresence } from "../../hooks/usePresence";
+import { useProfileLookup } from "../../hooks/useProfileLookup";
 import type { ConversationWithDetails } from "../../types/messaging";
 import { MessageSquare, ArrowLeft, Menu, Search, Filter } from "lucide-react";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import ConversationList from "./ConversationList";
 import ConversationSearch from "./ConversationSearch";
+import { supabase } from "@/lib/supabase";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import { OnlineStatusIndicator } from "./OnlineStatusIndicator";
 import { LastSeenBadge } from "./LastSeenBadge";
 import { TypingIndicator } from "./TypingIndicator";
-import { supabase } from "../../lib/supabase";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import {
   ResizableHandle,
@@ -30,6 +31,7 @@ import {
 } from "../ui/select";
 import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/useToast";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -47,6 +49,10 @@ const MessagingInterface = ({
   const { conversations, messages, loading, fetchMessages, sendMessage } =
     useMessaging();
 
+  // Collect all participant IDs from conversations
+  const participantIds = conversations.flatMap((conv) => conv.participants || []);
+  const { getProfile } = useProfileLookup(participantIds);
+
   const [selectedConversation, setSelectedConversation] =
     useState<ConversationWithDetails | null>(null);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
@@ -57,7 +63,9 @@ const MessagingInterface = ({
   const typingTimeoutRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map()
   );
-  const typingChannelRef = useRef<any>(null);
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
+    null
+  );
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -105,7 +113,19 @@ const MessagingInterface = ({
       );
       if (conversation) {
         setSelectedConversation(conversation);
-        fetchMessages(conversation.id);
+        void (async () => {
+          try {
+            await fetchMessages(conversation.id);
+          } catch (error) {
+            console.error("Failed to fetch messages:", error);
+            toast({
+              title: "Failed to load messages",
+              description:
+                "We couldn't load the messages for this conversation. Please try again.",
+              variant: "destructive",
+            });
+          }
+        })();
         setIsMobileSidebarOpen(false);
       }
     }
@@ -124,7 +144,7 @@ const MessagingInterface = ({
 
     // Stop typing indicator
     if (typingChannelRef.current && user?.id) {
-      typingChannelRef.current.send({
+      void typingChannelRef.current.send({
         type: "broadcast",
         event: "typing",
         payload: {
@@ -154,7 +174,7 @@ const MessagingInterface = ({
     }
 
     // Broadcast typing status
-    typingChannelRef.current.send({
+    void typingChannelRef.current.send({
       type: "broadcast",
       event: "typing",
       payload: {
@@ -167,7 +187,7 @@ const MessagingInterface = ({
     // Set timeout to stop typing after 3 seconds of inactivity
     if (content.length > 0) {
       const timeout = setTimeout(() => {
-        typingChannelRef.current?.send({
+        void typingChannelRef.current?.send({
           type: "broadcast",
           event: "typing",
           payload: {
@@ -184,19 +204,24 @@ const MessagingInterface = ({
 
   // Cleanup timeouts on component unmount
   useEffect(() => {
+    const timeouts = typingTimeoutRef.current;
     return () => {
       // Clear all pending timeouts when component unmounts
-      typingTimeoutRef.current.forEach((timeout) => clearTimeout(timeout));
-      typingTimeoutRef.current.clear();
+      timeouts.forEach((timeout) => clearTimeout(timeout));
+      timeouts.clear();
     };
   }, []);
 
   // Set up typing indicator channel
   useEffect(() => {
+    // Capture ref value at the start of the effect for cleanup
+    const timeouts = typingTimeoutRef.current;
+    const channelRef = typingChannelRef;
+
     if (!selectedConversation || !user) {
-      if (typingChannelRef.current) {
-        supabase.removeChannel(typingChannelRef.current);
-        typingChannelRef.current = null;
+      if (channelRef.current) {
+        void supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
       setTypingUsers(new Set());
       return;
@@ -210,7 +235,7 @@ const MessagingInterface = ({
       },
     });
 
-    typingChannelRef.current = channel;
+    channelRef.current = channel;
 
     channel
       .on("broadcast", { event: "typing" }, (payload) => {
@@ -238,21 +263,24 @@ const MessagingInterface = ({
       .subscribe();
 
     return () => {
-      // Clean up timeouts
-      typingTimeoutRef.current.forEach((timeout) => clearTimeout(timeout));
-      typingTimeoutRef.current.clear();
+      // Clean up timeouts - use captured ref value
+      timeouts.forEach((timeout) => clearTimeout(timeout));
+      timeouts.clear();
 
-      if (typingChannelRef.current) {
-        supabase.removeChannel(typingChannelRef.current);
-        typingChannelRef.current = null;
+      if (channelRef.current) {
+        void supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
       setTypingUsers(new Set());
     };
   }, [selectedConversation, user]);
 
-  const otherParticipant = selectedConversation?.participants.find(
-    (p) => p.id !== user?.id
+  const otherParticipantId = selectedConversation?.participants?.find(
+    (participantId) => participantId !== user?.id
   );
+  const otherParticipant = otherParticipantId
+    ? getProfile(otherParticipantId)
+    : undefined;
 
   const filteredConversations = useMemo(() => {
     if (filter === "all") return conversations;
@@ -268,7 +296,7 @@ const MessagingInterface = ({
 
       return true;
     });
-  }, [conversations, filter, user?.id]);
+  }, [conversations, filter]);
 
   const conversationSidebar = (
     <div className="flex h-full flex-col bg-card/60">
@@ -333,7 +361,21 @@ const MessagingInterface = ({
         <ConversationList
           conversations={filteredConversations}
           selectedConversationId={selectedConversation?.id}
-          onSelectConversation={handleSelectConversation}
+          onSelectConversation={(conversation) => {
+            void (async () => {
+              try {
+                await handleSelectConversation(conversation);
+              } catch (error) {
+                console.error("Failed to select conversation:", error);
+                toast({
+                  title: "Failed to load conversation",
+                  description:
+                    "We couldn't load the messages for this conversation. Please try again.",
+                  variant: "destructive",
+                });
+              }
+            })();
+          }}
           loading={loading}
         />
       </ScrollArea>
@@ -381,9 +423,9 @@ const MessagingInterface = ({
                   {otherParticipant?.email?.charAt(0).toUpperCase() || "?"}
                 </AvatarFallback>
               </Avatar>
-              {otherParticipant && (
+              {otherParticipantId && (
                 <OnlineStatusIndicator
-                  isOnline={isOnline(otherParticipant.id)}
+                  isOnline={isOnline(otherParticipantId)}
                   size="md"
                   className="absolute -bottom-1 -right-1"
                 />
@@ -401,10 +443,10 @@ const MessagingInterface = ({
                   </Badge>
                 )}
               </div>
-              {otherParticipant && (
+              {otherParticipantId && (
                 <LastSeenBadge
-                  isOnline={isOnline(otherParticipant.id)}
-                  lastSeenAt={otherParticipant.last_seen_at || null}
+                  isOnline={isOnline(otherParticipantId)}
+                  lastSeenAt={otherParticipant?.last_seen_at || null}
                   className="mt-1"
                 />
               )}
@@ -461,9 +503,14 @@ const MessagingInterface = ({
                 {typingUsers.size > 0 && (
                   <TypingIndicator
                     userName={
-                      selectedConversation.participants.find((p) =>
-                        typingUsers.has(p.id)
-                      )?.email
+                      (() => {
+                        const typingUserId = selectedConversation.participants?.find(
+                          (participantId) => typingUsers.has(participantId)
+                        );
+                        return typingUserId
+                          ? getProfile(typingUserId)?.email ?? undefined
+                          : undefined;
+                      })()
                     }
                   />
                 )}
@@ -530,7 +577,21 @@ const MessagingInterface = ({
         currentUserId={user?.id}
         open={isSearchOpen}
         onOpenChange={setIsSearchOpen}
-        onSelect={handleSelectConversation}
+        onSelect={(conversation) => {
+          void (async () => {
+            try {
+              await handleSelectConversation(conversation);
+            } catch (error) {
+              console.error("Failed to select conversation:", error);
+              toast({
+                title: "Failed to load conversation",
+                description:
+                  "We couldn't load the messages for this conversation. Please try again.",
+                variant: "destructive",
+              });
+            }
+          })();
+        }}
       />
     </div>
   );

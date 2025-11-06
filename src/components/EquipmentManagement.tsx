@@ -1,14 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "../lib/database.types";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -45,13 +40,7 @@ const EquipmentManagement = () => {
   );
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (user) {
-      fetchEquipment();
-    }
-  }, [user]);
-
-  const fetchEquipment = async () => {
+  const fetchEquipment = useCallback(async () => {
     if (!user) return;
 
     // Reset failed images on refetch to allow retrying previously failed URLs
@@ -92,7 +81,13 @@ const EquipmentManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      void fetchEquipment();
+    }
+  }, [user, fetchEquipment]);
 
   const handleToggleAvailability = async (
     equipmentId: string,
@@ -147,7 +142,7 @@ const EquipmentManagement = () => {
   const handleFormSuccess = () => {
     setShowForm(false);
     setEditingEquipment(null);
-    fetchEquipment();
+    void fetchEquipment();
   };
 
   const handleEdit = (
@@ -190,7 +185,9 @@ const EquipmentManagement = () => {
             <h2 className="text-2xl font-bold text-foreground">
               {showingCalendar.title}
             </h2>
-            <p className="text-muted-foreground">Manage availability and pricing</p>
+            <p className="text-muted-foreground">
+              Manage availability and pricing
+            </p>
           </div>
           <Button variant="outline" onClick={handleCloseCalendar}>
             Back to Equipment
@@ -217,7 +214,9 @@ const EquipmentManagement = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-foreground">My Equipment</h2>
-          <p className="text-muted-foreground">Manage your equipment listings</p>
+          <p className="text-muted-foreground">
+            Manage your equipment listings
+          </p>
         </div>
         <Button onClick={() => setShowForm(true)}>Add New Equipment</Button>
       </div>
@@ -237,12 +236,13 @@ const EquipmentManagement = () => {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {equipment.map((item) => {
-            const primaryPhoto = item.photos?.find((p) => p.is_primary) || item.photos?.[0];
+            const primaryPhoto =
+              item.photos?.find((p) => p.is_primary) || item.photos?.[0];
             const imageHasError = primaryPhoto
               ? failedImages.has(primaryPhoto.id)
               : true;
             const showImage = primaryPhoto && !imageHasError;
-            
+
             return (
               <Card
                 key={item.id}
@@ -258,20 +258,28 @@ const EquipmentManagement = () => {
                       loading="lazy"
                       onError={() => {
                         if (primaryPhoto) {
-                          setFailedImages((prev) => new Set(prev).add(primaryPhoto.id));
+                          setFailedImages((prev) =>
+                            new Set(prev).add(primaryPhoto.id)
+                          );
                         }
                       }}
                     />
                   ) : null}
                   {!showImage && (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50" role="img" aria-label={`No photo available for ${item.title}`}>
+                    <div
+                      className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50"
+                      role="img"
+                      aria-label={`No photo available for ${item.title}`}
+                    >
                       <div className="text-center text-muted-foreground">
-                        <div className="text-4xl mb-2" aria-hidden="true">📷</div>
+                        <div className="text-4xl mb-2" aria-hidden="true">
+                          📷
+                        </div>
                         <p className="text-xs">No photo</p>
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Availability Badge Overlay */}
                   <div className="absolute top-3 right-3">
                     <Badge
@@ -281,10 +289,13 @@ const EquipmentManagement = () => {
                       {item.is_available ? "Available" : "Unavailable"}
                     </Badge>
                   </div>
-                  
+
                   {/* Category Badge Overlay */}
                   <div className="absolute top-3 left-3">
-                    <Badge variant="secondary" className="shadow-md bg-background/80 backdrop-blur-sm">
+                    <Badge
+                      variant="secondary"
+                      className="shadow-md bg-background/80 backdrop-blur-sm"
+                    >
                       {item.category.name}
                     </Badge>
                   </div>
@@ -314,7 +325,9 @@ const EquipmentManagement = () => {
                       <span className="text-lg font-semibold text-foreground">
                         ${item.daily_rate}
                       </span>
-                      <span className="text-sm text-muted-foreground">/day</span>
+                      <span className="text-sm text-muted-foreground">
+                        /day
+                      </span>
                     </div>
                     <Badge variant="outline" className="capitalize text-xs">
                       {item.condition}
@@ -346,9 +359,9 @@ const EquipmentManagement = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        handleToggleAvailability(item.id, item.is_available)
-                      }
+                      onClick={() => {
+                        void handleToggleAvailability(item.id, item.is_available);
+                      }}
                       className="flex-1"
                     >
                       {item.is_available ? (
@@ -402,7 +415,9 @@ const EquipmentManagement = () => {
             </Button>
             <Button
               variant="destructive"
-              onClick={handleDeleteConfirm}
+              onClick={() => {
+                void handleDeleteConfirm();
+              }}
             >
               Delete
             </Button>

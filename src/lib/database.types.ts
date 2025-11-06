@@ -11,7 +11,7 @@ export type ProfileSummary = {
   id: string;
   email: string | null;
   last_seen_at: string | null;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type Database = {
@@ -187,12 +187,60 @@ export type Database = {
           }
         ];
       };
+      booking_history: {
+        Row: {
+          id: string;
+          booking_request_id: string;
+          old_status: Database["public"]["Enums"]["booking_status"] | null;
+          new_status: Database["public"]["Enums"]["booking_status"];
+          changed_by: string | null;
+          changed_at: string | null;
+          reason: string | null;
+          metadata: Json | null;
+        };
+        Insert: {
+          id?: string;
+          booking_request_id: string;
+          old_status?: Database["public"]["Enums"]["booking_status"] | null;
+          new_status: Database["public"]["Enums"]["booking_status"];
+          changed_by?: string | null;
+          changed_at?: string | null;
+          reason?: string | null;
+          metadata?: Json | null;
+        };
+        Update: {
+          id?: string;
+          booking_request_id?: string;
+          old_status?: Database["public"]["Enums"]["booking_status"] | null;
+          new_status?: Database["public"]["Enums"]["booking_status"];
+          changed_by?: string | null;
+          changed_at?: string | null;
+          reason?: string | null;
+          metadata?: Json | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "booking_history_booking_request_id_fkey";
+            columns: ["booking_request_id"];
+            isOneToOne: false;
+            referencedRelation: "booking_requests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "booking_history_changed_by_fkey";
+            columns: ["changed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       conversations: {
         Row: {
           booking_request_id: string | null;
           created_at: string | null;
           id: string;
-          participants: ProfileSummary[] | null;
+          participants: string[] | null;
           updated_at: string | null;
         };
         Insert: {
@@ -770,19 +818,19 @@ export type Database = {
     };
     Functions: {
       update_last_seen: {
-        Args: {};
-        Returns: void;
+        Args: Record<string, never>;
+        Returns: undefined;
       };
       mark_conversation_read: {
         Args: {
           /** UUID of the conversation to mark as read */
           p_conversation: string;
         };
-        Returns: void;
+        Returns: undefined;
       };
     };
     Enums: {
-      booking_status: "pending" | "approved" | "declined" | "cancelled";
+      booking_status: "pending" | "approved" | "declined" | "cancelled" | "completed";
       equipment_condition: "new" | "excellent" | "good" | "fair";
       user_role: "renter" | "owner";
       verification_status: "unverified" | "pending" | "verified";
@@ -899,7 +947,7 @@ export type Enums<
 export const Constants = {
   public: {
     Enums: {
-      booking_status: ["pending", "approved", "declined", "cancelled"],
+      booking_status: ["pending", "approved", "declined", "cancelled", "completed"],
       equipment_condition: ["new", "excellent", "good", "fair"],
       user_role: ["renter", "owner"],
       verification_status: ["unverified", "pending", "verified"],

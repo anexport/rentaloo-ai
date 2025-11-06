@@ -96,7 +96,7 @@ const ReviewForm = ({
 
       if (reviewError) throw reviewError;
 
-      onSuccess?.();
+      void onSuccess?.();
     } catch (err) {
       console.error("Error submitting review:", err);
       setError(
@@ -121,7 +121,12 @@ const ReviewForm = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(onSubmit)(e);
+          }}
+          className="space-y-6"
+        >
           {/* Error Alert */}
           {error && (
             <Alert variant="destructive">

@@ -51,7 +51,7 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
         setCategories([]);
       }
     };
-    load();
+    void load();
   }, []);
 
   return (

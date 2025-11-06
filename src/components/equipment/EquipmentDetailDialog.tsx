@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
@@ -23,6 +23,7 @@ import {
   Package,
   CheckCircle2,
   CreditCard,
+  DollarSign,
 } from "lucide-react";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import StarRating from "@/components/reviews/StarRating";
@@ -40,6 +41,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import BookingRequestForm from "@/components/booking/BookingRequestForm";
 import type { Listing } from "@/components/equipment/services/listings";
+import type { BookingCalculation } from "@/types/booking";
+import { formatBookingDuration } from "@/lib/booking";
 
 type EquipmentDetailDialogProps = {
   open: boolean;
@@ -63,6 +66,24 @@ const EquipmentDetailDialog = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  const [calculation, setCalculation] = useState<BookingCalculation | null>(
+    null
+  );
+  const [watchedStartDate, setWatchedStartDate] = useState<string>("");
+  const [watchedEndDate, setWatchedEndDate] = useState<string>("");
+
+  const handleCalculationChange = useCallback(
+    (
+      calc: BookingCalculation | null,
+      startDate: string,
+      endDate: string
+    ) => {
+      setCalculation(calc);
+      setWatchedStartDate(startDate);
+      setWatchedEndDate(endDate);
+    },
+    []
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: ["listing", listingId],
@@ -363,6 +384,7 @@ const EquipmentDetailDialog = ({
                       });
                     }}
                     isEmbedded={true}
+                    onCalculationChange={handleCalculationChange}
                   />
                 )}
               </TabsContent>
@@ -410,6 +432,57 @@ const EquipmentDetailDialog = ({
                     Contact the owner to arrange pickup after booking.
                   </p>
                 </div>
+              </div>
+
+              <Separator />
+
+              {/* Pricing Breakdown */}
+              <div className="space-y-3">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Pricing Breakdown
+                </h3>
+                {calculation && watchedStartDate && watchedEndDate ? (
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Duration:</span>
+                      <span className="font-medium">
+                        {formatBookingDuration(watchedStartDate, watchedEndDate)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Daily Rate:</span>
+                      <span className="font-medium">
+                        ${calculation.daily_rate}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Subtotal ({calculation.days} days):
+                      </span>
+                      <span className="font-medium">
+                        ${calculation.subtotal.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Service Fee (5%):
+                      </span>
+                      <span className="font-medium">
+                        ${calculation.fees.toFixed(2)}
+                      </span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-semibold text-base">
+                      <span>Total:</span>
+                      <span>${calculation.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Select dates to see pricing breakdown.
+                  </p>
+                )}
               </div>
 
               <Button

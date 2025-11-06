@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePayment } from "@/hooks/usePayment";
 import { supabase } from "@/lib/supabase";
@@ -36,18 +36,18 @@ const EscrowDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchEscrowData = async () => {
-      if (!user) return;
+  // Reusable function to fetch both payments and escrow balance
+  const fetchEscrowData = useCallback(async () => {
+    if (!user) return;
 
-      setLoading(true);
+    setLoading(true);
 
-      try {
-        // Fetch all payments with escrow status
-        const { data, error } = await supabase
-          .from("payments")
-          .select(
-            `
+    try {
+      // Fetch all payments with escrow status
+      const { data, error } = await supabase
+        .from("payments")
+        .select(
+          `
             id,
             escrow_amount,
             escrow_status,
@@ -60,33 +60,32 @@ const EscrowDashboard = () => {
               )
             )
           `
-          )
-          .eq("owner_id", user.id)
-          .in("escrow_status", ["held", "released"])
-          .order("created_at", { ascending: false });
+        )
+        .eq("owner_id", user.id)
+        .in("escrow_status", ["held", "released"])
+        .order("created_at", { ascending: false });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        setPayments(data || []);
+      setPayments(data || []);
 
-        // Calculate total held in escrow
-        const balance = await getEscrowBalance(user.id);
-        setTotalEscrow(balance);
-      } catch (error) {
-        console.error("Error fetching escrow data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEscrowData();
+      // Calculate total held in escrow
+      const balance = await getEscrowBalance(user.id);
+      setTotalEscrow(balance);
+    } catch (error) {
+      console.error("Error fetching escrow data:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [user, getEscrowBalance]);
 
+  useEffect(() => {
+    void fetchEscrowData();
+  }, [fetchEscrowData]);
+
   const handleEscrowReleased = () => {
-    // Refresh escrow data
-    if (user) {
-      getEscrowBalance(user.id).then(setTotalEscrow);
-    }
+    // Refresh both payments and escrow balance after release
+    void fetchEscrowData();
   };
 
   if (loading) {

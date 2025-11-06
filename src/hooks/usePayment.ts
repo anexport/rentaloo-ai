@@ -194,30 +194,54 @@ export const usePayment = () => {
   );
 
   /**
-   * Process a refund
+   * Process a refund via Stripe Edge Function
    */
   const processRefund = useCallback(
     async ({ paymentId, reason }: ProcessRefundParams): Promise<boolean> => {
+      if (!user) {
+        setError("User must be authenticated");
+        return false;
+      }
+
       setLoading(true);
       setError(null);
 
       try {
-        // In production, this would call your backend API to:
-        // 1. Create a Stripe Refund
-        // 2. Update the payment and escrow status
-        // 3. Notify both parties
+        // Get session token
+        const { data: session } = await supabase.auth.getSession();
+        const token = session?.session?.access_token;
 
-        const { error: updateError } = await supabase
-          .from("payments")
-          .update({
-            payment_status: "refunded" as PaymentStatus,
-            escrow_status: "refunded" as EscrowStatus,
-            refund_reason: reason,
-            refunded_at: new Date().toISOString(),
-          })
-          .eq("id", paymentId);
+        if (!token) {
+          throw new Error("Authentication required");
+        }
 
-        if (updateError) throw updateError;
+        // Get Supabase URL
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        if (!supabaseUrl) {
+          throw new Error("VITE_SUPABASE_URL is not configured");
+        }
+
+        // Call Edge Function for refund
+        const response = await fetch(
+          `${supabaseUrl}/functions/v1/process-refund`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ paymentId, reason }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({
+            error: "Unknown error",
+          }));
+          throw new Error(
+            errorData.error || `Failed to process refund: ${response.status}`
+          );
+        }
 
         return true;
       } catch (err) {
@@ -230,7 +254,7 @@ export const usePayment = () => {
         setLoading(false);
       }
     },
-    []
+    [user]
   );
 
   /**

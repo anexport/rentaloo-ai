@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
 import {
   LayoutDashboard,
   Search,
@@ -22,49 +23,39 @@ import ThemeToggle from "@/components/ThemeToggle";
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setUserRole] = useState<"owner" | "renter" | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchUserRole = async () => {
-      if (user) {
-        const role = user.user_metadata?.role as "owner" | "renter" | undefined;
-        if (role) {
-          setUserRole(role);
-        }
-      }
-    };
-
-    fetchUserRole();
+    if (user?.user_metadata?.role) {
+      setUserRole(user.user_metadata.role as "owner" | "renter");
+    } else {
+      setUserRole(null);
+    }
   }, [user]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
-
   const handleSignOut = async () => {
-    await signOut();
+    const { error } = await signOut();
+    if (error) {
+      console.error("Sign out error:", error);
+      toast({
+        variant: "destructive",
+        title: "Sign out failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to sign out. Please try again.",
+      });
+      return;
+    }
     setIsOpen(false);
-    navigate("/");
+    void navigate("/");
   };
 
   const handleNavigation = (path: string) => {
-    navigate(path);
     setIsOpen(false);
+    void navigate(path);
   };
 
   const getInitials = (email?: string | null) => {
@@ -91,9 +82,8 @@ const UserMenu = () => {
   const displayName = user.user_metadata?.fullName || user.email;
 
   return (
-    <DropdownMenu ref={menuRef}>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger
-        onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 focus:outline-none"
         aria-label="User menu"
       >
@@ -110,75 +100,67 @@ const UserMenu = () => {
         </div>
       </DropdownMenuTrigger>
 
-      {isOpen && (
-        <DropdownMenuContent>
-          {/* User Info */}
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-            <p className="text-sm font-semibold text-foreground truncate">
-              {displayName}
-            </p>
-            <p className="text-xs text-gray-500 truncate mt-0.5">
-              {userRole === "owner" ? "Equipment Owner" : "Renter"}
-            </p>
-          </div>
+      <DropdownMenuContent>
+        {/* User Info */}
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {displayName}
+          </p>
+          <p className="text-xs text-gray-500 truncate mt-0.5">
+            {userRole == null
+              ? "Loading..."
+              : userRole === "owner"
+                ? "Equipment Owner"
+                : "Renter"}
+          </p>
+        </div>
 
-          {/* Navigation Items */}
-          <DropdownMenuItem
-            onClick={() => handleNavigation(getDashboardPath())}
-          >
-            <div className="flex items-center space-x-3">
-              <LayoutDashboard className="h-4 w-4 text-gray-500" />
-              <span>Dashboard</span>
-            </div>
-          </DropdownMenuItem>
+        {/* Navigation Items */}
+        <DropdownMenuItem
+          onClick={() => handleNavigation(getDashboardPath())}
+        >
+          <LayoutDashboard className="h-4 w-4 text-gray-500" />
+          <span>Dashboard</span>
+        </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => handleNavigation("/equipment")}>
-            <div className="flex items-center space-x-3">
-              <Search className="h-4 w-4 text-gray-500" />
-              <span>Browse Equipment</span>
-            </div>
-          </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleNavigation("/equipment")}>
+          <Search className="h-4 w-4 text-gray-500" />
+          <span>Browse Equipment</span>
+        </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => handleNavigation("/messages")}>
-            <div className="flex items-center space-x-3">
-              <MessageSquare className="h-4 w-4 text-gray-500" />
-              <span>Messages</span>
-            </div>
-          </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleNavigation("/messages")}>
+          <MessageSquare className="h-4 w-4 text-gray-500" />
+          <span>Messages</span>
+        </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => handleNavigation("/verification")}>
-            <div className="flex items-center space-x-3">
-              <Shield className="h-4 w-4 text-gray-500" />
-              <span>Verification</span>
-            </div>
-          </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleNavigation("/verification")}>
+          <Shield className="h-4 w-4 text-gray-500" />
+          <span>Verification</span>
+        </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+        <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => handleNavigation("/settings")}>
-            <div className="flex items-center space-x-3">
-              <Settings className="h-4 w-4 text-gray-500" />
-              <span>Settings</span>
-            </div>
-          </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleNavigation("/settings")}>
+          <Settings className="h-4 w-4 text-gray-500" />
+          <span>Settings</span>
+        </DropdownMenuItem>
 
-          <DropdownMenuItem>
-            <ThemeToggle variant="menu-item" />
-          </DropdownMenuItem>
+        <DropdownMenuItem>
+          <ThemeToggle variant="menu-item" />
+        </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+        <DropdownMenuSeparator />
 
-          <DropdownMenuItem
-            onClick={handleSignOut}
-            className="text-red-600 hover:bg-red-50"
-          >
-            <div className="flex items-center space-x-3">
-              <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
-            </div>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      )}
+        <DropdownMenuItem
+          onClick={() => {
+            void handleSignOut();
+          }}
+          className="text-red-600 hover:bg-red-50"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Sign Out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
     </DropdownMenu>
   );
 };

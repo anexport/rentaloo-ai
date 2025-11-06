@@ -28,12 +28,12 @@ const StatsOverview = () => {
       try {
         setLoading(true);
 
-        // Fetch active bookings count
+        // Fetch active bookings count (approved status only - in_progress doesn't exist)
         const { count: activeCount } = await supabase
           .from("booking_requests")
           .select("*", { count: "exact", head: true })
           .eq("renter_id", user.id)
-          .in("status", ["approved", "in_progress"]);
+          .eq("status", "approved");
 
         // Fetch pending requests count
         const { count: pendingCount } = await supabase
@@ -42,14 +42,18 @@ const StatsOverview = () => {
           .eq("renter_id", user.id)
           .eq("status", "pending");
 
-        // Fetch total spent from transactions
-        const { data: transactions } = await supabase
-          .from("transactions")
-          .select("amount")
-          .eq("payer_id", user.id)
-          .eq("status", "completed");
+        // Fetch total spent from payments table (not transactions)
+        const { data: payments } = await supabase
+          .from("payments")
+          .select("total_amount")
+          .eq("renter_id", user.id)
+          .eq("payment_status", "succeeded");
 
-        const totalSpent = transactions?.reduce((sum, t) => sum + t.amount, 0) || 0;
+        const totalSpent =
+          payments?.reduce(
+            (sum, p) => sum + Number(p.total_amount ?? 0),
+            0
+          ) ?? 0;
 
         setStats({
           activeBookings: activeCount || 0,
@@ -63,7 +67,7 @@ const StatsOverview = () => {
       }
     };
 
-    fetchStats();
+    void fetchStats();
   }, [user]);
 
   if (loading) {

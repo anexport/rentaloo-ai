@@ -1,13 +1,15 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { usePayment } from "@/hooks/usePayment";
-import { calculatePaymentSummary } from "../../lib/payment";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import { getStripe, createPaymentIntent } from "@/lib/stripe";
+import { calculatePaymentSummary } from "@/lib/payment";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -16,20 +18,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CreditCard, Lock } from "lucide-react";
+import { AlertCircle, CreditCard, Lock, Loader2 } from "lucide-react";
 import PaymentSummary from "./PaymentSummary";
-
-const paymentFormSchema = z.object({
-  card_number: z
-    .string()
-    .min(13, "Invalid card number")
-    .max(19, "Invalid card number"),
-  card_holder: z.string().min(2, "Cardholder name is required"),
-  expiry_month: z.string().regex(/^(0[1-9]|1[0-2])$/, "Invalid month"),
-  expiry_year: z.string().regex(/^\d{4}$/, "Invalid year"),
-  cvv: z.string().regex(/^\d{3,4}$/, "Invalid CVV"),
-  save_card: z.boolean().default(false),
-});
 
 interface PaymentFormProps {
   bookingRequestId: string;
@@ -39,62 +29,105 @@ interface PaymentFormProps {
   onCancel?: () => void;
 }
 
-const PaymentForm = ({
+interface PaymentFormInnerProps extends PaymentFormProps {
+  paymentIntentId: string;
+}
+
+const PaymentFormInner = ({
   bookingRequestId,
   ownerId,
   totalAmount,
   onSuccess,
   onCancel,
-}: PaymentFormProps) => {
+  paymentIntentId,
+}: PaymentFormInnerProps) => {
   const navigate = useNavigate();
-  const { createPayment, loading: paymentLoading } = usePayment();
+  const stripe = useStripe();
+  const elements = useElements();
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const paymentSummary = calculatePaymentSummary(totalAmount);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<z.infer<typeof paymentFormSchema>>({
-    resolver: zodResolver(paymentFormSchema),
-    defaultValues: {
-      save_card: false,
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const onSubmit = async (formData: z.infer<typeof paymentFormSchema>) => {
+    if (!stripe || !elements) {
+      setError("Stripe is not initialized. Please refresh the page.");
+      return;
+    }
+
+    setIsProcessing(true);
     setError(null);
-    void formData;
 
     try {
-      // In a production environment, this would:
-      // 1. Create a payment intent via your backend API
-      // 2. Use Stripe.js to securely collect and tokenize card details
-      // 3. Confirm the payment with Stripe
-      // 4. Update the booking and payment records in Supabase
-
-      // For MVP, we'll simulate the payment process using our usePayment hook
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Create mock payment method ID (in production, this comes from Stripe)
-      const paymentMethodId = `pm_mock_${Date.now()}`;
-
-      // Create payment using the usePayment hook
-      const payment = await createPayment({
-        bookingRequestId,
-        ownerId,
-        totalAmount: paymentSummary.total,
-        paymentMethodId,
+      // Confirm payment with Stripe
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/payment/confirmation?payment_intent_id=${paymentIntentId}`,
+        },
+        redirect: "if_required",
       });
 
-      if (payment) {
-        // Navigate to payment confirmation page
-        navigate(`/payment/confirmation?payment_id=${payment.id}`);
-        onSuccess?.(payment.id);
+      if (confirmError) {
+        setError(confirmError.message || "Payment failed. Please try again.");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Payment succeeded - poll for payment record
+      if (!paymentIntentId) {
+        setError("Payment Intent ID not found");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Poll for payment record (up to 10 seconds with backoff)
+      const maxAttempts = 20;
+      const pollInterval = 500; // 500ms
+
+      const pollPayment = async (): Promise<string | null> => {
+        for (let i = 0; i < maxAttempts; i++) {
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
+
+          const { data: payment, error: fetchError } = await supabase
+            .from("payments")
+            .select("id")
+            .eq("stripe_payment_intent_id", paymentIntentId)
+            .eq("payment_status", "succeeded")
+            .maybeSingle();
+
+          if (payment) {
+            return payment.id;
+          }
+
+          if (fetchError && fetchError.code !== "PGRST116") {
+            // PGRST116 is "not found" which is expected during polling
+            console.error("Error polling payment:", fetchError);
+          }
+        }
+        return null;
+      };
+
+      const paymentId = await pollPayment();
+
+      if (paymentId) {
+        // Navigate to confirmation page
+        void navigate(`/payment/confirmation?payment_id=${paymentId}`);
+        onSuccess?.(paymentId);
       } else {
-        throw new Error("Payment creation failed");
+        // Payment succeeded but record not found yet
+        // Still navigate but show warning
+        setError(
+          "Payment succeeded but confirmation is pending. Please check your payment status."
+        );
+        // Still navigate after a short delay
+        setTimeout(() => {
+          void navigate(
+            `/payment/confirmation?payment_intent_id=${paymentIntentId}`
+          );
+        }, 2000);
       }
     } catch (err) {
       console.error("Payment error:", err);
@@ -103,6 +136,7 @@ const PaymentForm = ({
           ? err.message
           : "Payment failed. Please try again or use a different payment method."
       );
+      setIsProcessing(false);
     }
   };
 
@@ -120,11 +154,11 @@ const PaymentForm = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Security Notice */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start space-x-2">
-              <Lock className="h-4 w-4 text-blue-600 mt-0.5" />
-              <div className="text-xs text-blue-700">
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-start space-x-2">
+              <Lock className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div className="text-xs text-blue-700 dark:text-blue-300">
                 Your payment information is encrypted and secure. We use Stripe
                 for payment processing.
               </div>
@@ -138,97 +172,9 @@ const PaymentForm = ({
               </Alert>
             )}
 
-            {/* Card Number */}
-            <div className="space-y-2">
-              <Label htmlFor="card_number">Card Number</Label>
-              <Input
-                id="card_number"
-                type="text"
-                placeholder="1234 5678 9012 3456"
-                maxLength={19}
-                {...register("card_number")}
-              />
-              {errors.card_number && (
-                <p className="text-sm text-red-600">
-                  {errors.card_number.message}
-                </p>
-              )}
-            </div>
-
-            {/* Cardholder Name */}
-            <div className="space-y-2">
-              <Label htmlFor="card_holder">Cardholder Name</Label>
-              <Input
-                id="card_holder"
-                type="text"
-                placeholder="John Doe"
-                {...register("card_holder")}
-              />
-              {errors.card_holder && (
-                <p className="text-sm text-red-600">
-                  {errors.card_holder.message}
-                </p>
-              )}
-            </div>
-
-            {/* Expiry and CVV */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="expiry_month">Month</Label>
-                <Input
-                  id="expiry_month"
-                  type="text"
-                  placeholder="MM"
-                  maxLength={2}
-                  {...register("expiry_month")}
-                />
-                {errors.expiry_month && (
-                  <p className="text-xs text-red-600">
-                    {errors.expiry_month.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="expiry_year">Year</Label>
-                <Input
-                  id="expiry_year"
-                  type="text"
-                  placeholder="YYYY"
-                  maxLength={4}
-                  {...register("expiry_year")}
-                />
-                {errors.expiry_year && (
-                  <p className="text-xs text-red-600">
-                    {errors.expiry_year.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cvv">CVV</Label>
-                <Input
-                  id="cvv"
-                  type="text"
-                  placeholder="123"
-                  maxLength={4}
-                  {...register("cvv")}
-                />
-                {errors.cvv && (
-                  <p className="text-xs text-red-600">{errors.cvv.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Save Card Option */}
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="save_card"
-                className="rounded border-gray-300"
-                {...register("save_card")}
-              />
-              <Label htmlFor="save_card" className="text-sm font-normal">
-                Save card for future bookings
-              </Label>
+            {/* Stripe Payment Element */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <PaymentElement />
             </div>
 
             {/* Action Buttons */}
@@ -238,18 +184,23 @@ const PaymentForm = ({
                 variant="outline"
                 className="flex-1"
                 onClick={onCancel}
-                disabled={paymentLoading}
+                disabled={isProcessing}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 className="flex-1"
-                disabled={paymentLoading}
+                disabled={!stripe || isProcessing}
               >
-                {paymentLoading
-                  ? "Processing..."
-                  : `Pay ${paymentSummary.total.toFixed(2)}`}
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  `Pay ${paymentSummary.total.toFixed(2)}`
+                )}
               </Button>
             </div>
           </form>
@@ -263,7 +214,7 @@ const PaymentForm = ({
         {/* Additional Info */}
         <Card className="mt-4">
           <CardContent className="pt-6">
-            <div className="text-sm text-gray-600 space-y-2">
+            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
               <p className="font-medium">Payment Protection</p>
               <ul className="list-disc list-inside space-y-1 text-xs">
                 <li>Funds held in escrow until rental completion</li>
@@ -276,6 +227,103 @@ const PaymentForm = ({
         </Card>
       </div>
     </div>
+  );
+};
+
+const PaymentForm = ({
+  bookingRequestId,
+  ownerId,
+  totalAmount,
+  onSuccess,
+  onCancel,
+}: PaymentFormProps) => {
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [stripePromise, setStripePromise] = useState<Promise<
+    import("@stripe/stripe-js").Stripe | null
+  > | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initializePayment = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Initialize Stripe
+        const stripe = getStripe();
+        setStripePromise(stripe);
+
+        // Create payment intent via Edge Function
+        const { clientSecret: secret, paymentIntentId: intentId } =
+          await createPaymentIntent(bookingRequestId);
+
+        setClientSecret(secret);
+        setPaymentIntentId(intentId);
+      } catch (err) {
+        console.error("Error initializing payment:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to initialize payment. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void initializePayment();
+  }, [bookingRequestId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Initializing payment...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive" className="m-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (!clientSecret || !paymentIntentId || !stripePromise) {
+    return (
+      <Alert variant="destructive" className="m-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Failed to initialize payment. Please try again.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <Elements
+      stripe={stripePromise}
+      options={{
+        clientSecret,
+        appearance: {
+          theme: "stripe",
+        },
+      }}
+    >
+      <PaymentFormInner
+        bookingRequestId={bookingRequestId}
+        ownerId={ownerId}
+        totalAmount={totalAmount}
+        onSuccess={onSuccess}
+        onCancel={onCancel}
+        paymentIntentId={paymentIntentId}
+      />
+    </Elements>
   );
 };
 

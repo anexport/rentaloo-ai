@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Link, useSearchParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import TransactionHistory from "@/components/payment/TransactionHistory";
 import ReviewList from "@/components/reviews/ReviewList";
@@ -23,6 +23,7 @@ import NotificationsPanel from "@/components/renter/NotificationsPanel";
 import { Separator } from "@/components/ui/separator";
 import { useVerification } from "@/hooks/useVerification";
 import { getVerificationProgress } from "@/lib/verification";
+import { useToast } from "@/hooks/useToast";
 
 const RenterDashboard = () => {
   const { user } = useAuth();
@@ -36,44 +37,95 @@ const RenterDashboard = () => {
   const {
     bookingRequests: renterBookings,
     loading: renterLoading,
+    error: renterError,
     fetchBookingRequests: fetchRenterBookings,
   } = useBookingRequests("renter");
+
+  const { toast } = useToast();
+
+  // Memoize the status change callback to prevent effect re-runs
+  const handleBookingStatusChange = useCallback(async () => {
+    try {
+      await fetchRenterBookings();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Failed to refresh bookings",
+        description:
+          err instanceof Error
+            ? err.message
+            : "An error occurred while refreshing bookings.",
+      });
+    }
+  }, [fetchRenterBookings, toast]);
+
+  // Watch for errors from initial/background fetches
+  useEffect(() => {
+    if (renterError) {
+      toast({
+        variant: "destructive",
+        title: "Failed to load bookings",
+        description: renterError,
+      });
+    }
+  }, [renterError, toast]);
 
   // Check if user has equipment listings and pending requests
   useEffect(() => {
     const checkEquipment = async () => {
       if (!user) return;
 
-      const { count } = await supabase
+      try {
+        const { count, error: countError } = await supabase
         .from("equipment")
         .select("*", { count: "exact", head: true })
         .eq("owner_id", user.id);
+
+        if (countError) throw countError;
 
       setHasEquipment((count || 0) > 0);
 
       // If they have equipment, check for pending requests
       if (count && count > 0) {
-        const { data: equipment } = await supabase
+          const { data: equipment, error: equipmentError } = await supabase
           .from("equipment")
           .select("id")
           .eq("owner_id", user.id);
 
+          if (equipmentError) throw equipmentError;
+
         if (equipment && equipment.length > 0) {
           const equipmentIds = equipment.map((eq) => eq.id);
 
-          const { count: pendingCount } = await supabase
+            const { count: pendingCount, error: pendingError } = await supabase
             .from("booking_requests")
             .select("*", { count: "exact", head: true })
             .in("equipment_id", equipmentIds)
             .eq("status", "pending");
 
+            if (pendingError) throw pendingError;
+
           setPendingOwnerRequests(pendingCount || 0);
         }
+        }
+      } catch (err) {
+        console.error("Failed to check equipment:", err);
+        toast({
+          variant: "destructive",
+          title: "Failed to load equipment information",
+          description:
+            err instanceof Error
+              ? err.message
+              : "An error occurred while checking your equipment listings.",
+        });
+        // Reset to safe defaults on error
+        setHasEquipment(false);
+        setPendingOwnerRequests(0);
       }
     };
 
-    checkEquipment();
-  }, [user]);
+    void checkEquipment();
+  }, [user, toast]);
 
   const progress = profile ? getVerificationProgress(profile) : 0;
   const hasAnyVerification =
@@ -229,7 +281,7 @@ const RenterDashboard = () => {
               <BookingRequestCard
                 key={booking.id}
                 bookingRequest={booking}
-                onStatusChange={fetchRenterBookings}
+                onStatusChange={handleBookingStatusChange}
                 showActions={true}
               />
             ))}

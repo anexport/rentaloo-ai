@@ -13,8 +13,8 @@ import type { Database, ProfileSummary } from "../lib/database.types";
 interface ConversationSummary {
   id: string;
   booking_request_id: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   participant_id: string;
   participant_email: string | null;
   last_seen_at: string | null;
@@ -28,32 +28,21 @@ interface ConversationSummary {
   end_date: string | null;
   total_amount: number | null;
   equipment_title: string | null;
-  unread_count: string | null;
+  unread_count: number | null;
 }
 
 interface ConversationGroup {
   summary: ConversationSummary;
-  participants: Map<
-    string,
-    {
-      id: string;
-      email: string | null;
-      last_seen_at: string | null;
-    }
-  >;
+  participants: Set<string>;
   unreadCount: number;
 }
 
 interface ConversationData {
   id: string;
   booking_request_id: string | null;
-  created_at: string;
-  updated_at: string;
-  participants: {
-    id: string;
-    email: string | null;
-    last_seen_at: string | null;
-  }[];
+  created_at: string | null;
+  updated_at: string | null;
+  participants: string[] | null;
   last_message: {
     id: string;
     sender_id: string | null;
@@ -99,6 +88,15 @@ type ConversationParticipantReadRow = Pick<
   ConversationParticipantRow,
   "conversation_id" | "last_read_at"
 >;
+
+// Supabase response types
+type ConversationSummaryRow =
+  Database["public"]["Views"]["messaging_conversation_summaries"]["Row"];
+
+type SupabaseResponse<T> = {
+  data: T | null;
+  error: Error | null;
+};
 type ConversationParticipantProfileRow = Pick<
   ConversationParticipantRow,
   "profile_id"
@@ -122,35 +120,24 @@ const processConversationSummaries = (
 
   summaries.forEach((summary) => {
     const convId = summary.id;
-    const participant = {
-      id: summary.participant_id,
-      email: summary.participant_email,
-      last_seen_at: summary.last_seen_at,
-    };
+    const participantId = summary.participant_id;
 
     const existingGroup = groupedSummaries.get(convId);
-    const unreadValue = Number(summary.unread_count) || 0;
+    const unreadValue = summary.unread_count ?? 0;
 
     if (!existingGroup) {
-      const participantMap = new Map<
-        string,
-        {
-          id: string;
-          email: string | null;
-          last_seen_at: string | null;
-        }
-      >();
-      participantMap.set(participant.id, participant);
+      const participantSet = new Set<string>();
+      participantSet.add(participantId);
 
       groupedSummaries.set(convId, {
         summary,
-        participants: participantMap,
+        participants: participantSet,
         unreadCount: summary.participant_id === userId ? unreadValue : 0,
       });
       return;
     }
 
-    existingGroup.participants.set(participant.id, participant);
+    existingGroup.participants.add(participantId);
     if (summary.participant_id === userId) {
       existingGroup.unreadCount = unreadValue;
     }
@@ -175,9 +162,9 @@ const convertToConversationData = (
     conversationMap.set(convId, {
       id: summary.id,
       booking_request_id: summary.booking_request_id,
-      created_at: summary.created_at,
-      updated_at: summary.updated_at,
-      participants: Array.from(participants.values()),
+      created_at: summary.created_at ?? null,
+      updated_at: summary.updated_at ?? null,
+      participants: Array.from(participants),
       last_message: summary.last_message_id
         ? {
             id: summary.last_message_id,
@@ -225,22 +212,10 @@ const buildConversationsWithDetails = (
   participantMap: Map<string, ConversationParticipantReadRow>
 ): ConversationWithDetails[] => {
   return conversationList.map((conversation) => {
-    const fullParticipants = (conversation.participants || []).reduce(
-      (acc: ProfileSummary[], participant) => {
-        const profile = profileMap.get(participant.id);
-        if (!profile) {
-          return acc;
-        }
-
-        acc.push({
-          ...profile,
-          last_seen_at:
-            participant.last_seen_at ?? profile.last_seen_at ?? null,
-        } as ProfileSummary);
-        return acc;
-      },
-      []
-    );
+    // Convert participant IDs to array (or null if empty)
+    const participantIds = conversation.participants && conversation.participants.length > 0
+      ? conversation.participants
+      : null;
 
     let lastMessage: MessageWithSender | null = null;
     const lastMessageId = conversation.last_message?.id;
@@ -286,7 +261,7 @@ const buildConversationsWithDetails = (
 
     return {
       ...conversation,
-      participants: fullParticipants,
+      participants: participantIds,
       last_message: lastMessage,
       booking_request: bookingRequest,
       last_read_at: lastReadAt,
@@ -353,7 +328,7 @@ const retryWithBackoff = async <T>(
   maxRetries: number = 3,
   delay: number = 1000
 ): Promise<T> => {
-  let lastError: Error;
+  let lastError: Error | undefined = undefined;
 
   for (let i = 0; i <= maxRetries; i++) {
     try {
@@ -380,7 +355,11 @@ const retryWithBackoff = async <T>(
   }
 
   // This should never be reached, but TypeScript needs it
-  throw lastError!;
+  // If we somehow get here, lastError should be set from the loop above
+  if (lastError) {
+    throw lastError;
+  }
+  throw new Error("Retry operation failed with unknown error");
 };
 
 /**
@@ -521,11 +500,11 @@ export const useMessaging = () => {
 
       // Explicitly clean up channels on logout
       if (conversationChannelRef.current) {
-        supabase.removeChannel(conversationChannelRef.current);
+        void supabase.removeChannel(conversationChannelRef.current);
         conversationChannelRef.current = null;
       }
       if (userChannelRef.current) {
-        supabase.removeChannel(userChannelRef.current);
+        void supabase.removeChannel(userChannelRef.current);
         userChannelRef.current = null;
       }
 
@@ -574,7 +553,9 @@ export const useMessaging = () => {
                 supabase
                   .from("conversation_participants")
                   .select("conversation_id")
-                  .eq("profile_id", user.id) as unknown as Promise<any>,
+                  .eq("profile_id", user.id) as unknown as Promise<
+                  SupabaseResponse<ConversationParticipantIdRow[]>
+                >,
                 10000,
                 "Failed to fetch user conversations: request timed out"
               );
@@ -582,7 +563,7 @@ export const useMessaging = () => {
             },
             2, // Max 2 retries for this operation
             1000 // 1 second initial delay
-          )) as any;
+          )) as SupabaseResponse<ConversationParticipantIdRow[]>;
 
         if (convError) throw convError;
         if (abortController.signal.aborted) throw new Error("Request aborted");
@@ -609,13 +590,15 @@ export const useMessaging = () => {
                 .in("id", userConversationIdArray)
                 .order("updated_at", {
                   ascending: false,
-                }) as unknown as Promise<any>,
+                }) as unknown as Promise<
+                SupabaseResponse<ConversationSummaryRow[]>
+              >,
               10000,
               "Failed to fetch conversation summaries: request timed out"
             ),
           2, // Max 2 retries for this operation
           1000 // 1 second initial delay
-        )) as any;
+        )) as SupabaseResponse<ConversationSummaryRow[]>;
 
         if (error) throw error;
         if (abortController.signal.aborted) throw new Error("Request aborted");
@@ -629,8 +612,31 @@ export const useMessaging = () => {
         }
 
         // Group by conversation_id (view returns one row per participant)
+        // Convert database types to ConversationSummary format
+        const conversationSummaries: ConversationSummary[] = summaries.map(
+          (s) => ({
+            id: s.id,
+            booking_request_id: s.booking_request_id,
+            created_at: s.created_at ?? null,
+            updated_at: s.updated_at ?? null,
+            participant_id: s.participant_id,
+            participant_email: s.participant_email,
+            last_seen_at: s.last_seen_at,
+            last_message_id: s.last_message_id,
+            last_message_sender_id: s.last_message_sender_id,
+            last_message_content: s.last_message_content,
+            last_message_type: s.last_message_type,
+            last_message_created_at: s.last_message_created_at,
+            booking_status: s.booking_status,
+            start_date: s.start_date,
+            end_date: s.end_date,
+            total_amount: s.total_amount,
+            equipment_title: s.equipment_title,
+            unread_count: s.unread_count,
+          })
+        );
         const groupedSummaries = processConversationSummaries(
-          summaries,
+          conversationSummaries,
           user.id
         );
 
@@ -644,9 +650,9 @@ export const useMessaging = () => {
 
         conversationList.forEach((conversation) => {
           conversationIds.add(conversation.id);
-          conversation.participants?.forEach((participant) => {
-            if (participant?.id) {
-              participantIds.add(participant.id);
+          conversation.participants?.forEach((participantId) => {
+            if (participantId) {
+              participantIds.add(participantId);
             }
           });
 
@@ -672,7 +678,7 @@ export const useMessaging = () => {
                         .in(
                           "id",
                           Array.from(participantIds)
-                        ) as unknown as Promise<any>,
+                        ) as unknown as Promise<SupabaseResponse<ProfileRow[]>>,
                       10000,
                       "Failed to fetch profiles: request timed out"
                     ),
@@ -698,7 +704,9 @@ export const useMessaging = () => {
                         .in(
                           "id",
                           Array.from(lastMessageIds)
-                        ) as unknown as Promise<any>,
+                        ) as unknown as Promise<
+                        SupabaseResponse<MessageRowWithSender[]>
+                      >,
                       10000,
                       "Failed to fetch messages: request timed out"
                     ),
@@ -724,7 +732,9 @@ export const useMessaging = () => {
                         .in(
                           "id",
                           Array.from(bookingRequestIds)
-                        ) as unknown as Promise<any>,
+                        ) as unknown as Promise<
+                        SupabaseResponse<BookingRequestWithEquipmentNullable[]>
+                      >,
                       10000,
                       "Failed to fetch booking requests: request timed out"
                     ),
@@ -743,7 +753,9 @@ export const useMessaging = () => {
                         .from("conversation_participants")
                         .select("conversation_id, last_read_at")
                         .in("conversation_id", Array.from(conversationIds))
-                        .eq("profile_id", user.id) as unknown as Promise<any>,
+                        .eq("profile_id", user.id) as unknown as Promise<
+                        SupabaseResponse<ConversationParticipantReadRow[]>
+                      >,
                       10000,
                       "Failed to fetch conversation participants: request timed out"
                     ),
@@ -846,13 +858,15 @@ export const useMessaging = () => {
                 .eq("conversation_id", conversationId)
                 .order("created_at", {
                   ascending: true,
-                }) as unknown as Promise<any>,
+                }) as unknown as Promise<
+                SupabaseResponse<MessageRowWithSender[]>
+              >,
               10000,
               "Failed to fetch messages: request timed out"
             ),
           2, // Max 2 retries for this operation
           1000 // 1 second initial delay
-        )) as any;
+        )) as SupabaseResponse<MessageRowWithSender[]>;
 
         // Check if request was aborted
         if (abortController.signal.aborted) return;
@@ -882,7 +896,7 @@ export const useMessaging = () => {
                 withTimeout(
                   supabase.rpc("mark_conversation_read", {
                     p_conversation: conversationId,
-                  }) as unknown as Promise<any>,
+                  }) as unknown as Promise<SupabaseResponse<undefined>>,
                   10000,
                   "Failed to mark conversation as read: request timed out"
                 ),
@@ -940,13 +954,15 @@ export const useMessaging = () => {
               sender:profiles(*)
             `
                 )
-                .single() as unknown as Promise<any>,
+                .single() as unknown as Promise<
+                SupabaseResponse<MessageRowWithSender>
+              >,
               10000,
               "Failed to send message: request timed out"
             ),
           2, // Max 2 retries for this operation
           1000 // 1 second initial delay
-        )) as any;
+        )) as SupabaseResponse<MessageRowWithSender>;
 
         // Check if request was aborted
         if (abortController.signal.aborted) return;
@@ -973,10 +989,9 @@ export const useMessaging = () => {
               supabase
                 .from("conversations")
                 .update({ updated_at: timestamp })
-                .eq(
-                  "id",
-                  messageData.conversation_id
-                ) as unknown as Promise<any>,
+                .eq("id", messageData.conversation_id) as unknown as Promise<
+                SupabaseResponse<undefined>
+              >,
               10000,
               "Failed to update conversation: request timed out"
             ),
@@ -1028,13 +1043,19 @@ export const useMessaging = () => {
                   .from("conversations")
                   .select("*")
                   .eq("booking_request_id", bookingRequestId)
-                  .single() as unknown as Promise<any>,
+                  .single() as unknown as Promise<
+                  SupabaseResponse<
+                    Database["public"]["Tables"]["conversations"]["Row"]
+                  >
+                >,
                 10000,
                 "Failed to check existing conversation: request timed out"
               ),
             2, // Max 2 retries for this operation
             1000 // 1 second initial delay
-          )) as any;
+          )) as SupabaseResponse<
+            Database["public"]["Tables"]["conversations"]["Row"]
+          >;
 
           if (existingConversation) {
             return existingConversation;
@@ -1050,13 +1071,15 @@ export const useMessaging = () => {
                 supabase
                   .from("conversation_participants")
                   .select("conversation_id")
-                  .eq("profile_id", user.id) as unknown as Promise<any>,
+                  .eq("profile_id", user.id) as unknown as Promise<
+                  SupabaseResponse<ConversationParticipantIdRow[]>
+                >,
                 10000,
                 "Failed to fetch user conversations: request timed out"
               ),
             2, // Max 2 retries for this operation
             1000 // 1 second initial delay
-          )) as any;
+          )) as SupabaseResponse<ConversationParticipantIdRow[]>;
 
           if (userConvs && userConvs.length > 0) {
             const convIds = userConvs.map(
@@ -1071,13 +1094,15 @@ export const useMessaging = () => {
                     supabase
                       .from("conversation_participants")
                       .select("profile_id")
-                      .eq("conversation_id", convId) as unknown as Promise<any>,
+                      .eq("conversation_id", convId) as unknown as Promise<
+                      SupabaseResponse<ConversationParticipantProfileRow[]>
+                    >,
                     10000,
                     "Failed to fetch conversation participants: request timed out"
                   ),
                 2, // Max 2 retries for this operation
                 1000 // 1 second initial delay
-              )) as any;
+              )) as SupabaseResponse<ConversationParticipantProfileRow[]>;
 
               const participantSet = new Set<string>(
                 (convParticipants ?? []).map(
@@ -1097,13 +1122,19 @@ export const useMessaging = () => {
                         .from("conversations")
                         .select("*")
                         .eq("id", convId)
-                        .single() as unknown as Promise<any>,
+                        .single() as unknown as Promise<
+                        SupabaseResponse<
+                          Database["public"]["Tables"]["conversations"]["Row"]
+                        >
+                      >,
                       10000,
                       "Failed to fetch existing conversation: request timed out"
                     ),
                   2, // Max 2 retries for this operation
                   1000 // 1 second initial delay
-                )) as any;
+                )) as SupabaseResponse<
+                  Database["public"]["Tables"]["conversations"]["Row"]
+                >;
 
                 if (existingConv) return existingConv;
               }
@@ -1123,13 +1154,19 @@ export const useMessaging = () => {
                     participants: uniqueParticipants, // Keep for backwards compatibility
                   })
                   .select()
-                  .single() as unknown as Promise<any>,
+                  .single() as unknown as Promise<
+                  SupabaseResponse<
+                    Database["public"]["Tables"]["conversations"]["Row"]
+                  >
+                >,
                 10000,
                 "Failed to create conversation: request timed out"
               ),
             2, // Max 2 retries for this operation
             1000 // 1 second initial delay
-          )) as any;
+          )) as SupabaseResponse<
+            Database["public"]["Tables"]["conversations"]["Row"]
+          >;
 
         if (convError) throw convError;
         if (!newConversation) {
@@ -1147,13 +1184,15 @@ export const useMessaging = () => {
             withTimeout(
               supabase
                 .from("conversation_participants")
-                .insert(participantInserts) as unknown as Promise<any>,
+                .insert(participantInserts) as unknown as Promise<
+                SupabaseResponse<undefined>
+              >,
               10000,
               "Failed to add conversation participants: request timed out"
             ),
           2, // Max 2 retries for this operation
           1000 // 1 second initial delay
-        )) as any;
+        )) as SupabaseResponse<undefined>;
 
         if (participantError) throw participantError;
 
@@ -1176,7 +1215,7 @@ export const useMessaging = () => {
   useEffect(() => {
     if (!user || !activeConversationId) {
       if (conversationChannelRef.current) {
-        supabase.removeChannel(conversationChannelRef.current);
+        void supabase.removeChannel(conversationChannelRef.current);
         conversationChannelRef.current = null;
       }
       return;
@@ -1194,7 +1233,7 @@ export const useMessaging = () => {
 
     // Clean up existing channel before creating a new one
     if (conversationChannelRef.current) {
-      supabase.removeChannel(conversationChannelRef.current);
+      void supabase.removeChannel(conversationChannelRef.current);
       conversationChannelRef.current = null;
     }
 
@@ -1207,7 +1246,8 @@ export const useMessaging = () => {
 
     conversationChannelRef.current = channel;
 
-    channel.on("broadcast", { event: "message_created" }, async (payload) => {
+    channel.on("broadcast", { event: "message_created" }, (payload) => {
+      void (async () => {
       const rawPayload = payload?.payload as MessageCreatedPayload | undefined;
       const record = rawPayload?.record || rawPayload?.new;
 
@@ -1240,13 +1280,15 @@ export const useMessaging = () => {
             `
                   )
                   .eq("id", messageId)
-                  .single() as unknown as Promise<any>,
+                  .single() as unknown as Promise<
+                  SupabaseResponse<MessageRowWithSender>
+                >,
                 10000,
                 "Failed to fetch new message: request timed out"
               ),
             2, // Max 2 retries for this operation
             1000 // 1 second initial delay
-          )) as any;
+          )) as SupabaseResponse<MessageRowWithSender>;
 
         if (fetchError || !fullMessage || !hasSender(fullMessage)) {
           console.error("Error fetching new message:", fetchError);
@@ -1272,6 +1314,7 @@ export const useMessaging = () => {
       } catch (error) {
         console.error("Error handling message_created event:", error);
       }
+      })();
     });
 
     channel.subscribe((status) => {
@@ -1283,7 +1326,7 @@ export const useMessaging = () => {
 
     return () => {
       if (conversationChannelRef.current) {
-        supabase.removeChannel(conversationChannelRef.current);
+        void supabase.removeChannel(conversationChannelRef.current);
         conversationChannelRef.current = null;
       }
     };
@@ -1293,7 +1336,7 @@ export const useMessaging = () => {
   useEffect(() => {
     if (!user) {
       if (userChannelRef.current) {
-        supabase.removeChannel(userChannelRef.current);
+        void supabase.removeChannel(userChannelRef.current);
         userChannelRef.current = null;
       }
       return;
@@ -1303,7 +1346,7 @@ export const useMessaging = () => {
 
     // Clean up existing channel before creating a new one
     if (userChannelRef.current) {
-      supabase.removeChannel(userChannelRef.current);
+      void supabase.removeChannel(userChannelRef.current);
       userChannelRef.current = null;
     }
 
@@ -1366,7 +1409,7 @@ export const useMessaging = () => {
 
     return () => {
       if (userChannelRef.current) {
-        supabase.removeChannel(userChannelRef.current);
+        void supabase.removeChannel(userChannelRef.current);
         userChannelRef.current = null;
       }
     };
@@ -1374,7 +1417,7 @@ export const useMessaging = () => {
 
   // Initial fetch
   useEffect(() => {
-    fetchConversations();
+    void fetchConversations();
   }, [fetchConversations]);
 
   return {

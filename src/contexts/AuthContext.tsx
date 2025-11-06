@@ -1,6 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import type { User, Session, AuthError } from "@supabase/supabase-js";
+import React, { createContext, useEffect, useState } from "react";
+import type { User, Session, AuthError, PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import type { Database } from "@/lib/database.types";
+
+type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+type UserMetadata = { role: "renter" | "owner" } & Record<string, unknown>;
+type UpdateProfileError = AuthError | PostgrestError;
 
 interface AuthContextType {
   user: User | null;
@@ -9,25 +14,22 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    userData: { role: "renter" | "owner" }
+    userData: UserMetadata
   ) => Promise<{ error: AuthError | null }>;
   signIn: (
     email: string,
     password: string
-  ) => Promise<{ error: AuthError | null }>;
+  ) => Promise<{ error: AuthError | null; user: User | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
-  updateProfile: (updates: any) => Promise<{ error: AuthError | null }>;
+  updateProfile: (
+    updates: ProfileUpdate
+  ) => Promise<{ error: UpdateProfileError | null }>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -40,29 +42,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      supabase.realtime
-        .setAuth(session?.access_token ?? null)
-        .catch((error) => {
-          console.error("Failed to set realtime auth:", error);
-        });
-    });
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        
+        try {
+          supabase.realtime.setAuth(session?.access_token ?? null);
+        } catch (realtimeError) {
+          console.error("Failed to set realtime auth:", realtimeError);
+        }
+      } catch (error) {
+        console.error("Error getting session:", error);
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+      }
+    };
+
+    void getInitialSession();
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      supabase.realtime
-        .setAuth(session?.access_token ?? null)
-        .catch((error) => {
-          console.error("Failed to set realtime auth:", error);
-        });
+      try {
+        supabase.realtime.setAuth(session?.access_token ?? null);
+      } catch (error) {
+        console.error("Failed to set realtime auth:", error);
+      }
 
       // Profile creation is now handled by database trigger
     });
@@ -73,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (
     email: string,
     password: string,
-    userData: { role: "renter" | "owner" } & Record<string, any>
+    userData: UserMetadata
   ) => {
     try {
       const { error } = await supabase.auth.signUp({
@@ -91,13 +113,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      return { error };
+      return { error, user: data?.user ?? null };
     } catch (error) {
-      return { error: error as AuthError };
+      return { error: error as AuthError, user: null };
     }
   };
 
@@ -110,15 +132,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const updateProfile = async (updates: any) => {
+  const updateProfile = async (updates: ProfileUpdate) => {
+    if (!user?.id) {
+      return {
+        error: {
+          message: "User not authenticated",
+          name: "AuthError",
+          status: 401,
+        } as UpdateProfileError,
+      };
+    }
     try {
       const { error } = await supabase
         .from("profiles")
-        .update(updates as any)
-        .eq("id", user?.id!);
-      return { error: error as AuthError | null };
+        .update(updates)
+        .eq("id", user.id);
+      if (error) {
+        return { error };
+      }
+      return { error: null };
     } catch (error) {
-      return { error: error as AuthError };
+      return {
+        error: error as UpdateProfileError,
+      };
     }
   };
 

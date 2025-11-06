@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,11 +34,7 @@ const AvailabilityCalendar = ({
   const [isBlocked, setIsBlocked] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchAvailability();
-  }, [equipmentId, currentMonth]);
-
-  const fetchAvailability = async () => {
+  const fetchAvailability = useCallback(async () => {
     const startOfMonth = new Date(
       currentMonth.getFullYear(),
       currentMonth.getMonth(),
@@ -63,7 +59,11 @@ const AvailabilityCalendar = ({
     }
 
     setAvailability(data || []);
-  };
+  }, [equipmentId, currentMonth]);
+
+  useEffect(() => {
+    void fetchAvailability();
+  }, [fetchAvailability]);
 
   const getDaysInMonth = () => {
     const year = currentMonth.getFullYear();
@@ -384,14 +384,21 @@ const AvailabilityCalendar = ({
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={handleDeleteAvailability}
+                    onClick={() => {
+                      void handleDeleteAvailability();
+                    }}
                     disabled={loading}
                   >
                     <X className="h-4 w-4 mr-1" />
                     Remove
                   </Button>
                 )}
-                <Button onClick={handleSaveAvailability} disabled={loading}>
+                <Button
+                  onClick={() => {
+                    void handleSaveAvailability();
+                  }}
+                  disabled={loading}
+                >
                   <Check className="h-4 w-4 mr-1" />
                   {loading ? "Saving..." : "Save"}
                 </Button>

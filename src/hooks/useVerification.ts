@@ -18,23 +18,25 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
   const [uploading, setUploading] = useState(false);
 
   const fetchVerificationProfile = useCallback(async () => {
-    const userId = options.userId;
-    if (!userId) {
+    // Step 1: Validate and get targetUserId (all validation happens first)
+    let targetUserId = options.userId;
+    if (!targetUserId) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
+        setError("User not authenticated");
         setLoading(false);
         return;
       }
+      targetUserId = user.id;
     }
 
+    // Step 2: Validation passed - set up state for the actual fetch
     setLoading(true);
     setError(null);
 
     try {
-      const targetUserId =
-        userId || (await supabase.auth.getUser()).data.user?.id;
       if (!targetUserId) throw new Error("No user ID available");
 
       // Fetch user profile
@@ -52,12 +54,17 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
         .select("rating")
         .eq("reviewee_id", targetUserId);
 
-      // Fetch completed bookings count
-      // Note: bookings table doesn't have a 'status' column, it has 'return_status'
+      // Fetch completed bookings count for the target user
+      // User can be either renter or owner, so we need to check both relationships
+      // Query from booking_requests and filter by status = 'completed'
       const { count: bookingsCount } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .eq("return_status", "completed");
+        .from("booking_requests")
+        .select(
+          "id, bookings!inner(return_status), equipment:equipment!inner(owner_id)",
+          { count: "exact", head: true }
+        )
+        .eq("status", "completed")
+        .or(`renter_id.eq.${targetUserId},equipment.owner_id.eq.${targetUserId}`);
 
       // Calculate trust score
       const accountAgeDays = calculateAccountAge(profileData.created_at);
@@ -101,7 +108,7 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
   }, [options.userId]);
 
   useEffect(() => {
-    fetchVerificationProfile();
+    void fetchVerificationProfile();
   }, [fetchVerificationProfile]);
 
   const uploadVerificationDocument = useCallback(

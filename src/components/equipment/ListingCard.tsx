@@ -37,9 +37,8 @@ const ListingCard = ({ listing, onOpen }: Props) => {
   // Guard currentImageIndex to prevent out-of-bounds access
   useEffect(() => {
     if (listing.photos && listing.photos.length > 0) {
-      setCurrentImageIndex((prev) =>
-        Math.min(prev, listing.photos!.length - 1)
-      );
+      const photosLength = listing.photos.length;
+      setCurrentImageIndex((prev) => Math.min(prev, photosLength - 1));
     } else {
       setCurrentImageIndex(0);
     }
@@ -57,8 +56,9 @@ const ListingCard = ({ listing, onOpen }: Props) => {
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (listing.photos && listing.photos.length > 0) {
+      const photosLength = listing.photos.length;
       setCurrentImageIndex((prev) =>
-        prev === 0 ? listing.photos!.length - 1 : prev - 1
+        prev === 0 ? photosLength - 1 : prev - 1
       );
     }
   };
@@ -66,8 +66,9 @@ const ListingCard = ({ listing, onOpen }: Props) => {
   const handleNextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (listing.photos && listing.photos.length > 0) {
+      const photosLength = listing.photos.length;
       setCurrentImageIndex((prev) =>
-        prev === listing.photos!.length - 1 ? 0 : prev + 1
+        prev === photosLength - 1 ? 0 : prev + 1
       );
     }
   };
@@ -93,7 +94,7 @@ const ListingCard = ({ listing, onOpen }: Props) => {
           {listing.photos && listing.photos.length > 0 ? (
             <>
               <img
-                src={listing.photos[currentImageIndex].photo_url}
+                src={listing.photos[currentImageIndex]?.photo_url || ""}
                 alt={listing.title}
                 className="w-full h-full object-cover transition-opacity duration-300"
               />
