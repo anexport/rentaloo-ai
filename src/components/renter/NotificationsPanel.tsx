@@ -63,12 +63,8 @@ const NotificationsPanel = () => {
             .eq("renter_id", user.id)
             .eq("payment_status", "pending")
             .limit(1),
-          // Check for new messages
-          supabase
-            .from("messages")
-            .select("*", { count: "exact", head: true })
-            .eq("receiver_id", user.id)
-            .eq("read", false),
+          // Check for new messages using RPC function
+          supabase.rpc("get_unread_messages_count"),
           // Check for approved bookings
           supabase
             .from("booking_requests")
@@ -130,7 +126,7 @@ const NotificationsPanel = () => {
 
         // Process unread messages
         if (unreadMessagesResult.status === "fulfilled") {
-          const unreadCount = unreadMessagesResult.value.count ?? 0;
+          const unreadCount = unreadMessagesResult.value.data ?? 0;
           if (unreadCount > 0) {
             newNotifications.push({
               id: "unread-messages",

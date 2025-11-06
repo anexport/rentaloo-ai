@@ -25,11 +25,7 @@ const QuickActions = () => {
       if (!user) return;
 
       // Prepare both fetch promises
-      const messagesPromise = supabase
-        .from("messages")
-        .select("*", { count: "exact", head: true })
-        .eq("receiver_id", user.id)
-        .eq("read", false);
+      const messagesPromise = supabase.rpc("get_unread_messages_count");
 
       const today = new Date().toISOString().split("T")[0];
       const bookingsPromise = supabase
@@ -48,7 +44,7 @@ const QuickActions = () => {
       // Handle messages result independently
       const messagesResult = results[0];
       if (messagesResult.status === "fulfilled") {
-        const { count: messagesCount, error: messagesError } = messagesResult.value;
+        const { data: messagesCount, error: messagesError } = messagesResult.value;
         if (messagesError) {
           console.error("Failed to fetch messages count:", messagesError);
           toast({
