@@ -11,10 +11,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
 import { supabase } from "@/lib/supabase";
 
 const QuickActions = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [upcomingBookings, setUpcomingBookings] = useState(0);
 
@@ -22,39 +24,76 @@ const QuickActions = () => {
     const fetchCounts = async () => {
       if (!user) return;
 
-      // Fetch unread messages count
-      const { count: messagesCount, error: messagesError } = await supabase
+      // Prepare both fetch promises
+      const messagesPromise = supabase
         .from("messages")
         .select("*", { count: "exact", head: true })
         .eq("receiver_id", user.id)
         .eq("read", false);
 
-      if (messagesError) {
-        console.error("Failed to fetch messages count:", messagesError);
-        return;
-      }
-
-      setUnreadMessages(messagesCount || 0);
-
-      // Fetch upcoming bookings (approved bookings with future start dates)
       const today = new Date().toISOString().split("T")[0];
-      const { count: bookingsCount, error: bookingsError } = await supabase
+      const bookingsPromise = supabase
         .from("booking_requests")
         .select("*", { count: "exact", head: true })
         .eq("renter_id", user.id)
         .eq("status", "approved")
         .gte("start_date", today);
 
-      if (bookingsError) {
-        console.error("Failed to fetch bookings count:", bookingsError);
-        return;
+      // Run both fetches in parallel
+      const results = await Promise.allSettled([
+        messagesPromise,
+        bookingsPromise,
+      ]);
+
+      // Handle messages result independently
+      const messagesResult = results[0];
+      if (messagesResult.status === "fulfilled") {
+        const { count: messagesCount, error: messagesError } = messagesResult.value;
+        if (messagesError) {
+          console.error("Failed to fetch messages count:", messagesError);
+          toast({
+            title: "Failed to load messages count",
+            description: "Unable to fetch unread messages. Please try again later.",
+            variant: "destructive",
+          });
+        } else {
+          setUnreadMessages(messagesCount || 0);
+        }
+      } else {
+        console.error("Messages fetch rejected:", messagesResult.reason);
+        toast({
+          title: "Failed to load messages count",
+          description: "Unable to fetch unread messages. Please try again later.",
+          variant: "destructive",
+        });
       }
 
-      setUpcomingBookings(bookingsCount || 0);
+      // Handle bookings result independently
+      const bookingsResult = results[1];
+      if (bookingsResult.status === "fulfilled") {
+        const { count: bookingsCount, error: bookingsError } = bookingsResult.value;
+        if (bookingsError) {
+          console.error("Failed to fetch bookings count:", bookingsError);
+          toast({
+            title: "Failed to load bookings count",
+            description: "Unable to fetch upcoming bookings. Please try again later.",
+            variant: "destructive",
+          });
+        } else {
+          setUpcomingBookings(bookingsCount || 0);
+        }
+      } else {
+        console.error("Bookings fetch rejected:", bookingsResult.reason);
+        toast({
+          title: "Failed to load bookings count",
+          description: "Unable to fetch upcoming bookings. Please try again later.",
+          variant: "destructive",
+        });
+      }
     };
 
     void fetchCounts();
-  }, [user]);
+  }, [user, toast]);
 
   const actions = [
     {

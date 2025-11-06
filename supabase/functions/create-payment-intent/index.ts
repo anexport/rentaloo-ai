@@ -191,7 +191,7 @@ Deno.serve(async (req) => {
 
     if (existingPayment) {
       // Update existing payment with new PaymentIntent
-      await supabase
+      const { data: updateData, error: updateError } = await supabase
         .from("payments")
         .update({
           stripe_payment_intent_id: pi.id,
@@ -203,23 +203,53 @@ Deno.serve(async (req) => {
           owner_payout_amount: subtotal,
         })
         .eq("id", existingPayment.id);
+
+      if (updateError) {
+        console.error("Failed to update payment record:", updateError);
+        return new Response(
+          JSON.stringify({
+            error: "Failed to update payment record",
+            details: updateError.message,
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
     } else {
       // Insert new payment row
-      await supabase.from("payments").insert({
-        booking_request_id: br.id,
-        renter_id: br.renter_id,
-        owner_id: ownerId,
-        subtotal,
-        service_fee,
-        tax,
-        total_amount: total,
-        escrow_amount: total,
-        owner_payout_amount: subtotal,
-        currency: "usd",
-        payment_status: "pending",
-        escrow_status: "held",
-        stripe_payment_intent_id: pi.id,
-      });
+      const { data: insertData, error: insertError } = await supabase
+        .from("payments")
+        .insert({
+          booking_request_id: br.id,
+          renter_id: br.renter_id,
+          owner_id: ownerId,
+          subtotal,
+          service_fee,
+          tax,
+          total_amount: total,
+          escrow_amount: total,
+          owner_payout_amount: subtotal,
+          currency: "usd",
+          payment_status: "pending",
+          escrow_status: "held",
+          stripe_payment_intent_id: pi.id,
+        });
+
+      if (insertError) {
+        console.error("Failed to insert payment record:", insertError);
+        return new Response(
+          JSON.stringify({
+            error: "Failed to create payment record",
+            details: insertError.message,
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
     }
 
     return new Response(
