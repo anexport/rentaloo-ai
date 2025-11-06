@@ -59,7 +59,7 @@ const UserMenu = () => {
       return;
     }
     setIsOpen(false);
-    navigate("/");
+    void navigate("/");
   };
 
   const handleNavigation = (path: string) => {
@@ -99,7 +99,7 @@ const UserMenu = () => {
         >
           {/* User Avatar with Initials */}
           <div className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
-            <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 via-purple-500 to-pink-500 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 text-white flex items-center justify-center font-semibold text-sm shadow-md ring-2 ring-white/20 dark:ring-white/10">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 text-white flex items-center justify-center font-semibold text-sm shadow-md ring-2 ring-white/20 dark:ring-white/10">
               {initials}
             </div>
             <ChevronDown

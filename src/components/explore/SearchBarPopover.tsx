@@ -160,6 +160,72 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     setActiveSection("when");
   };
 
+  const renderAutocompleteCommand = (
+    placeholder: string,
+    options?: {
+      className?: string;
+      popularHeading?: string;
+    }
+  ) => {
+    const commandClassName =
+      options?.className !== undefined
+        ? options.className || undefined
+        : "rounded-2xl border";
+    return (
+      <Command
+        className={commandClassName}
+        shouldFilter={false}
+      >
+      <CommandInput
+        placeholder={placeholder}
+        value={addressAutocomplete.query}
+        onValueChange={addressAutocomplete.setQuery}
+      />
+      <CommandList aria-busy={addressAutocomplete.loading}>
+        <CommandEmpty>
+          {addressAutocomplete.loading
+            ? "Searching..."
+            : addressAutocomplete.query.trim().length === 0
+            ? "Start typing to search locations."
+            : addressAutocomplete.error
+            ? `Error: ${addressAutocomplete.error}`
+            : "No locations found."}
+        </CommandEmpty>
+        {addressAutocomplete.query.trim().length >= 2 &&
+          addressAutocomplete.suggestions.length > 0 && (
+            <CommandGroup heading="Suggestions">
+              {addressAutocomplete.suggestions.map((s) => (
+                <CommandItem
+                  key={s.id}
+                  onSelect={() => {
+                    handleLocationSelect(s.label);
+                    addressAutocomplete.setQuery("");
+                  }}
+                  className="cursor-pointer"
+                >
+                  <MapPin className="mr-2 h-4 w-4" />
+                  {s.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+        <CommandGroup heading={options?.popularHeading ?? "Popular"}>
+          {POPULAR_LOCATIONS.map((loc) => (
+            <CommandItem
+              key={loc}
+              onSelect={() => handleLocationSelect(loc)}
+              className="cursor-pointer"
+            >
+              <MapPin className="mr-2 h-4 w-4" />
+              {loc}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </Command>
+    );
+  };
+
   const handleDateSelect = (range: DateRange | undefined) => {
     if (!range?.from) {
       onChange({ ...value, dateRange: undefined });
@@ -262,9 +328,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
             action: (
               <ToastAction
                 altText="Try again"
-                onClick={() => {
-                  void handleUseCurrentLocation();
-                }}
+                onClick={handleLocationClick}
               >
                 Try Again
               </ToastAction>
@@ -281,9 +345,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
             action: (
               <ToastAction
                 altText="Try again"
-                onClick={() => {
-                  void handleUseCurrentLocation();
-                }}
+                onClick={handleLocationClick}
               >
                 Try Again
               </ToastAction>
@@ -320,6 +382,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     } finally {
       setIsLocating(false);
     }
+  };
+
+  const handleLocationClick = () => {
+    void handleUseCurrentLocation();
   };
 
   const getSearchSummary = () => {
@@ -431,9 +497,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                   <Button
                     variant="secondary"
                     className="w-full justify-start"
-                    onClick={() => {
-                      void handleUseCurrentLocation();
-                    }}
+                    onClick={handleLocationClick}
                     disabled={isLocating}
                     aria-label="Use current location"
                     aria-busy={isLocating}
@@ -443,54 +507,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                       ? "Detecting your location..."
                       : "Use current location"}
                   </Button>
-                  <Command className="rounded-2xl border" shouldFilter={false}>
-                    <CommandInput
-                      placeholder="Try Yosemite National Park"
-                      value={addressAutocomplete.query}
-                      onValueChange={addressAutocomplete.setQuery}
-                    />
-                    <CommandList aria-busy={addressAutocomplete.loading}>
-                      <CommandEmpty>
-                        {addressAutocomplete.loading
-                          ? "Searching..."
-                          : addressAutocomplete.query.trim().length === 0
-                          ? "Start typing to search locations."
-                          : addressAutocomplete.error
-                          ? `Error: ${addressAutocomplete.error}`
-                          : "No locations found."}
-                      </CommandEmpty>
-                      {addressAutocomplete.query.trim().length >= 2 &&
-                        addressAutocomplete.suggestions.length > 0 && (
-                          <CommandGroup heading="Suggestions">
-                            {addressAutocomplete.suggestions.map((s) => (
-                              <CommandItem
-                                key={s.id}
-                                onSelect={() => {
-                                  handleLocationSelect(s.label);
-                                  addressAutocomplete.setQuery("");
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <MapPin className="mr-2 h-4 w-4" />
-                                {s.label}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        )}
-                      <CommandGroup heading="Popular">
-                        {POPULAR_LOCATIONS.map((loc) => (
-                          <CommandItem
-                            key={loc}
-                            onSelect={() => handleLocationSelect(loc)}
-                            className="cursor-pointer"
-                          >
-                            <MapPin className="mr-2 h-4 w-4" />
-                            {loc}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
+                  {renderAutocompleteCommand("Try Yosemite National Park")}
                   <div className="flex flex-wrap gap-2">
                     {POPULAR_LOCATIONS.map((loc) => (
                       <Button
@@ -700,9 +717,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
               <Button
                 variant="ghost"
                 className="w-full justify-start h-9"
-                onClick={() => {
-                  void handleUseCurrentLocation();
-                }}
+                onClick={handleLocationClick}
                 disabled={isLocating}
                 aria-label="Use current location"
                 aria-busy={isLocating}
@@ -713,54 +728,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                   : "Use current location"}
               </Button>
             </div>
-            <Command shouldFilter={false}>
-              <CommandInput
-                placeholder="Search locations..."
-                value={addressAutocomplete.query}
-                onValueChange={addressAutocomplete.setQuery}
-              />
-              <CommandList aria-busy={addressAutocomplete.loading}>
-                <CommandEmpty>
-                  {addressAutocomplete.loading
-                    ? "Searching..."
-                    : addressAutocomplete.query.trim().length === 0
-                    ? "Start typing to search locations."
-                    : addressAutocomplete.error
-                    ? `Error: ${addressAutocomplete.error}`
-                    : "No locations found."}
-                </CommandEmpty>
-                {addressAutocomplete.query.trim().length >= 2 &&
-                  addressAutocomplete.suggestions.length > 0 && (
-                    <CommandGroup heading="Suggestions">
-                      {addressAutocomplete.suggestions.map((s) => (
-                        <CommandItem
-                          key={s.id}
-                          onSelect={() => {
-                            handleLocationSelect(s.label);
-                            addressAutocomplete.setQuery("");
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <MapPin className="mr-2 h-4 w-4" />
-                          {s.label}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
-                <CommandGroup heading="Popular destinations">
-                  {POPULAR_LOCATIONS.map((loc) => (
-                    <CommandItem
-                      key={loc}
-                      onSelect={() => handleLocationSelect(loc)}
-                      className="cursor-pointer"
-                    >
-                      <MapPin className="mr-2 h-4 w-4" />
-                      {loc}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
+            {renderAutocompleteCommand("Search locations...", {
+              className: undefined,
+              popularHeading: "Popular destinations",
+            })}
           </PopoverContent>
         </Popover>
 

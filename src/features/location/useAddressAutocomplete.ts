@@ -68,14 +68,9 @@ export function useAddressAutocomplete(params?: {
           signal: ctrl.signal,
         });
         if (!ctrl.signal.aborted) {
-          console.log(
-            `[Autocomplete] Query: "${q}", Results: ${items.length}`,
-            items
-          );
           setSuggestions(items);
           if (items.length === 0) {
             setError(null);
-            console.log(`[Autocomplete] No results for "${q}"`);
           }
         }
       } catch (e: unknown) {

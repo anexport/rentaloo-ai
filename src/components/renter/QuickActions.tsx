@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
 import { Search, MessageSquare, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,23 +22,33 @@ const QuickActions = () => {
     const fetchCounts = async () => {
       if (!user) return;
 
-      // Fetch unread messages count (simplified - you may need to adjust based on your messaging schema)
-      const { count: messagesCount } = await supabase
+      // Fetch unread messages count
+      const { count: messagesCount, error: messagesError } = await supabase
         .from("messages")
         .select("*", { count: "exact", head: true })
         .eq("receiver_id", user.id)
         .eq("read", false);
 
+      if (messagesError) {
+        console.error("Failed to fetch messages count:", messagesError);
+        return;
+      }
+
       setUnreadMessages(messagesCount || 0);
 
       // Fetch upcoming bookings (approved bookings with future start dates)
       const today = new Date().toISOString().split("T")[0];
-      const { count: bookingsCount } = await supabase
+      const { count: bookingsCount, error: bookingsError } = await supabase
         .from("booking_requests")
         .select("*", { count: "exact", head: true })
         .eq("renter_id", user.id)
         .eq("status", "approved")
         .gte("start_date", today);
+
+      if (bookingsError) {
+        console.error("Failed to fetch bookings count:", bookingsError);
+        return;
+      }
 
       setUpcomingBookings(bookingsCount || 0);
     };
@@ -72,7 +88,10 @@ const QuickActions = () => {
       {actions.map((action) => {
         const Icon = action.icon;
         return (
-          <Card key={action.title} className="hover:shadow-md transition-shadow">
+          <Card
+            key={action.title}
+            className="hover:shadow-md transition-shadow"
+          >
             <CardHeader>
               <div className="flex items-center justify-between mb-2">
                 <Icon className="h-6 w-6 text-primary" />
@@ -102,4 +121,3 @@ const QuickActions = () => {
 };
 
 export default QuickActions;
-

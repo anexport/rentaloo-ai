@@ -55,7 +55,7 @@ const BookingRequestCard = ({
   const [showRenterScreening, setShowRenterScreening] = useState(false);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
 
-  // Check if payment exists for this booking
+  // Check if payment exists for this booking and subscribe to real-time updates
   useEffect(() => {
     const checkPayment = async () => {
       try {
@@ -80,7 +80,61 @@ const BookingRequestCard = ({
     };
 
     void checkPayment();
-  }, [bookingRequest.id]);
+
+    // Subscribe to real-time payment updates
+    const paymentChannel = supabase
+      .channel(`payment-${bookingRequest.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "payments",
+          filter: `booking_request_id=eq.${bookingRequest.id}`,
+        },
+        (payload) => {
+          // Update payment status if payment succeeded
+          if (
+            payload.new &&
+            (payload.new as { payment_status: string }).payment_status ===
+              "succeeded"
+          ) {
+            setHasPayment(true);
+            onStatusChange?.();
+          } else if (
+            payload.new &&
+            (payload.new as { payment_status: string }).payment_status ===
+              "failed"
+          ) {
+            setHasPayment(false);
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to real-time booking request status updates
+    const bookingChannel = supabase
+      .channel(`booking-${bookingRequest.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "booking_requests",
+          filter: `id=eq.${bookingRequest.id}`,
+        },
+        () => {
+          // Refresh booking status when webhook updates it
+          onStatusChange?.();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(paymentChannel);
+      void supabase.removeChannel(bookingChannel);
+    };
+  }, [bookingRequest.id, onStatusChange]);
 
   const handleStatusUpdate = async (
     newStatus: "approved" | "declined" | "cancelled"
@@ -269,13 +323,13 @@ const BookingRequestCard = ({
         )}
 
         {/* Status-specific information */}
-        {bookingRequest.status === "pending" && (
+        {bookingRequest.status === "pending" && !hasPayment && (
           <Alert>
             <Clock className="h-4 w-4" />
             <AlertDescription>
               {isOwner
                 ? "This booking request is waiting for your approval."
-                : "Your booking request is waiting for owner approval."}
+                : "Your booking request is waiting. You can pay now to expedite approval."}
             </AlertDescription>
           </Alert>
         )}
@@ -377,9 +431,10 @@ const BookingRequestCard = ({
               </Button>
             )}
 
-            {/* Payment Button - Only for renters with approved bookings */}
+            {/* Payment Button - For renters with pending or approved bookings */}
             {isRenter &&
-              bookingRequest.status === "approved" &&
+              (bookingRequest.status === "pending" ||
+                bookingRequest.status === "approved") &&
               !hasPayment && (
                 <Button
                   size="sm"

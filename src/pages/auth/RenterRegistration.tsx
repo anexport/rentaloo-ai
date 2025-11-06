@@ -49,6 +49,8 @@ const interestOptions = [
   "Running",
 ];
 
+const experienceLevels = ["beginner", "intermediate", "advanced"] as const;
+
 const RenterRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -234,7 +236,7 @@ const RenterRegistration = () => {
               <div className="space-y-2">
                 <Label>Experience Level</Label>
                 <div className="grid grid-cols-3 gap-2">
-                  {["beginner", "intermediate", "advanced"].map((level) => (
+                  {experienceLevels.map((level) => (
                     <Button
                       key={level}
                       type="button"
@@ -244,12 +246,7 @@ const RenterRegistration = () => {
                           : "outline"
                       }
                       size="sm"
-                      onClick={() =>
-                        setValue(
-                          "experienceLevel",
-                          level as "beginner" | "intermediate" | "advanced"
-                        )
-                      }
+                      onClick={() => setValue("experienceLevel", level)}
                       className="capitalize"
                     >
                       {level}

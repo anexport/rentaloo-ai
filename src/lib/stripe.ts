@@ -1,4 +1,5 @@
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
+import { supabase } from "./supabase";
 
 // Stripe publishable key - In production, use environment variable
 const STRIPE_PUBLISHABLE_KEY =
@@ -18,33 +19,51 @@ export const getStripe = (): Promise<Stripe | null> => {
 };
 
 /**
- * Create a payment intent via backend API
- * In production, this would call your backend endpoint
+ * Create a payment intent via Supabase Edge Function
  */
 export const createPaymentIntent = async (
-  amount: number,
-  bookingRequestId: string,
-  metadata: Record<string, string>
+  bookingRequestId: string
 ): Promise<{ clientSecret: string; paymentIntentId: string }> => {
-  void amount;
-  void bookingRequestId;
-  void metadata;
-  // In production, call your backend API endpoint:
-  // const response = await fetch('/api/payments/create-intent', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ amount, bookingRequestId, metadata }),
-  // });
-  //
-  // const data = await response.json();
-  // return data;
+  // Get session token
+  const { data: session } = await supabase.auth.getSession();
+  const token = session?.session?.access_token;
 
-  // For MVP, return mock data
+  if (!token) {
+    throw new Error("Authentication required");
+  }
+
+  // Get Supabase URL
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (!supabaseUrl) {
+    throw new Error("VITE_SUPABASE_URL is not configured");
+  }
+
+  // Call Edge Function
+  const response = await fetch(
+    `${supabaseUrl}/functions/v1/create-payment-intent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ bookingRequestId }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({
+      error: "Unknown error",
+    }));
+    throw new Error(
+      errorData.error || `Failed to create payment intent: ${response.status}`
+    );
+  }
+
+  const data = await response.json();
   return {
-    clientSecret: `pi_mock_${Date.now()}_secret_${Math.random()
-      .toString(36)
-      .substring(7)}`,
-    paymentIntentId: `pi_mock_${Date.now()}`,
+    clientSecret: data.clientSecret,
+    paymentIntentId: data.paymentIntentId,
   };
 };
 

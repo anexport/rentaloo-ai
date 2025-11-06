@@ -1,8 +1,9 @@
-import { useMemo } from "react"
-import { formatDistanceToNow } from "date-fns"
-import { Search } from "lucide-react"
+import { useMemo } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { Search } from "lucide-react";
 
-import type { ConversationWithDetails } from "../../types/messaging"
+import type { ConversationWithDetails } from "../../types/messaging";
+import { useProfileLookup } from "../../hooks/useProfileLookup";
 import {
   CommandDialog,
   CommandEmpty,
@@ -11,17 +12,17 @@ import {
   CommandItem,
   CommandList,
   CommandShortcut,
-} from "../ui/command"
-import { Avatar, AvatarFallback } from "../ui/avatar"
-import { Badge } from "../ui/badge"
-import { cn } from "@/lib/utils"
+} from "../ui/command";
+import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Badge } from "../ui/badge";
+import { cn } from "@/lib/utils";
 
 interface ConversationSearchProps {
-  conversations: ConversationWithDetails[]
-  currentUserId?: string
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSelect: (conversation: ConversationWithDetails) => void
+  conversations: ConversationWithDetails[];
+  currentUserId?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelect: (conversation: ConversationWithDetails) => void;
 }
 
 const ConversationSearch = ({
@@ -31,29 +32,40 @@ const ConversationSearch = ({
   onOpenChange,
   onSelect,
 }: ConversationSearchProps) => {
+  // Collect all participant IDs from conversations
+  const participantIds = conversations.flatMap((conv) => conv.participants || []);
+  const { getProfile } = useProfileLookup(participantIds);
+
   const preparedConversations = useMemo(() => {
     return conversations.map((conversation) => {
-      const otherParticipant = conversation.participants.find(
-        (participant) => participant.id !== currentUserId
-      )
+      const otherParticipantId = conversation.participants?.find(
+        (participantId) => participantId !== currentUserId
+      );
+      const otherParticipant = otherParticipantId
+        ? getProfile(otherParticipantId)
+        : undefined;
 
-      const title = otherParticipant?.email || "Unknown user"
-      const initials = title.trim().charAt(0).toUpperCase()
-      const lastMessage = conversation.last_message?.content || "No messages yet"
+      const title = otherParticipant?.email || "Unknown user";
+      const initials = title.trim().charAt(0).toUpperCase();
+      const lastMessage =
+        conversation.last_message?.content || "No messages yet";
       const lastActivity =
         conversation.last_message?.created_at ||
         conversation.updated_at ||
-        conversation.created_at
+        conversation.created_at;
 
-      let relativeTime = ""
+      let relativeTime = "";
       if (lastActivity) {
         try {
-          relativeTime = formatDistanceToNow(new Date(lastActivity), {
-            addSuffix: true,
-          })
+          const date = new Date(lastActivity);
+          if (!isNaN(date.getTime())) {
+            relativeTime = formatDistanceToNow(date, {
+              addSuffix: true,
+            });
+          }
         } catch (error) {
-          console.error("Error formatting conversation activity:", error)
-          relativeTime = ""
+          console.error("Error formatting conversation activity:", error);
+          relativeTime = "";
         }
       }
 
@@ -65,9 +77,9 @@ const ConversationSearch = ({
         lastMessage,
         relativeTime,
         booking: conversation.booking_request,
-      }
-    })
-  }, [conversations, currentUserId])
+      };
+    });
+  }, [conversations, currentUserId, getProfile]);
 
   return (
     <CommandDialog
@@ -98,8 +110,8 @@ const ConversationSearch = ({
                 .join(" ")
                 .toLowerCase()}
               onSelect={() => {
-                onSelect(item.conversation)
-                onOpenChange(false)
+                onSelect(item.conversation);
+                onOpenChange(false);
               }}
             >
               <div className="flex items-start gap-3">
@@ -137,7 +149,7 @@ const ConversationSearch = ({
         </CommandGroup>
       </CommandList>
     </CommandDialog>
-  )
-}
+  );
+};
 
-export default ConversationSearch
+export default ConversationSearch;

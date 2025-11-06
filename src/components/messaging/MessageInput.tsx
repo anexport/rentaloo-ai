@@ -34,7 +34,7 @@ const messageSchema = z.object({
 });
 
 interface MessageInputProps {
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string) => Promise<void> | void;
   onTyping?: (content: string) => void;
   disabled?: boolean;
 }
@@ -89,7 +89,7 @@ const MessageInput = ({
     setSendError(null);
 
     try {
-      onSendMessage(data.content.trim());
+      await onSendMessage(data.content.trim());
       reset();
       adjustTextareaSize();
       onTyping?.("");

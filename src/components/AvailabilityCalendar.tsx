@@ -63,7 +63,7 @@ const AvailabilityCalendar = ({
 
   useEffect(() => {
     void fetchAvailability();
-  }, [fetchAvailability, equipmentId, currentMonth]);
+  }, [fetchAvailability]);
 
   const getDaysInMonth = () => {
     const year = currentMonth.getFullYear();

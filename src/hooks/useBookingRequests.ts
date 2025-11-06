@@ -212,6 +212,7 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
       approved: bookingRequests.filter((r) => r.status === "approved").length,
       declined: bookingRequests.filter((r) => r.status === "declined").length,
       cancelled: bookingRequests.filter((r) => r.status === "cancelled").length,
+      completed: bookingRequests.filter((r) => r.status === "completed").length,
     };
 
     return stats;

@@ -28,32 +28,21 @@ interface ConversationSummary {
   end_date: string | null;
   total_amount: number | null;
   equipment_title: string | null;
-  unread_count: string | null;
+  unread_count: number | null;
 }
 
 interface ConversationGroup {
   summary: ConversationSummary;
-  participants: Map<
-    string,
-    {
-      id: string;
-      email: string | null;
-      last_seen_at: string | null;
-    }
-  >;
+  participants: Set<string>;
   unreadCount: number;
 }
 
 interface ConversationData {
   id: string;
   booking_request_id: string | null;
-  created_at: string;
-  updated_at: string;
-  participants: {
-    id: string;
-    email: string | null;
-    last_seen_at: string | null;
-  }[];
+  created_at: string | null;
+  updated_at: string | null;
+  participants: string[] | null;
   last_message: {
     id: string;
     sender_id: string | null;
@@ -131,35 +120,24 @@ const processConversationSummaries = (
 
   summaries.forEach((summary) => {
     const convId = summary.id;
-    const participant = {
-      id: summary.participant_id,
-      email: summary.participant_email,
-      last_seen_at: summary.last_seen_at,
-    };
+    const participantId = summary.participant_id;
 
     const existingGroup = groupedSummaries.get(convId);
-    const unreadValue = Number(summary.unread_count) || 0;
+    const unreadValue = summary.unread_count ?? 0;
 
     if (!existingGroup) {
-      const participantMap = new Map<
-        string,
-        {
-          id: string;
-          email: string | null;
-          last_seen_at: string | null;
-        }
-      >();
-      participantMap.set(participant.id, participant);
+      const participantSet = new Set<string>();
+      participantSet.add(participantId);
 
       groupedSummaries.set(convId, {
         summary,
-        participants: participantMap,
+        participants: participantSet,
         unreadCount: summary.participant_id === userId ? unreadValue : 0,
       });
       return;
     }
 
-    existingGroup.participants.set(participant.id, participant);
+    existingGroup.participants.add(participantId);
     if (summary.participant_id === userId) {
       existingGroup.unreadCount = unreadValue;
     }
@@ -184,9 +162,9 @@ const convertToConversationData = (
     conversationMap.set(convId, {
       id: summary.id,
       booking_request_id: summary.booking_request_id,
-      created_at: summary.created_at ?? "",
-      updated_at: summary.updated_at ?? "",
-      participants: Array.from(participants.values()),
+      created_at: summary.created_at ?? null,
+      updated_at: summary.updated_at ?? null,
+      participants: Array.from(participants),
       last_message: summary.last_message_id
         ? {
             id: summary.last_message_id,
@@ -234,22 +212,10 @@ const buildConversationsWithDetails = (
   participantMap: Map<string, ConversationParticipantReadRow>
 ): ConversationWithDetails[] => {
   return conversationList.map((conversation) => {
-    const fullParticipants = (conversation.participants || []).reduce(
-      (acc: ProfileSummary[], participant) => {
-        const profile = profileMap.get(participant.id);
-        if (!profile) {
-          return acc;
-        }
-
-        acc.push({
-          ...profile,
-          last_seen_at:
-            participant.last_seen_at ?? profile.last_seen_at ?? null,
-        } as ProfileSummary);
-        return acc;
-      },
-      []
-    );
+    // Convert participant IDs to array (or null if empty)
+    const participantIds = conversation.participants && conversation.participants.length > 0
+      ? conversation.participants
+      : null;
 
     let lastMessage: MessageWithSender | null = null;
     const lastMessageId = conversation.last_message?.id;
@@ -295,7 +261,7 @@ const buildConversationsWithDetails = (
 
     return {
       ...conversation,
-      participants: fullParticipants,
+      participants: participantIds,
       last_message: lastMessage,
       booking_request: bookingRequest,
       last_read_at: lastReadAt,
@@ -651,8 +617,8 @@ export const useMessaging = () => {
           (s) => ({
             id: s.id,
             booking_request_id: s.booking_request_id,
-            created_at: s.created_at ?? "",
-            updated_at: s.updated_at ?? "",
+            created_at: s.created_at ?? null,
+            updated_at: s.updated_at ?? null,
             participant_id: s.participant_id,
             participant_email: s.participant_email,
             last_seen_at: s.last_seen_at,
@@ -666,7 +632,7 @@ export const useMessaging = () => {
             end_date: s.end_date,
             total_amount: s.total_amount,
             equipment_title: s.equipment_title,
-            unread_count: String(s.unread_count),
+            unread_count: s.unread_count,
           })
         );
         const groupedSummaries = processConversationSummaries(
@@ -684,9 +650,9 @@ export const useMessaging = () => {
 
         conversationList.forEach((conversation) => {
           conversationIds.add(conversation.id);
-          conversation.participants?.forEach((participant) => {
-            if (participant?.id) {
-              participantIds.add(participant.id);
+          conversation.participants?.forEach((participantId) => {
+            if (participantId) {
+              participantIds.add(participantId);
             }
           });
 

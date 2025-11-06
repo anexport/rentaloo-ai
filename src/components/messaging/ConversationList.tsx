@@ -1,6 +1,7 @@
 import type { ConversationWithDetails } from "../../types/messaging";
 import { useAuth } from "../../hooks/useAuth";
 import { usePresence } from "../../hooks/usePresence";
+import { useProfileLookup } from "../../hooks/useProfileLookup";
 import { Skeleton } from "../ui/skeleton";
 import {
   Empty,
@@ -94,6 +95,10 @@ const ConversationList = ({
   const { isOnline } = usePresence();
   const prevConversationIdsRef = useRef<Set<string>>(new Set());
 
+  // Collect all participant IDs from conversations
+  const participantIds = conversations.flatMap((conv) => conv.participants || []);
+  const { getProfile } = useProfileLookup(participantIds);
+
   // Clean up stale logged conversations when conversation data updates
   useEffect(() => {
     const currentConversationIds = new Set(
@@ -134,9 +139,12 @@ const ConversationList = ({
     <TooltipProvider delayDuration={200}>
       <div className="space-y-2">
         {conversations.map((conversation) => {
-          const otherParticipant = conversation.participants.find(
-            (participant) => participant.id !== user?.id
+          const otherParticipantId = conversation.participants?.find(
+            (participantId) => participantId !== user?.id
           );
+          const otherParticipant = otherParticipantId
+            ? getProfile(otherParticipantId)
+            : undefined;
 
           const otherParticipantName =
             otherParticipant?.email || "Unknown user";
@@ -158,9 +166,11 @@ const ConversationList = ({
             const lastMessageAt = conversation.last_message?.created_at;
 
             if (lastReadAt && lastMessageAt) {
-              const lastRead = new Date(lastReadAt).getTime();
-              const lastMessage = new Date(lastMessageAt).getTime();
-              return lastMessage > lastRead;
+              const lastRead = new Date(lastReadAt);
+              const lastMessage = new Date(lastMessageAt);
+              if (!isNaN(lastRead.getTime()) && !isNaN(lastMessage.getTime())) {
+                return lastMessage.getTime() > lastRead.getTime();
+              }
             }
 
             // Fallback 2: Check localStorage for persisted read state (secondary backup)
@@ -244,7 +254,7 @@ const ConversationList = ({
               otherParticipantName={otherParticipantName}
               otherParticipantInitials={otherParticipantInitials}
               isOnline={
-                otherParticipant ? isOnline(otherParticipant.id) : false
+                otherParticipantId ? isOnline(otherParticipantId) : false
               }
               lastSeenAt={lastSeenAt}
               unread={Boolean(unread)}

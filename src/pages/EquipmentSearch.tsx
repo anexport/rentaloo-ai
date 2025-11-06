@@ -63,61 +63,61 @@ const EquipmentSearch = () => {
   const [locationSearch, setLocationSearch] = useState("");
 
   useEffect(() => {
+    const fetchEquipment = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("equipment")
+          .select(
+            `
+            *,
+            category:categories(*),
+            photos:equipment_photos(*),
+            owner:profiles!equipment_owner_id_fkey(id, email)
+          `
+          )
+          .eq("is_available", true)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        // Fetch reviews for each equipment to calculate average rating
+        const equipmentWithReviews = await Promise.all(
+          (data || []).map(async (item) => {
+            const { data: reviews } = await supabase
+              .from("reviews")
+              .select("rating")
+              .eq("reviewee_id", item.owner_id);
+
+            return { ...item, reviews: reviews || [] };
+          })
+        );
+
+        setEquipment(equipmentWithReviews);
+      } catch (error) {
+        console.error("Error fetching equipment:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("categories")
+          .select("*")
+          .is("parent_id", null)
+          .order("name");
+
+        if (error) throw error;
+        setCategories(data || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
     void fetchEquipment();
     void fetchCategories();
   }, []);
-
-  const fetchEquipment = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("equipment")
-        .select(
-          `
-          *,
-          category:categories(*),
-          photos:equipment_photos(*),
-          owner:profiles!equipment_owner_id_fkey(id, email)
-        `
-        )
-        .eq("is_available", true)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch reviews for each equipment to calculate average rating
-      const equipmentWithReviews = await Promise.all(
-        (data || []).map(async (item) => {
-          const { data: reviews } = await supabase
-            .from("reviews")
-            .select("rating")
-            .eq("reviewee_id", item.owner_id);
-
-          return { ...item, reviews: reviews || [] };
-        })
-      );
-
-      setEquipment(equipmentWithReviews);
-    } catch (error) {
-      console.error("Error fetching equipment:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .is("parent_id", null)
-        .order("name");
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
 
   const filteredEquipment = equipment.filter((item) => {
     // Search filter

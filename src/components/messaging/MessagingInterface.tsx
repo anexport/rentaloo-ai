@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useMessaging } from "../../hooks/useMessaging";
 import { useAuth } from "../../hooks/useAuth";
 import { usePresence } from "../../hooks/usePresence";
+import { useProfileLookup } from "../../hooks/useProfileLookup";
 import type { ConversationWithDetails } from "../../types/messaging";
 import { MessageSquare, ArrowLeft, Menu, Search, Filter } from "lucide-react";
 import { Button } from "../ui/button";
@@ -30,6 +31,7 @@ import {
 } from "../ui/select";
 import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/useToast";
 
 interface MessagingInterfaceProps {
   initialConversationId?: string;
@@ -46,6 +48,10 @@ const MessagingInterface = ({
   const { isOnline } = usePresence();
   const { conversations, messages, loading, fetchMessages, sendMessage } =
     useMessaging();
+
+  // Collect all participant IDs from conversations
+  const participantIds = conversations.flatMap((conv) => conv.participants || []);
+  const { getProfile } = useProfileLookup(participantIds);
 
   const [selectedConversation, setSelectedConversation] =
     useState<ConversationWithDetails | null>(null);
@@ -107,7 +113,19 @@ const MessagingInterface = ({
       );
       if (conversation) {
         setSelectedConversation(conversation);
-        void fetchMessages(conversation.id);
+        void (async () => {
+          try {
+            await fetchMessages(conversation.id);
+          } catch (error) {
+            console.error("Failed to fetch messages:", error);
+            toast({
+              title: "Failed to load messages",
+              description:
+                "We couldn't load the messages for this conversation. Please try again.",
+              variant: "destructive",
+            });
+          }
+        })();
         setIsMobileSidebarOpen(false);
       }
     }
@@ -257,9 +275,12 @@ const MessagingInterface = ({
     };
   }, [selectedConversation, user]);
 
-  const otherParticipant = selectedConversation?.participants.find(
-    (p) => p.id !== user?.id
+  const otherParticipantId = selectedConversation?.participants?.find(
+    (participantId) => participantId !== user?.id
   );
+  const otherParticipant = otherParticipantId
+    ? getProfile(otherParticipantId)
+    : undefined;
 
   const filteredConversations = useMemo(() => {
     if (filter === "all") return conversations;
@@ -275,7 +296,7 @@ const MessagingInterface = ({
 
       return true;
     });
-  }, [conversations, filter, user]);
+  }, [conversations, filter]);
 
   const conversationSidebar = (
     <div className="flex h-full flex-col bg-card/60">
@@ -341,7 +362,19 @@ const MessagingInterface = ({
           conversations={filteredConversations}
           selectedConversationId={selectedConversation?.id}
           onSelectConversation={(conversation) => {
-            void handleSelectConversation(conversation);
+            void (async () => {
+              try {
+                await handleSelectConversation(conversation);
+              } catch (error) {
+                console.error("Failed to select conversation:", error);
+                toast({
+                  title: "Failed to load conversation",
+                  description:
+                    "We couldn't load the messages for this conversation. Please try again.",
+                  variant: "destructive",
+                });
+              }
+            })();
           }}
           loading={loading}
         />
@@ -390,9 +423,9 @@ const MessagingInterface = ({
                   {otherParticipant?.email?.charAt(0).toUpperCase() || "?"}
                 </AvatarFallback>
               </Avatar>
-              {otherParticipant && (
+              {otherParticipantId && (
                 <OnlineStatusIndicator
-                  isOnline={isOnline(otherParticipant.id)}
+                  isOnline={isOnline(otherParticipantId)}
                   size="md"
                   className="absolute -bottom-1 -right-1"
                 />
@@ -410,10 +443,10 @@ const MessagingInterface = ({
                   </Badge>
                 )}
               </div>
-              {otherParticipant && (
+              {otherParticipantId && (
                 <LastSeenBadge
-                  isOnline={isOnline(otherParticipant.id)}
-                  lastSeenAt={otherParticipant.last_seen_at || null}
+                  isOnline={isOnline(otherParticipantId)}
+                  lastSeenAt={otherParticipant?.last_seen_at || null}
                   className="mt-1"
                 />
               )}
@@ -470,9 +503,14 @@ const MessagingInterface = ({
                 {typingUsers.size > 0 && (
                   <TypingIndicator
                     userName={
-                      selectedConversation.participants.find((p) =>
-                        typingUsers.has(p.id)
-                      )?.email ?? undefined
+                      (() => {
+                        const typingUserId = selectedConversation.participants?.find(
+                          (participantId) => typingUsers.has(participantId)
+                        );
+                        return typingUserId
+                          ? getProfile(typingUserId)?.email ?? undefined
+                          : undefined;
+                      })()
                     }
                   />
                 )}
@@ -484,9 +522,7 @@ const MessagingInterface = ({
 
         <div className="px-4 pb-5">
           <MessageInput
-            onSendMessage={(content) => {
-              void handleSendMessage(content);
-            }}
+            onSendMessage={handleSendMessage}
             onTyping={handleTyping}
             disabled={loading}
           />
@@ -542,7 +578,19 @@ const MessagingInterface = ({
         open={isSearchOpen}
         onOpenChange={setIsSearchOpen}
         onSelect={(conversation) => {
-          void handleSelectConversation(conversation);
+          void (async () => {
+            try {
+              await handleSelectConversation(conversation);
+            } catch (error) {
+              console.error("Failed to select conversation:", error);
+              toast({
+                title: "Failed to load conversation",
+                description:
+                  "We couldn't load the messages for this conversation. Please try again.",
+                variant: "destructive",
+              });
+            }
+          })();
         }}
       />
     </div>

@@ -214,11 +214,35 @@ export async function searchNominatim(
     ) {
       throw error;
     }
+
+    // Narrow error type before accessing properties
+    let errorMessage: string;
+    let errorName: string | undefined;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorName = error.name;
+    } else if (
+      error &&
+      typeof error === "object" &&
+      "message" in error &&
+      typeof error.message === "string"
+    ) {
+      errorMessage = error.message;
+      errorName =
+        "name" in error && typeof error.name === "string"
+          ? error.name
+          : undefined;
+    } else {
+      errorMessage = String(error);
+      errorName = undefined;
+    }
+
     console.error("Nominatim search request failed", {
       url: requestUrl,
       query: q,
-      error: error?.message || error,
-      errorName: error?.name,
+      error: errorMessage,
+      errorName,
     });
     throw error;
   }

@@ -85,11 +85,14 @@ const EscrowDashboard = () => {
   const handleEscrowReleased = () => {
     // Refresh escrow data
     if (user) {
-      void getEscrowBalance(user.id)
-        .then(setTotalEscrow)
-        .catch((error) => {
+      void (async () => {
+        try {
+          const balance = await getEscrowBalance(user.id);
+          setTotalEscrow(balance);
+        } catch (error) {
           console.error("Error refreshing escrow balance:", error);
-        });
+        }
+      })();
     }
   };
 
