@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
 import {
   LayoutDashboard,
   Search,
@@ -22,9 +23,9 @@ import ThemeToggle from "@/components/ThemeToggle";
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setUserRole] = useState<"owner" | "renter" | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -35,27 +36,18 @@ const UserMenu = () => {
     }
   }, [user]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
-
   const handleSignOut = async () => {
     const { error } = await signOut();
     if (error) {
       console.error("Sign out error:", error);
+      toast({
+        variant: "destructive",
+        title: "Sign out failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to sign out. Please try again.",
+      });
       return;
     }
     setIsOpen(false);
@@ -63,8 +55,8 @@ const UserMenu = () => {
   };
 
   const handleNavigation = (path: string) => {
-    void navigate(path);
     setIsOpen(false);
+    void navigate(path);
   };
 
   const getInitials = (email?: string | null) => {
@@ -91,96 +83,82 @@ const UserMenu = () => {
   const displayName = user.user_metadata?.fullName || user.email;
 
   return (
-    <div ref={menuRef}>
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-        <DropdownMenuTrigger
-          className="flex items-center space-x-2 focus:outline-none"
-          aria-label="User menu"
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger
+        className="flex items-center space-x-2 focus:outline-none"
+        aria-label="User menu"
+      >
+        {/* User Avatar with Initials */}
+        <div className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 text-white flex items-center justify-center font-semibold text-sm shadow-md ring-2 ring-white/20 dark:ring-white/10">
+            {initials}
+          </div>
+          <ChevronDown
+            className={`h-4 w-4 text-gray-600 dark:text-gray-400 transition-transform hidden sm:block ${
+              isOpen ? "rotate-180" : ""
+            }`}
+          />
+        </div>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent>
+        {/* User Info */}
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {displayName}
+          </p>
+          <p className="text-xs text-gray-500 truncate mt-0.5">
+            {userRole === "owner" ? "Equipment Owner" : "Renter"}
+          </p>
+        </div>
+
+        {/* Navigation Items */}
+        <DropdownMenuItem
+          onClick={() => handleNavigation(getDashboardPath())}
         >
-          {/* User Avatar with Initials */}
-          <div className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 text-white flex items-center justify-center font-semibold text-sm shadow-md ring-2 ring-white/20 dark:ring-white/10">
-              {initials}
-            </div>
-            <ChevronDown
-              className={`h-4 w-4 text-gray-600 dark:text-gray-400 transition-transform hidden sm:block ${
-                isOpen ? "rotate-180" : ""
-              }`}
-            />
-          </div>
-        </DropdownMenuTrigger>
+          <LayoutDashboard className="h-4 w-4 text-gray-500" />
+          <span>Dashboard</span>
+        </DropdownMenuItem>
 
-        <DropdownMenuContent>
-          {/* User Info */}
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-            <p className="text-sm font-semibold text-foreground truncate">
-              {displayName}
-            </p>
-            <p className="text-xs text-gray-500 truncate mt-0.5">
-              {userRole === "owner" ? "Equipment Owner" : "Renter"}
-            </p>
-          </div>
+        <DropdownMenuItem onClick={() => handleNavigation("/equipment")}>
+          <Search className="h-4 w-4 text-gray-500" />
+          <span>Browse Equipment</span>
+        </DropdownMenuItem>
 
-          {/* Navigation Items */}
-          <DropdownMenuItem
-            onClick={() => handleNavigation(getDashboardPath())}
-          >
-            <div className="flex items-center space-x-3">
-              <LayoutDashboard className="h-4 w-4 text-gray-500" />
-              <span>Dashboard</span>
-            </div>
-          </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleNavigation("/messages")}>
+          <MessageSquare className="h-4 w-4 text-gray-500" />
+          <span>Messages</span>
+        </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => handleNavigation("/equipment")}>
-            <div className="flex items-center space-x-3">
-              <Search className="h-4 w-4 text-gray-500" />
-              <span>Browse Equipment</span>
-            </div>
-          </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleNavigation("/verification")}>
+          <Shield className="h-4 w-4 text-gray-500" />
+          <span>Verification</span>
+        </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => handleNavigation("/messages")}>
-            <div className="flex items-center space-x-3">
-              <MessageSquare className="h-4 w-4 text-gray-500" />
-              <span>Messages</span>
-            </div>
-          </DropdownMenuItem>
+        <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={() => handleNavigation("/verification")}>
-            <div className="flex items-center space-x-3">
-              <Shield className="h-4 w-4 text-gray-500" />
-              <span>Verification</span>
-            </div>
-          </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleNavigation("/settings")}>
+          <Settings className="h-4 w-4 text-gray-500" />
+          <span>Settings</span>
+        </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+        <DropdownMenuItem>
+          <ThemeToggle variant="menu-item" />
+        </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => handleNavigation("/settings")}>
-            <div className="flex items-center space-x-3">
-              <Settings className="h-4 w-4 text-gray-500" />
-              <span>Settings</span>
-            </div>
-          </DropdownMenuItem>
+        <DropdownMenuSeparator />
 
-          <DropdownMenuItem>
-            <ThemeToggle variant="menu-item" />
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            onClick={() => {
-              void handleSignOut();
-            }}
-            className="text-red-600 hover:bg-red-50"
-          >
-            <div className="flex items-center space-x-3">
-              <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
-            </div>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+        <DropdownMenuItem
+          onClick={() => {
+            void handleSignOut();
+          }}
+          className="text-red-600 hover:bg-red-50"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Sign Out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

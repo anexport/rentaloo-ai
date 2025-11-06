@@ -13,7 +13,7 @@ import {
 import { MessageSquare } from "lucide-react";
 import { TooltipProvider } from "../ui/tooltip";
 import { ConversationListItem } from "./shared/ConversationListItem";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 
 interface ConversationListProps {
   conversations: ConversationWithDetails[];
@@ -95,8 +95,11 @@ const ConversationList = ({
   const { isOnline } = usePresence();
   const prevConversationIdsRef = useRef<Set<string>>(new Set());
 
-  // Collect all participant IDs from conversations
-  const participantIds = conversations.flatMap((conv) => conv.participants || []);
+  // Collect all participant IDs from conversations (memoized to prevent unnecessary re-runs)
+  const participantIds = useMemo(
+    () => conversations.flatMap((conv) => conv.participants || []),
+    [conversations]
+  );
   const { getProfile } = useProfileLookup(participantIds);
 
   // Clean up stale logged conversations when conversation data updates

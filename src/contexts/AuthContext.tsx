@@ -41,16 +41,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Get initial session
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    const getInitialSession = async () => {
       try {
-        supabase.realtime.setAuth(session?.access_token ?? null);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        
+        try {
+          supabase.realtime.setAuth(session?.access_token ?? null);
+        } catch (realtimeError) {
+          console.error("Failed to set realtime auth:", realtimeError);
+        }
       } catch (error) {
-        console.error("Failed to set realtime auth:", error);
+        console.error("Error getting session:", error);
+        setSession(null);
+        setUser(null);
+        setLoading(false);
       }
-    });
+    };
+
+    void getInitialSession();
 
     // Listen for auth changes
     const {

@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Link, useSearchParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import TransactionHistory from "@/components/payment/TransactionHistory";
 import ReviewList from "@/components/reviews/ReviewList";
@@ -23,6 +23,7 @@ import NotificationsPanel from "@/components/renter/NotificationsPanel";
 import { Separator } from "@/components/ui/separator";
 import { useVerification } from "@/hooks/useVerification";
 import { getVerificationProgress } from "@/lib/verification";
+import { useToast } from "@/hooks/useToast";
 
 const RenterDashboard = () => {
   const { user } = useAuth();
@@ -36,8 +37,38 @@ const RenterDashboard = () => {
   const {
     bookingRequests: renterBookings,
     loading: renterLoading,
+    error: renterError,
     fetchBookingRequests: fetchRenterBookings,
   } = useBookingRequests("renter");
+
+  const { toast } = useToast();
+
+  // Memoize the status change callback to prevent effect re-runs
+  const handleBookingStatusChange = useCallback(async () => {
+    try {
+      await fetchRenterBookings();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Failed to refresh bookings",
+        description:
+          err instanceof Error
+            ? err.message
+            : "An error occurred while refreshing bookings.",
+      });
+    }
+  }, [fetchRenterBookings, toast]);
+
+  // Watch for errors from initial/background fetches
+  useEffect(() => {
+    if (renterError) {
+      toast({
+        variant: "destructive",
+        title: "Failed to load bookings",
+        description: renterError,
+      });
+    }
+  }, [renterError, toast]);
 
   // Check if user has equipment listings and pending requests
   useEffect(() => {
@@ -229,9 +260,7 @@ const RenterDashboard = () => {
               <BookingRequestCard
                 key={booking.id}
                 bookingRequest={booking}
-                onStatusChange={() => {
-                  void fetchRenterBookings();
-                }}
+                onStatusChange={handleBookingStatusChange}
                 showActions={true}
               />
             ))}

@@ -24,7 +24,7 @@ export function useAddressAutocomplete(params?: {
   const opts = useMemo(
     () => ({
       language:
-        params?.language ||
+        params?.language ??
         (typeof navigator !== "undefined" ? navigator.language : "en"),
       limit: params?.limit ?? 5,
       countrycodes: params?.countrycodes,

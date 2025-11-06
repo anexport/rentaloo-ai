@@ -45,6 +45,11 @@ const OwnerDashboard = () => {
     fetchBookingRequests,
   } = useBookingRequests("owner");
 
+  // Memoize the status change callback to prevent effect re-runs
+  const handleBookingStatusChange = useCallback(() => {
+    void fetchBookingRequests();
+  }, [fetchBookingRequests]);
+
   const fetchStats = useCallback(async () => {
     if (!user) return;
 
@@ -377,9 +382,7 @@ const OwnerDashboard = () => {
                   <BookingRequestCard
                     key={request.id}
                     bookingRequest={request}
-                    onStatusChange={() => {
-                      void fetchBookingRequests();
-                    }}
+                    onStatusChange={handleBookingStatusChange}
                     showActions={true}
                   />
                 ))}

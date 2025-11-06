@@ -27,17 +27,18 @@ const PaymentConfirmation = () => {
   const [loading, setLoading] = useState(true);
 
   const paymentId = searchParams.get("payment_id");
+  const paymentIntentId = searchParams.get("payment_intent_id");
 
   useEffect(() => {
     const fetchPaymentDetails = async () => {
-      if (!paymentId) {
+      if (!paymentId && !paymentIntentId) {
         void navigate("/");
         return;
       }
 
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from("payments")
           .select(
             `
@@ -53,9 +54,16 @@ const PaymentConfirmation = () => {
               )
             )
           `
-          )
-          .eq("id", paymentId)
-          .single();
+          );
+
+        // Query by payment_id if available, otherwise use payment_intent_id
+        if (paymentId) {
+          query = query.eq("id", paymentId);
+        } else if (paymentIntentId) {
+          query = query.eq("stripe_payment_intent_id", paymentIntentId);
+        }
+
+        const { data, error } = await query.single();
 
         if (error) throw error;
 
@@ -69,7 +77,7 @@ const PaymentConfirmation = () => {
     };
 
     void fetchPaymentDetails();
-  }, [paymentId, navigate]);
+  }, [paymentId, paymentIntentId, navigate]);
 
   if (loading) {
     return (
