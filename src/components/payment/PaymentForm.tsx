@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import { getStripe, createPaymentIntent } from "@/lib/stripe";
 import { calculatePaymentSummary } from "@/lib/payment";
 import { supabase } from "@/lib/supabase";
@@ -79,7 +84,6 @@ const PaymentFormInner = ({
       }
 
       // Poll for payment record (up to 10 seconds with backoff)
-      let attempts = 0;
       const maxAttempts = 20;
       const pollInterval = 500; // 500ms
 
@@ -120,7 +124,9 @@ const PaymentFormInner = ({
         );
         // Still navigate after a short delay
         setTimeout(() => {
-          void navigate(`/payment/confirmation?payment_intent_id=${paymentIntentId}`);
+          void navigate(
+            `/payment/confirmation?payment_intent_id=${paymentIntentId}`
+          );
         }, 2000);
       }
     } catch (err) {
@@ -233,7 +239,9 @@ const PaymentForm = ({
 }: PaymentFormProps) => {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
-  const [stripePromise, setStripePromise] = useState<Promise<import("@stripe/stripe-js").Stripe | null> | null>(null);
+  const [stripePromise, setStripePromise] = useState<Promise<
+    import("@stripe/stripe-js").Stripe | null
+  > | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
