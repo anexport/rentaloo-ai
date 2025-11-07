@@ -55,6 +55,10 @@ interface BookingRequestFormProps {
   onSuccess?: (bookingRequestId: string) => void;
   onCancel?: () => void;
   isEmbedded?: boolean;
+  initialDates?: {
+    start_date?: string;
+    end_date?: string;
+  };
   onCalculationChange?: (
     calculation: BookingCalculation | null,
     startDate: string,
@@ -67,6 +71,7 @@ const BookingRequestForm = ({
   onSuccess,
   onCancel,
   isEmbedded = false,
+  initialDates,
   onCalculationChange,
 }: BookingRequestFormProps) => {
   const { user } = useAuth();
@@ -83,15 +88,30 @@ const BookingRequestForm = ({
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<BookingFormData>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
-      start_date: new Date().toISOString().split("T")[0],
-      end_date: new Date(Date.now() + 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
+      start_date:
+        initialDates?.start_date ||
+        new Date().toISOString().split("T")[0],
+      end_date:
+        initialDates?.end_date ||
+        new Date(Date.now() + 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
     },
   });
+
+  // Update form values when initialDates change
+  useEffect(() => {
+    if (initialDates?.start_date) {
+      setValue("start_date", initialDates.start_date);
+    }
+    if (initialDates?.end_date) {
+      setValue("end_date", initialDates.end_date);
+    }
+  }, [initialDates, setValue]);
 
   const watchedStartDate = watch("start_date");
   const watchedEndDate = watch("end_date");

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
@@ -24,6 +24,8 @@ import {
   CheckCircle2,
   CreditCard,
   DollarSign,
+  AlertCircle,
+  ChevronDown,
 } from "lucide-react";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import StarRating from "@/components/reviews/StarRating";
@@ -32,6 +34,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import EquipmentLocationMap from "./EquipmentLocationMap";
 import ReviewList from "@/components/reviews/ReviewList";
@@ -42,8 +51,14 @@ import { useToast } from "@/hooks/useToast";
 import BookingRequestForm from "@/components/booking/BookingRequestForm";
 import PaymentForm from "@/components/payment/PaymentForm";
 import type { Listing } from "@/components/equipment/services/listings";
-import type { BookingCalculation } from "@/types/booking";
-import { formatBookingDuration } from "@/lib/booking";
+import type { BookingCalculation, BookingConflict } from "@/types/booking";
+import {
+  formatBookingDuration,
+  calculateBookingTotal,
+  checkBookingConflicts,
+} from "@/lib/booking";
+import type { DateRange } from "react-day-picker";
+import { startOfDay } from "date-fns";
 
 type EquipmentDetailDialogProps = {
   open: boolean;
@@ -73,6 +88,12 @@ const EquipmentDetailDialog = ({
   const [watchedStartDate, setWatchedStartDate] = useState<string>("");
   const [watchedEndDate, setWatchedEndDate] = useState<string>("");
   const [bookingRequestId, setBookingRequestId] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [conflicts, setConflicts] = useState<BookingConflict[]>([]);
+  const [loadingConflicts, setLoadingConflicts] = useState(false);
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+  const requestIdRef = useRef(0);
 
   const handleCalculationChange = useCallback(
     (
@@ -92,6 +113,164 @@ const EquipmentDetailDialog = ({
     queryFn: () => fetchListingById(listingId as string),
     enabled: !!listingId && open,
   });
+
+  // Calculate booking when both dates are selected
+  const calculateBooking = useCallback(
+    (startDate: string, endDate: string) => {
+      if (!data) return;
+
+      const newCalculation = calculateBookingTotal(
+        data.daily_rate,
+        startDate,
+        endDate
+      );
+      setCalculation(newCalculation);
+      handleCalculationChange(newCalculation, startDate, endDate);
+
+      // Check for conflicts
+      requestIdRef.current += 1;
+      const currentRequestId = requestIdRef.current;
+
+      const checkConflicts = async () => {
+        setLoadingConflicts(true);
+        try {
+          const result = await checkBookingConflicts(data.id, startDate, endDate);
+
+          if (currentRequestId === requestIdRef.current) {
+            setConflicts(result);
+          }
+        } catch (error) {
+          if (currentRequestId === requestIdRef.current) {
+            console.error("Error checking booking conflicts:", error);
+            setConflicts([
+              {
+                type: "unavailable",
+                message: "Could not verify availability — please try again",
+              },
+            ]);
+          }
+        } finally {
+          if (currentRequestId === requestIdRef.current) {
+            setLoadingConflicts(false);
+          }
+        }
+      };
+
+      void checkConflicts();
+    },
+    [data, handleCalculationChange]
+  );
+
+  // Handle start date selection
+  const handleStartDateSelect = useCallback(
+    (date: Date | undefined) => {
+      if (!date) {
+        setDateRange(undefined);
+        setCalculation(null);
+        setWatchedStartDate("");
+        setWatchedEndDate("");
+        setConflicts([]);
+        setStartDateOpen(false);
+        return;
+      }
+
+      const newStartDate = date.toISOString().split("T")[0];
+      const endDate = dateRange?.to
+        ? dateRange.to.toISOString().split("T")[0]
+        : null;
+
+      // If end date exists and is before start date, clear end date
+      if (endDate && endDate < newStartDate) {
+        setDateRange({ from: date, to: undefined });
+        setWatchedStartDate(newStartDate);
+        setWatchedEndDate("");
+        setCalculation(null);
+        setConflicts([]);
+        setStartDateOpen(false);
+        return;
+      }
+
+      const newRange: DateRange = {
+        from: date,
+        to: dateRange?.to,
+      };
+      setDateRange(newRange);
+      setWatchedStartDate(newStartDate);
+      setStartDateOpen(false);
+
+      // If both dates are selected, calculate
+      if (endDate && endDate >= newStartDate) {
+        calculateBooking(newStartDate, endDate);
+      }
+    },
+    [data, dateRange, calculateBooking]
+  );
+
+  // Handle end date selection
+  const handleEndDateSelect = useCallback(
+    (date: Date | undefined) => {
+      if (!date) {
+        if (dateRange?.from) {
+          setDateRange({ from: dateRange.from, to: undefined });
+        } else {
+          setDateRange(undefined);
+        }
+        setCalculation(null);
+        setWatchedEndDate("");
+        setConflicts([]);
+        setEndDateOpen(false);
+        return;
+      }
+
+      const startDate = dateRange?.from
+        ? dateRange.from.toISOString().split("T")[0]
+        : null;
+
+      if (!startDate) {
+        // If no start date, set this as start date
+        const newStartDate = date.toISOString().split("T")[0];
+        setDateRange({ from: date, to: undefined });
+        setWatchedStartDate(newStartDate);
+        setWatchedEndDate("");
+        setEndDateOpen(false);
+        return;
+      }
+
+      const newEndDate = date.toISOString().split("T")[0];
+
+      // Validate end date is after start date
+      if (newEndDate < startDate) {
+        setEndDateOpen(false);
+        return;
+      }
+
+      const newRange: DateRange = {
+        from: dateRange.from,
+        to: date,
+      };
+      setDateRange(newRange);
+      setWatchedEndDate(newEndDate);
+      setEndDateOpen(false);
+
+      // Calculate booking
+      calculateBooking(startDate, newEndDate);
+    },
+    [data, dateRange, calculateBooking]
+  );
+
+  // Reset calendar and dates when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setDateRange(undefined);
+      setCalculation(null);
+      setWatchedStartDate("");
+      setWatchedEndDate("");
+      setConflicts([]);
+      setBookingRequestId(null);
+      setStartDateOpen(false);
+      setEndDateOpen(false);
+    }
+  }, [open]);
 
   const avgRating = (() => {
     if (!data?.reviews || data.reviews.length === 0) return 0;
@@ -399,6 +578,14 @@ const EquipmentDetailDialog = ({
                       setBookingRequestId(id);
                     }}
                     isEmbedded={true}
+                    initialDates={
+                      watchedStartDate && watchedEndDate
+                        ? {
+                            start_date: watchedStartDate,
+                            end_date: watchedEndDate,
+                          }
+                        : undefined
+                    }
                     onCalculationChange={handleCalculationChange}
                   />
                 )}
@@ -447,6 +634,91 @@ const EquipmentDetailDialog = ({
                     Contact the owner to arrange pickup after booking.
                   </p>
                 </div>
+              </div>
+
+              <Separator />
+
+              {/* Date Selection */}
+              <div className="space-y-3">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Select Dates
+                </h3>
+                <div className="flex gap-3">
+                  <div className="flex-1 flex flex-col gap-2">
+                    <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between font-normal"
+                          aria-label="Select start date"
+                        >
+                          {dateRange?.from
+                            ? dateRange.from.toLocaleDateString()
+                            : "Select start date"}
+                          <ChevronDown className="h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={dateRange?.from}
+                          onSelect={handleStartDateSelect}
+                          disabled={(date) =>
+                            startOfDay(date) < startOfDay(new Date())
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2">
+                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between font-normal"
+                          aria-label="Select end date"
+                        >
+                          {dateRange?.to
+                            ? dateRange.to.toLocaleDateString()
+                            : "Select end date"}
+                          <ChevronDown className="h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={dateRange?.to}
+                          onSelect={handleEndDateSelect}
+                          disabled={(date) => {
+                            const today = startOfDay(new Date());
+                            const startDate = dateRange?.from
+                              ? startOfDay(dateRange.from)
+                              : null;
+                            return (
+                              startOfDay(date) < today ||
+                              (startDate && startOfDay(date) < startDate)
+                            );
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+                {conflicts.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        {conflicts.map((conflict, index) => (
+                          <div key={index}>{conflict.message}</div>
+                        ))}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
 
               <Separator />
@@ -504,6 +776,12 @@ const EquipmentDetailDialog = ({
                 className="w-full"
                 size="lg"
                 aria-label="Book & Pay for this equipment"
+                disabled={
+                  !dateRange?.from ||
+                  !dateRange?.to ||
+                  conflicts.length > 0 ||
+                  loadingConflicts
+                }
                 onClick={() => {
                   if (!user) {
                     toast({
@@ -529,6 +807,23 @@ const EquipmentDetailDialog = ({
                     });
                     return;
                   }
+                  if (!dateRange?.from || !dateRange?.to) {
+                    toast({
+                      variant: "destructive",
+                      title: "Dates Required",
+                      description: "Please select start and end dates for your booking.",
+                    });
+                    return;
+                  }
+                  if (conflicts.length > 0) {
+                    toast({
+                      variant: "destructive",
+                      title: "Booking Conflict",
+                      description: conflicts[0].message,
+                    });
+                    return;
+                  }
+                  // If dates are selected in the calendar, proceed to booking
                   setActiveTab("book");
                 }}
               >
@@ -536,6 +831,10 @@ const EquipmentDetailDialog = ({
                   ? "Login to Book"
                   : data?.owner?.id === user.id
                   ? "Your Equipment"
+                  : !dateRange?.from || !dateRange?.to
+                  ? "Select Dates to Book"
+                  : conflicts.length > 0
+                  ? "Dates Unavailable"
                   : "Book & Pay Now"}
               </Button>
             </Card>
