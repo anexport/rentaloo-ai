@@ -16,29 +16,26 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import {
-  MapPin,
-  Calendar as CalendarIcon,
   Info,
-  MessageSquare,
   Package,
-  CreditCard,
+  Star,
 } from "lucide-react";
 import { fetchListingById } from "@/components/equipment/services/listings";
 import { EquipmentHeader } from "./EquipmentHeader";
 import { EquipmentPhotoGallery } from "./EquipmentPhotoGallery";
 import { EquipmentOverviewTab } from "./EquipmentOverviewTab";
+import { DetailsTab } from "./DetailsTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import BookingSidebar from "@/components/booking/BookingSidebar";
-import AvailabilityCalendar from "@/components/AvailabilityCalendar";
-import EquipmentLocationMap from "../EquipmentLocationMap";
+import { FloatingBookingCTA } from "@/components/booking/FloatingBookingCTA";
+import { MobileSidebarDrawer } from "@/components/booking/MobileSidebarDrawer";
 import ReviewList from "@/components/reviews/ReviewList";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { createMaxWidthQuery } from "@/config/breakpoints";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
-import BookingRequestForm from "@/components/booking/BookingRequestForm";
-import PaymentForm from "@/components/payment/PaymentForm";
 import { supabase } from "@/lib/supabase";
 import type { Listing } from "@/components/equipment/services/listings";
 import type { BookingCalculation, BookingConflict } from "@/types/booking";
@@ -50,13 +47,6 @@ type EquipmentDetailDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   listingId?: string;
-};
-
-// Type guard to check if listing has category
-const hasCategory = (
-  listing: Listing | undefined
-): listing is Listing & { category: NonNullable<Listing["category"]> } => {
-  return !!listing?.category;
 };
 
 const EquipmentDetailDialog = ({
@@ -79,6 +69,7 @@ const EquipmentDetailDialog = ({
   const [loadingConflicts, setLoadingConflicts] = useState(false);
   const [isCreatingBooking, setIsCreatingBooking] = useState(false);
   const [isCancellingBooking, setIsCancellingBooking] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const requestIdRef = useRef(0);
 
   const handleCalculationChange = useCallback(
@@ -303,10 +294,10 @@ const EquipmentDetailDialog = ({
 
       if (error) throw error;
 
-      // Set booking request ID to trigger payment form
+      // Set booking request ID for tracking
       if (newBooking) {
         setBookingRequestId(newBooking.id);
-        setActiveTab("book");
+        // Payment happens in sidebar, no need to switch tabs
       }
     } catch (error) {
       console.error("Error creating booking request:", error);
@@ -393,6 +384,8 @@ const EquipmentDetailDialog = ({
       setBookingRequestId(null);
       setIsCreatingBooking(false);
       setIsCancellingBooking(false);
+      setMobileSidebarOpen(false);
+      setActiveTab("overview");
     }
   }, [open, bookingRequestId]);
 
@@ -467,46 +460,35 @@ const EquipmentDetailDialog = ({
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger
                   value="overview"
-                  className="flex items-center gap-1 sm:gap-2"
-                  aria-label="Overview"
+                  className="flex items-center gap-2"
+                  aria-label="Overview - Description and details"
                 >
                   <Info className="h-4 w-4" />
-                  <span className="hidden sm:inline">Overview</span>
+                  <span>Overview</span>
                 </TabsTrigger>
                 <TabsTrigger
-                  value="availability"
-                  className="flex items-center gap-1 sm:gap-2"
-                  aria-label="Availability"
+                  value="details"
+                  className="flex items-center gap-2"
+                  aria-label="Details - Availability and location"
                 >
-                  <CalendarIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline">Availability</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="location"
-                  className="flex items-center gap-1 sm:gap-2"
-                  aria-label="Location"
-                >
-                  <MapPin className="h-4 w-4" />
-                  <span className="hidden sm:inline">Location</span>
+                  <Package className="h-4 w-4" />
+                  <span>Details</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="reviews"
-                  className="flex items-center gap-1 sm:gap-2"
-                  aria-label="Reviews"
+                  className="flex items-center gap-2"
+                  aria-label="Reviews - Owner ratings and feedback"
                 >
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline">Reviews</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="book"
-                  className="flex items-center gap-1 sm:gap-2"
-                  aria-label="Book"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  <span className="hidden sm:inline">Book</span>
+                  <Star className="h-4 w-4" />
+                  <span>Reviews</span>
+                  {data.reviews && data.reviews.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 text-xs">
+                      {data.reviews.length}
+                    </Badge>
+                  )}
                 </TabsTrigger>
               </TabsList>
 
@@ -518,16 +500,10 @@ const EquipmentDetailDialog = ({
                 />
               </TabsContent>
 
-              <TabsContent value="availability" className="mt-6">
-                <AvailabilityCalendar
+              <TabsContent value="details" className="mt-6">
+                <DetailsTab
                   equipmentId={data.id}
-                  defaultDailyRate={data.daily_rate}
-                  viewOnly={true}
-                />
-              </TabsContent>
-
-              <TabsContent value="location" className="mt-6">
-                <EquipmentLocationMap
+                  dailyRate={data.daily_rate}
                   location={data.location}
                   latitude={data.latitude}
                   longitude={data.longitude}
@@ -535,145 +511,83 @@ const EquipmentDetailDialog = ({
               </TabsContent>
 
               <TabsContent value="reviews" className="mt-6">
-                <ReviewList
-                  revieweeId={data.owner?.id}
-                  showSummary={true}
-                  showEquipment={false}
-                />
-              </TabsContent>
-
-              <TabsContent value="book" className="mt-6">
-                {!hasCategory(data) ? (
+                {data.reviews && data.reviews.length > 0 ? (
+                  <ReviewList
+                    revieweeId={data.owner?.id}
+                    showSummary={true}
+                    showEquipment={false}
+                  />
+                ) : (
                   <Card>
                     <CardContent className="pt-6">
-                      <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <Package className="h-12 w-12 text-muted-foreground mb-4" />
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <Star className="h-12 w-12 text-muted-foreground mb-4" />
                         <h3 className="text-lg font-semibold mb-2">
-                          Category Information Missing
+                          No Reviews Yet
                         </h3>
                         <p className="text-muted-foreground max-w-md">
-                          This equipment is missing category information. Please
-                          contact the owner or try again later.
+                          This owner hasn't received any reviews yet. Be the first to rent and share your experience!
                         </p>
                       </div>
                     </CardContent>
                   </Card>
-                ) : bookingRequestId && calculation ? (
-                  <PaymentForm
-                    bookingRequestId={bookingRequestId}
-                    ownerId={data.owner?.id || ""}
-                    totalAmount={calculation.total}
-                    isCancelling={isCancellingBooking}
-                    onSuccess={() => {
-                      setActiveTab("overview");
-                      toast({
-                        title: "Payment Successful",
-                        description:
-                          "Your booking has been confirmed! The owner has been notified.",
-                      });
-                      setBookingRequestId(null);
-                    }}
-                    onCancel={async () => {
-                      if (!bookingRequestId || isCancellingBooking) return;
-
-                      setIsCancellingBooking(true);
-
-                      try {
-                        // Check if booking request still exists (idempotency)
-                        const { data: existingRequest, error: checkError } =
-                          await supabase
-                            .from("booking_requests")
-                            .select("id, status")
-                            .eq("id", bookingRequestId)
-                            .maybeSingle();
-
-                        if (checkError && checkError.code !== "PGRST116") {
-                          throw checkError;
-                        }
-
-                        // If booking request exists and is still pending, delete it
-                        if (
-                          existingRequest &&
-                          existingRequest.status === "pending"
-                        ) {
-                          const { error: deleteError } = await supabase
-                            .from("booking_requests")
-                            .delete()
-                            .eq("id", bookingRequestId)
-                            .eq("status", "pending"); // Only delete if still pending (safety check)
-
-                          if (deleteError) throw deleteError;
-                        }
-
-                        // Clear local state and update UI
-                        setBookingRequestId(null);
-                        setActiveTab("overview");
-
-                        toast({
-                          title: "Booking Cancelled",
-                          description:
-                            "Your booking request has been cancelled.",
-                        });
-                      } catch (error) {
-                        console.error(
-                          "Error cancelling booking request:",
-                          error
-                        );
-                        toast({
-                          variant: "destructive",
-                          title: "Cancellation Failed",
-                          description:
-                            "Failed to cancel booking request. Please try again.",
-                        });
-                      } finally {
-                        setIsCancellingBooking(false);
-                      }
-                    }}
-                  />
-                ) : (
-                  <BookingRequestForm
-                    equipment={{
-                      ...data,
-                      category: data.category,
-                    }}
-                    onSuccess={(id) => {
-                      setBookingRequestId(id);
-                    }}
-                    isEmbedded={true}
-                    initialDates={
-                      watchedStartDate && watchedEndDate
-                        ? {
-                            start_date: watchedStartDate,
-                            end_date: watchedEndDate,
-                          }
-                        : undefined
-                    }
-                    onCalculationChange={handleCalculationChange}
-                  />
                 )}
               </TabsContent>
             </Tabs>
           </div>
 
-          {/* Sticky booking sidebar */}
-          <BookingSidebar
-            listing={data}
-            avgRating={avgRating}
-            reviewCount={data.reviews?.length || 0}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            onStartDateSelect={handleStartDateSelect}
-            onEndDateSelect={handleEndDateSelect}
-            conflicts={conflicts}
-            loadingConflicts={loadingConflicts}
-            calculation={calculation}
-            watchedStartDate={watchedStartDate}
-            watchedEndDate={watchedEndDate}
-            onBooking={handleBooking}
-            isCreatingBooking={isCreatingBooking}
-            user={user}
-          />
+          {/* Sticky booking sidebar - Desktop only */}
+          {!isMobile && (
+            <BookingSidebar
+              listing={data}
+              avgRating={avgRating}
+              reviewCount={data.reviews?.length || 0}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              onStartDateSelect={handleStartDateSelect}
+              onEndDateSelect={handleEndDateSelect}
+              conflicts={conflicts}
+              loadingConflicts={loadingConflicts}
+              calculation={calculation}
+              watchedStartDate={watchedStartDate}
+              watchedEndDate={watchedEndDate}
+              onBooking={handleBooking}
+              isCreatingBooking={isCreatingBooking}
+              user={user}
+            />
+          )}
         </div>
+
+        {/* Mobile-only: Floating CTA and Sidebar Drawer */}
+        {isMobile && (
+          <>
+            <FloatingBookingCTA
+              dailyRate={data.daily_rate}
+              onOpenBooking={() => setMobileSidebarOpen(true)}
+              isVisible={true}
+            />
+            
+            <MobileSidebarDrawer
+              open={mobileSidebarOpen}
+              onOpenChange={setMobileSidebarOpen}
+              listing={data}
+              avgRating={avgRating}
+              reviewCount={data.reviews?.length || 0}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              onStartDateSelect={handleStartDateSelect}
+              onEndDateSelect={handleEndDateSelect}
+              conflicts={conflicts}
+              loadingConflicts={loadingConflicts}
+              calculation={calculation}
+              watchedStartDate={watchedStartDate}
+              watchedEndDate={watchedEndDate}
+              onBooking={handleBooking}
+              isCreatingBooking={isCreatingBooking}
+              user={user}
+            />
+          </>
+        )}
       </div>
     );
   };
