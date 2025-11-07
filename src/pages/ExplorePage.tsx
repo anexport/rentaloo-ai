@@ -5,7 +5,7 @@ import type { SearchBarFilters } from "@/types/search";
 import CategoryBar from "@/components/explore/CategoryBar";
 import CategoryBarSkeleton from "@/components/explore/CategoryBarSkeleton";
 import ListingCard from "@/components/equipment/ListingCard";
-import EquipmentDetailDialog from "@/components/equipment/EquipmentDetailDialog";
+import EquipmentDetailDialog from "@/components/equipment/detail/EquipmentDetailDialog";
 import ListingCardSkeleton from "@/components/equipment/ListingCardSkeleton";
 import FiltersSheet, {
   type FilterValues,

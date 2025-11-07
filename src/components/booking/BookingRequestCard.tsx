@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { useMessaging } from "@/hooks/useMessaging";
+import { usePayment } from "@/hooks/usePayment";
 import type { BookingRequestWithDetails } from "../../types/booking";
 import {
   formatBookingDate,
@@ -47,6 +48,7 @@ const BookingRequestCard = ({
 }: BookingRequestCardProps) => {
   const { user } = useAuth();
   const { getOrCreateConversation } = useMessaging();
+  const { processRefund } = usePayment();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -136,35 +138,58 @@ const BookingRequestCard = ({
     };
   }, [bookingRequest.id, onStatusChange]);
 
-  const handleStatusUpdate = async (
-    newStatus: "approved" | "declined" | "cancelled"
-  ) => {
+  const handleStatusUpdate = async (newStatus: "cancelled") => {
     if (!user) return;
 
-    // Confirmation for cancellation
-    if (newStatus === "cancelled") {
-      const confirmed = window.confirm(
-        "Are you sure you want to cancel this booking request? This action cannot be undone."
-      );
-      if (!confirmed) return;
-    }
+    const confirmed = window.confirm(
+      isOwner
+        ? "Are you sure you want to cancel this booking? The renter will receive a full refund."
+        : "Are you sure you want to cancel this booking? You will receive a full refund."
+    );
+    if (!confirmed) return;
 
     setIsUpdating(true);
 
     try {
+      // If there's a successful payment, process refund
+      if (hasPayment) {
+        const { data: payment } = await supabase
+          .from("payments")
+          .select("id, stripe_payment_intent_id")
+          .eq("booking_request_id", bookingRequest.id)
+          .eq("payment_status", "succeeded")
+          .single();
+
+        if (payment) {
+          // Call refund function
+          const refundSuccess = await processRefund({
+            paymentId: payment.id,
+            reason: isOwner
+              ? "Booking cancelled by owner"
+              : "Booking cancelled by renter",
+          });
+
+          if (!refundSuccess) {
+            throw new Error(
+              "Refund processing failed. Please contact support to cancel this booking."
+            );
+          }
+        }
+      }
+
+      // Update booking status to cancelled
       const { error } = await supabase
         .from("booking_requests")
         .update({
-          status: newStatus,
+          status: "cancelled",
           updated_at: new Date().toISOString(),
         })
         .eq("id", bookingRequest.id);
 
       if (error) throw error;
 
-      // Send system message about status change
+      // Send cancellation message
       try {
-        // Find or create conversation for this booking
         const otherUserId = isOwner
           ? bookingRequest.renter_id
           : bookingRequest.owner.id;
@@ -175,35 +200,24 @@ const BookingRequestCard = ({
         );
 
         if (conversation) {
-          const statusMessages = {
-            approved: `Booking request has been approved! 🎉`,
-            declined: `Booking request has been declined.`,
-            cancelled: `Booking request has been cancelled.`,
-          };
-
-          const messageTypes = {
-            approved: "booking_approved" as const,
-            declined: "booking_declined" as const,
-            cancelled: "booking_cancelled" as const,
-          };
-
-          // Insert system message with structured message_type
           await supabase.from("messages").insert({
             conversation_id: conversation.id,
             sender_id: user.id,
-            content: statusMessages[newStatus],
-            message_type: messageTypes[newStatus],
+            content: `Booking has been cancelled. ${
+              hasPayment ? "A full refund will be processed." : ""
+            }`,
+            message_type: "booking_cancelled",
           });
         }
       } catch (msgError) {
-        console.error("Error sending status message:", msgError);
+        console.error("Error sending cancellation message:", msgError);
         // Don't fail the status update if message fails
       }
 
       onStatusChange?.();
     } catch (error) {
-      console.error("Error updating booking status:", error);
-      alert(`Failed to ${newStatus} booking request. Please try again.`);
+      console.error("Error cancelling booking:", error);
+      alert("Failed to cancel booking. Please try again.");
     } finally {
       setIsUpdating(false);
     }
@@ -242,7 +256,6 @@ const BookingRequestCard = ({
 
   const isOwner = user?.id === bookingRequest.owner.id;
   const isRenter = user?.id === bookingRequest.renter.id;
-  const canApprove = isOwner && bookingRequest.status === "pending";
   const canCancel =
     (isOwner || isRenter) &&
     ["pending", "approved"].includes(bookingRequest.status || "");
@@ -260,11 +273,19 @@ const BookingRequestCard = ({
             </CardDescription>
           </div>
           <Badge
-            className={getBookingStatusColor(
-              bookingRequest.status || "pending"
-            )}
+            className={
+              bookingRequest.status === "pending" && !hasPayment
+                ? "bg-yellow-100 text-yellow-800"
+                : bookingRequest.status === "approved" && hasPayment
+                ? "bg-green-100 text-green-800"
+                : getBookingStatusColor(bookingRequest.status || "pending")
+            }
           >
-            {getBookingStatusText(bookingRequest.status || "pending")}
+            {bookingRequest.status === "pending" && !hasPayment
+              ? "Awaiting Payment"
+              : bookingRequest.status === "approved" && hasPayment
+              ? "Booking Confirmed"
+              : getBookingStatusText(bookingRequest.status || "pending")}
           </Badge>
         </div>
       </CardHeader>
@@ -328,39 +349,17 @@ const BookingRequestCard = ({
             <Clock className="h-4 w-4" />
             <AlertDescription>
               {isOwner
-                ? "This booking request is waiting for your approval."
-                : "Your booking request is waiting. You can pay now to expedite approval."}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {bookingRequest.status === "approved" && !hasPayment && (
-          <Alert>
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>
-              {isOwner
-                ? "You have approved this booking request. Waiting for renter payment."
-                : "Your booking request has been approved! Payment is required to confirm."}
+                ? "This booking request is awaiting payment from the renter."
+                : "Your booking request is awaiting payment. Complete payment to confirm your booking."}
             </AlertDescription>
           </Alert>
         )}
 
         {bookingRequest.status === "approved" && hasPayment && (
-          <Alert className="bg-green-50 border-green-200">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800">
-              Payment received! Rental is confirmed.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {bookingRequest.status === "declined" && (
-          <Alert variant="destructive">
-            <XCircle className="h-4 w-4" />
-            <AlertDescription>
-              {isOwner
-                ? "You have declined this booking request."
-                : "Your booking request has been declined."}
+          <Alert className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800">
+            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <AlertDescription className="text-green-800 dark:text-green-200">
+              Payment received! Booking is confirmed.
             </AlertDescription>
           </Alert>
         )}
@@ -390,33 +389,6 @@ const BookingRequestCard = ({
               </Button>
             )}
 
-            {canApprove && (
-              <>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    void handleStatusUpdate("approved");
-                  }}
-                  disabled={isUpdating}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle className="h-4 w-4 mr-1" />
-                  {isUpdating ? "Approving..." : "Approve"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => {
-                    void handleStatusUpdate("declined");
-                  }}
-                  disabled={isUpdating}
-                >
-                  <XCircle className="h-4 w-4 mr-1" />
-                  {isUpdating ? "Declining..." : "Decline"}
-                </Button>
-              </>
-            )}
-
             {canCancel && (
               <Button
                 size="sm"
@@ -430,21 +402,6 @@ const BookingRequestCard = ({
                 {isUpdating ? "Cancelling..." : "Cancel Booking"}
               </Button>
             )}
-
-            {/* Payment Button - For renters with pending or approved bookings */}
-            {isRenter &&
-              (bookingRequest.status === "pending" ||
-                bookingRequest.status === "approved") &&
-              !hasPayment && (
-                <Button
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => setShowPayment(true)}
-                >
-                  <CreditCard className="h-4 w-4 mr-1" />
-                  Pay Now
-                </Button>
-              )}
 
             {/* Message Button */}
             <Button

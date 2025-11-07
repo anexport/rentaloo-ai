@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     const { data: br, error: brErr } = await supabase
       .from("booking_requests")
       .select(
-        "id, renter_id, total_amount, status, equipment:equipment(id, owner_id)"
+        "id, renter_id, total_amount, status, start_date, end_date, equipment:equipment(id, owner_id)"
       )
       .eq("id", bookingRequestId)
       .single();
@@ -101,6 +101,45 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Equipment owner not found" }),
         {
           status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Check availability one more time before creating payment intent
+    // This prevents race conditions where multiple users try to book same dates
+    // Exclude the current booking_request_id so it doesn't conflict with itself
+    const { data: conflictCheck, error: conflictError } = await supabase.rpc(
+      "check_booking_conflicts",
+      {
+        p_equipment_id: (br.equipment as { id: string }).id,
+        p_start_date: br.start_date,
+        p_end_date: br.end_date,
+        p_exclude_booking_id: br.id, // Exclude current booking request
+      }
+    );
+
+    if (conflictError) {
+      console.error("Error checking availability:", conflictError);
+      return new Response(
+        JSON.stringify({
+          error: "Unable to verify availability. Please try again.",
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (conflictCheck === false) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "These dates are no longer available. Please select different dates.",
+        }),
+        {
+          status: 409,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );

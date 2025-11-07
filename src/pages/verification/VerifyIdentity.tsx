@@ -231,7 +231,7 @@ const VerifyIdentity = () => {
                     <div>
                       <h4 className="font-semibold mb-1">For Renters:</h4>
                       <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                        <li>Higher approval rates for rental requests</li>
+                        <li>Instant booking confirmation</li>
                         <li>Access to premium equipment</li>
                         <li>Build credibility with equipment owners</li>
                       </ul>
@@ -413,7 +413,8 @@ const VerifyIdentity = () => {
                   <Shield className="h-4 w-4" />
                   <AlertDescription>
                     <strong>Pro tip:</strong> Complete all verifications to
-                    unlock premium features and get priority booking approvals.
+                    unlock premium features and get instant booking
+                    confirmation.
                   </AlertDescription>
                 </Alert>
               </CardContent>

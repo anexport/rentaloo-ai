@@ -97,6 +97,75 @@ Deno.serve(async (req) => {
           console.error("Error approving booking request:", bookingError);
           // Don't fail the webhook
         }
+
+        // After approving booking request, create conversation and send confirmation message
+        try {
+          // Get booking request details
+          const { data: bookingRequest } = await supabase
+            .from("booking_requests")
+            .select(`
+              id,
+              renter_id,
+              start_date,
+              end_date,
+              total_amount,
+              equipment:equipment(id, title, owner_id)
+            `)
+            .eq("id", brId)
+            .single();
+
+          if (bookingRequest && bookingRequest.equipment) {
+            const ownerId = (bookingRequest.equipment as { owner_id: string }).owner_id;
+            
+            // Check if conversation exists for this booking
+            const { data: existingConv } = await supabase
+              .from("conversations")
+              .select("id")
+              .eq("booking_request_id", brId)
+              .maybeSingle();
+
+            let conversationId = existingConv?.id;
+
+            // Create conversation if it doesn't exist
+            if (!conversationId) {
+              const { data: newConv } = await supabase
+                .from("conversations")
+                .insert({
+                  booking_request_id: brId,
+                  participants: [bookingRequest.renter_id, ownerId]
+                })
+                .select("id")
+                .single();
+              
+              conversationId = newConv?.id;
+
+              // Add conversation participants
+              if (conversationId) {
+                await supabase.from("conversation_participants").insert([
+                  { conversation_id: conversationId, profile_id: bookingRequest.renter_id },
+                  { conversation_id: conversationId, profile_id: ownerId }
+                ]);
+              }
+            }
+
+            // Send payment confirmation message
+            if (conversationId) {
+              const startDate = new Date(bookingRequest.start_date).toLocaleDateString();
+              const endDate = new Date(bookingRequest.end_date).toLocaleDateString();
+              const equipmentTitle = (bookingRequest.equipment as { title: string }).title;
+              
+              await supabase.from("messages").insert({
+                conversation_id: conversationId,
+                sender_id: bookingRequest.renter_id,
+                content: `Payment confirmed! I've booked your "${equipmentTitle}" from ${startDate} to ${endDate} ($${bookingRequest.total_amount.toFixed(2)} total).`,
+                message_type: "booking_approved"
+              });
+            }
+          }
+        } catch (convError) {
+          console.error("Error creating conversation after payment:", convError);
+          // Don't fail the webhook - booking is still valid
+        }
       }
     }
 

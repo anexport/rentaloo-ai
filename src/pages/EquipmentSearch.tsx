@@ -24,11 +24,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "../lib/database.types";
 import BookingRequestForm from "@/components/booking/BookingRequestForm";
+import PaymentForm from "@/components/payment/PaymentForm";
 import ReviewList from "@/components/reviews/ReviewList";
 import StarRating from "@/components/reviews/StarRating";
 import ThemeToggle from "@/components/ThemeToggle";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/layout/PageHeader";
+import type { BookingCalculation } from "@/types/booking";
 
 type EquipmentWithCategory =
   Database["public"]["Tables"]["equipment"]["Row"] & {
@@ -65,7 +67,7 @@ const fetchEquipment = async (): Promise<EquipmentWithCategory[]> => {
 
   // Batch fetch all reviews for all owners in a single query
   let reviewsByOwnerId: Map<string, Array<{ rating: number }>> = new Map();
-  
+
   if (ownerIds.length > 0) {
     const { data: reviewsData, error: reviewsError } = await supabase
       .from("reviews")
@@ -120,6 +122,9 @@ const EquipmentSearch = () => {
     useState<EquipmentWithCategory | null>(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showEquipmentDetail, setShowEquipmentDetail] = useState(false);
+  const [bookingRequestId, setBookingRequestId] = useState<string | null>(null);
+  const [bookingCalculation, setBookingCalculation] =
+    useState<BookingCalculation | null>(null);
 
   // Advanced filters
   const [showFilters, setShowFilters] = useState(false);
@@ -244,11 +249,24 @@ const EquipmentSearch = () => {
     setShowBookingForm(true);
   };
 
-  const handleBookingSuccess = () => {
+  const handleBookingSuccess = (id: string) => {
+    setBookingRequestId(id);
+  };
+
+  const handlePaymentSuccess = () => {
     setShowBookingForm(false);
     setSelectedEquipment(null);
-    // Show success message or redirect
-    alert("Booking request submitted successfully!");
+    setBookingRequestId(null);
+    setBookingCalculation(null);
+    // Show success message
+    alert("Payment successful! Your booking has been confirmed.");
+  };
+
+  const handlePaymentCancel = () => {
+    setShowBookingForm(false);
+    setSelectedEquipment(null);
+    setBookingRequestId(null);
+    setBookingCalculation(null);
   };
 
   const calculateAverageRating = (reviews?: Array<{ rating: number }>) => {
@@ -309,8 +327,11 @@ const EquipmentSearch = () => {
                         <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
                           <li>Register as an owner and list your gear.</li>
                           <li>Set price, availability, and conditions.</li>
-                          <li>Approve booking requests from renters.</li>
-                          <li>Get paid securely after a successful rental.</li>
+                          <li>
+                            Receive instant booking confirmations when renters
+                            pay.
+                          </li>
+                          <li>Get paid securely upfront for each rental.</li>
                         </ol>
                       </div>
                     </div>
@@ -757,14 +778,31 @@ const EquipmentSearch = () => {
           {showBookingForm && selectedEquipment && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
               <div className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
-                <BookingRequestForm
-                  equipment={selectedEquipment}
-                  onSuccess={handleBookingSuccess}
-                  onCancel={() => {
-                    setShowBookingForm(false);
-                    setSelectedEquipment(null);
-                  }}
-                />
+                {bookingRequestId && bookingCalculation ? (
+                  <div className="p-6">
+                    <PaymentForm
+                      bookingRequestId={bookingRequestId}
+                      ownerId={selectedEquipment.owner_id}
+                      totalAmount={bookingCalculation.total}
+                      onSuccess={handlePaymentSuccess}
+                      onCancel={handlePaymentCancel}
+                    />
+                  </div>
+                ) : (
+                  <BookingRequestForm
+                    equipment={selectedEquipment}
+                    onSuccess={handleBookingSuccess}
+                    onCalculationChange={(calc) => {
+                      setBookingCalculation(calc);
+                    }}
+                    onCancel={() => {
+                      setShowBookingForm(false);
+                      setSelectedEquipment(null);
+                      setBookingRequestId(null);
+                      setBookingCalculation(null);
+                    }}
+                  />
+                )}
               </div>
             </div>
           )}
@@ -1190,14 +1228,31 @@ const EquipmentSearch = () => {
       {showBookingForm && selectedEquipment && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
-            <BookingRequestForm
-              equipment={selectedEquipment}
-              onSuccess={handleBookingSuccess}
-              onCancel={() => {
-                setShowBookingForm(false);
-                setSelectedEquipment(null);
-              }}
-            />
+            {bookingRequestId && bookingCalculation ? (
+              <div className="p-6">
+                <PaymentForm
+                  bookingRequestId={bookingRequestId}
+                  ownerId={selectedEquipment.owner_id}
+                  totalAmount={bookingCalculation.total}
+                  onSuccess={handlePaymentSuccess}
+                  onCancel={handlePaymentCancel}
+                />
+              </div>
+            ) : (
+              <BookingRequestForm
+                equipment={selectedEquipment}
+                onSuccess={handleBookingSuccess}
+                onCalculationChange={(calc) => {
+                  setBookingCalculation(calc);
+                }}
+                onCancel={() => {
+                  setShowBookingForm(false);
+                  setSelectedEquipment(null);
+                  setBookingRequestId(null);
+                  setBookingCalculation(null);
+                }}
+              />
+            )}
           </div>
         </div>
       )}

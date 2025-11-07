@@ -28,8 +28,7 @@ export type MessageType =
   | "system"
   | "booking_update"
   | "booking_approved"
-  | "booking_cancelled"
-  | "booking_declined";
+  | "booking_cancelled";
 
 export interface NewMessage {
   conversation_id: string;

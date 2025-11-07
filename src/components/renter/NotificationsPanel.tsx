@@ -86,7 +86,7 @@ const NotificationsPanel = () => {
               }`,
               description: `You have ${pendingCount} booking ${
                 pendingCount === 1 ? "request" : "requests"
-              } waiting for owner approval.`,
+              } awaiting payment.`,
               action: {
                 label: "View Bookings",
                 href: "/renter/dashboard?tab=bookings",

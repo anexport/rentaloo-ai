@@ -14,16 +14,14 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
   const isSystemMessage =
     message.message_type === "system" ||
     message.message_type === "booking_approved" ||
-    message.message_type === "booking_cancelled" ||
-    message.message_type === "booking_declined";
+    message.message_type === "booking_cancelled";
 
   // System messages are centered and styled differently
   if (isSystemMessage) {
     const tone =
       message.message_type === "booking_approved"
         ? "success"
-        : message.message_type === "booking_cancelled" ||
-          message.message_type === "booking_declined"
+        : message.message_type === "booking_cancelled"
         ? "danger"
         : "info";
 

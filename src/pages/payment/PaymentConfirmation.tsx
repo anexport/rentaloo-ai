@@ -200,9 +200,14 @@ const PaymentConfirmation = () => {
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Payment Successful!
           </h1>
+          <Alert className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800 mb-4">
+            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <AlertDescription className="text-green-800 dark:text-green-200">
+              Payment successful! Your booking is confirmed and the owner has been notified.
+            </AlertDescription>
+          </Alert>
           <p className="text-muted-foreground">
-            Your booking has been confirmed. The equipment owner will be
-            notified.
+            Your booking has been automatically confirmed. You can now contact the owner to arrange pickup.
           </p>
         </div>
 

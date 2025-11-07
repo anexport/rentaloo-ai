@@ -102,7 +102,7 @@ const StatsOverview = () => {
       title: "Pending Requests",
       value: stats.pendingRequests,
       icon: Package,
-      description: "Awaiting approval",
+      description: "Awaiting payment",
       badge: stats.pendingRequests > 0 ? "Pending" : undefined,
       badgeVariant: "secondary" as const,
     },

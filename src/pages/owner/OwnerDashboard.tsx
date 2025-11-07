@@ -153,7 +153,7 @@ const OwnerDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.pendingRequests}</div>
-              <p className="text-xs text-muted-foreground">Awaiting approval</p>
+              <p className="text-xs text-muted-foreground">Awaiting payment</p>
             </CardContent>
           </Card>
 
