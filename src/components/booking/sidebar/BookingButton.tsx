@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { CreditCard } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 interface BookingButtonProps {
@@ -60,6 +61,9 @@ const BookingButton = ({
     >
       {isLoading && (
         <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+      )}
+      {!isLoading && buttonText === "Book & Pay Now" && (
+        <CreditCard className="h-4 w-4" aria-hidden="true" />
       )}
       {buttonText}
     </Button>
