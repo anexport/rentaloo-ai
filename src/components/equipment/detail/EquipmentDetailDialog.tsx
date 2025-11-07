@@ -71,6 +71,7 @@ const EquipmentDetailDialog = ({
   const [isCancellingBooking, setIsCancellingBooking] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const requestIdRef = useRef(0);
+  const sheetContentRef = useRef<HTMLElement | null>(null);
 
   const handleCalculationChange = useCallback(
     (calc: BookingCalculation | null, startDate: string, endDate: string) => {
@@ -429,6 +430,25 @@ const EquipmentDetailDialog = ({
     }
   }, [open, bookingRequestId]);
 
+  // Find the scrollable SheetContent element for mobile scroll detection
+  useEffect(() => {
+    if (open && isMobile) {
+      // Use a small delay to ensure the SheetContent is rendered
+      const timeoutId = setTimeout(() => {
+        // Find the SheetContent element by its data attribute
+        const sheetContent = document.querySelector(
+          '[data-slot="sheet-content"]'
+        ) as HTMLElement | null;
+        if (sheetContent) {
+          sheetContentRef.current = sheetContent;
+        }
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    } else {
+      sheetContentRef.current = null;
+    }
+  }, [open, isMobile]);
+
   const avgRating = (() => {
     if (!data?.reviews || data.reviews.length === 0) return 0;
     const validRatings = data.reviews.filter(
@@ -628,6 +648,7 @@ const EquipmentDetailDialog = ({
               dailyRate={data.daily_rate}
               onOpenBooking={() => setMobileSidebarOpen(true)}
               isVisible={true}
+              scrollContainerRef={sheetContentRef}
             />
             
             <MobileSidebarDrawer

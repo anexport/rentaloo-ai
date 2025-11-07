@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, RefObject, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface FloatingBookingCTAProps {
@@ -23,6 +23,13 @@ interface FloatingBookingCTAProps {
    * Optional className for additional styling
    */
   className?: string;
+  
+  /**
+   * Optional ref to the scrollable container element.
+   * If provided, listens to this element's scroll events.
+   * If not provided, falls back to window scroll.
+   */
+  scrollContainerRef?: RefObject<HTMLElement>;
 }
 
 /**
@@ -35,8 +42,10 @@ export const FloatingBookingCTA = ({
   onOpenBooking,
   isVisible,
   className,
+  scrollContainerRef,
 }: FloatingBookingCTAProps) => {
   const [shouldShow, setShouldShow] = useState(false);
+  const currentListenerRef = useRef<HTMLElement | Window | null>(null);
 
   useEffect(() => {
     if (!isVisible) {
@@ -46,16 +55,51 @@ export const FloatingBookingCTA = ({
 
     // Show button after user scrolls 400px down
     const handleScroll = () => {
-      const scrolled = window.scrollY > 400;
+      // Always check the ref dynamically in case it's set after mount
+      const container = scrollContainerRef?.current || window;
+      const isWindowContainer = container === window;
+      const scrollTop = isWindowContainer
+        ? window.scrollY
+        : (container as HTMLElement).scrollTop;
+      const scrolled = scrollTop > 400;
       setShouldShow(scrolled);
     };
 
     // Check initial scroll position
     handleScroll();
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isVisible]);
+    // Determine which element to listen to
+    const container = scrollContainerRef?.current;
+    const scrollTarget: HTMLElement | Window = container || window;
+    
+    // Add listener to the appropriate target
+    scrollTarget.addEventListener("scroll", handleScroll, { passive: true });
+    currentListenerRef.current = scrollTarget;
+
+    // Set up a check to switch to element listener when ref becomes available
+    const checkRef = setInterval(() => {
+      const currentContainer = scrollContainerRef?.current;
+      if (currentContainer && currentContainer !== container) {
+        // Ref was just set, switch listeners
+        const oldListener = currentListenerRef.current;
+        if (oldListener) {
+          oldListener.removeEventListener("scroll", handleScroll);
+        }
+        currentContainer.addEventListener("scroll", handleScroll, { passive: true });
+        currentListenerRef.current = currentContainer;
+        handleScroll(); // Check scroll position immediately
+      }
+    }, 100);
+
+    return () => {
+      const listener = currentListenerRef.current;
+      if (listener) {
+        listener.removeEventListener("scroll", handleScroll);
+        currentListenerRef.current = null;
+      }
+      clearInterval(checkRef);
+    };
+  }, [isVisible, scrollContainerRef]);
 
   if (!shouldShow) return null;
 
