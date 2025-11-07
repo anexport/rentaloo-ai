@@ -87,6 +87,46 @@ const EquipmentDetailDialog = ({
     enabled: !!listingId && open,
   });
 
+  // Fetch rental count for this equipment
+  const { data: rentalCountData } = useQuery({
+    queryKey: ["rentalCount", listingId],
+    queryFn: async () => {
+      if (!listingId) return 0;
+      const { count, error } = await supabase
+        .from("booking_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("equipment_id", listingId)
+        .in("status", ["approved", "completed"]);
+      
+      if (error) {
+        console.error("Error fetching rental count:", error);
+        return 0;
+      }
+      return count || 0;
+    },
+    enabled: !!listingId && open,
+  });
+
+  // Fetch owner profile details
+  const { data: ownerProfile } = useQuery({
+    queryKey: ["ownerProfile", data?.owner?.id],
+    queryFn: async () => {
+      if (!data?.owner?.id) return null;
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("id, email, created_at")
+        .eq("id", data.owner.id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching owner profile:", error);
+        return null;
+      }
+      return profile;
+    },
+    enabled: !!data?.owner?.id && open,
+  });
+
   // Calculate booking when both dates are selected
   const calculateBooking = useCallback(
     (startDate: string, endDate: string) => {
@@ -497,6 +537,29 @@ const EquipmentDetailDialog = ({
                   description={data.description}
                   condition={data.condition}
                   category={data.category}
+                  dailyRate={data.daily_rate}
+                  location={data.location}
+                  owner={data.owner && ownerProfile ? {
+                    id: data.owner.id,
+                    email: data.owner.email,
+                    name: undefined, // Not available in profiles table
+                    avatar_url: undefined, // Not available in profiles table
+                    joinedDate: ownerProfile.created_at 
+                      ? new Date(ownerProfile.created_at).getFullYear().toString()
+                      : undefined,
+                    totalRentals: undefined, // Could be fetched separately if needed
+                    responseRate: undefined, // Could be calculated from messaging data
+                    rating: avgRating,
+                    isVerified: false, // Could be fetched from verification table
+                  } : undefined}
+                  rentalCount={rentalCountData || 0}
+                  averageRating={avgRating}
+                  isVerified={false} // Could be fetched from verification table
+                  lastInspectionDate={
+                    data.created_at 
+                      ? new Date(data.created_at).toLocaleDateString()
+                      : undefined
+                  }
                 />
               </TabsContent>
 
