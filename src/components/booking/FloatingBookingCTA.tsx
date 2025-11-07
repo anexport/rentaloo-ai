@@ -53,16 +53,35 @@ export const FloatingBookingCTA = ({
       return;
     }
 
-    // Show button after user scrolls 400px down
+    // Show button after user scrolls down, with logic to handle shorter content
     const handleScroll = () => {
       // Always check the ref dynamically in case it's set after mount
       const container = scrollContainerRef?.current || window;
       const isWindowContainer = container === window;
-      const scrollTop = isWindowContainer
-        ? window.scrollY
-        : (container as HTMLElement).scrollTop;
-      const scrolled = scrollTop > 400;
-      setShouldShow(scrolled);
+      
+      if (isWindowContainer) {
+        // For window scroll, use the original 400px threshold
+        const scrolled = window.scrollY > 400;
+        setShouldShow(scrolled);
+      } else {
+        // For container scroll, check both scroll position and content height
+        const element = container as HTMLElement;
+        const scrollTop = element.scrollTop;
+        const scrollHeight = element.scrollHeight;
+        const clientHeight = element.clientHeight;
+        const maxScroll = scrollHeight - clientHeight;
+        
+        // Show if:
+        // 1. User has scrolled more than 200px (lower threshold for shorter content)
+        // 2. OR content is scrollable and user has scrolled at least 50px
+        //    (handles cases where content is shorter than 400px)
+        const hasScrolledEnough = scrollTop > 200;
+        const isScrollable = maxScroll > 0;
+        const hasScrolledSome = scrollTop > 50;
+        const scrolled = hasScrolledEnough || (isScrollable && hasScrolledSome);
+        
+        setShouldShow(scrolled);
+      }
     };
 
     // Check initial scroll position

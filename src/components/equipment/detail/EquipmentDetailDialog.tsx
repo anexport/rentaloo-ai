@@ -66,6 +66,11 @@ const EquipmentDetailDialog = ({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const requestIdRef = useRef(0);
   const sheetContentRef = useRef<HTMLElement | null>(null);
+  
+  // Callback ref to attach to the scrollable container
+  const sheetContentRefCallback = useCallback((element: HTMLElement | null) => {
+    sheetContentRef.current = element;
+  }, []);
 
   const handleCalculationChange = useCallback(
     (calc: BookingCalculation | null, startDate: string, endDate: string) => {
@@ -424,23 +429,25 @@ const EquipmentDetailDialog = ({
     }
   }, [open, bookingRequestId]);
 
-  // Find the scrollable SheetContent element for mobile scroll detection
+  // Set up scroll listeners for mobile scroll detection
   useEffect(() => {
-    if (open && isMobile) {
-      // Use a small delay to ensure the SheetContent is rendered
-      const timeoutId = setTimeout(() => {
-        // Find the SheetContent element by its data attribute
-        const sheetContent = document.querySelector(
-          '[data-slot="sheet-content"]'
-        ) as HTMLElement | null;
-        if (sheetContent) {
-          sheetContentRef.current = sheetContent;
-        }
-      }, 100);
-      return () => clearTimeout(timeoutId);
-    } else {
+    if (!open || !isMobile) {
       sheetContentRef.current = null;
+      return;
     }
+
+    const scrollElement = sheetContentRef.current;
+    
+    // If ref is not available, fall back to window scroll with warning
+    if (!scrollElement) {
+      console.warn(
+        "[EquipmentDetailDialog] SheetContent ref is null, falling back to window scroll for FloatingBookingCTA"
+      );
+      return;
+    }
+
+    // Scroll listeners are handled by FloatingBookingCTA component
+    // The ref is now reliably set via callback ref when component mounts
   }, [open, isMobile]);
 
   const avgRating = (() => {
@@ -668,6 +675,7 @@ const EquipmentDetailDialog = ({
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
+          ref={sheetContentRefCallback}
           side="bottom"
           className="h-[90vh] max-h-[90vh] w-full overflow-y-auto px-0"
         >
