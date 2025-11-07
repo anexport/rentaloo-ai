@@ -21,18 +21,17 @@ import {
   Info,
   MessageSquare,
   Package,
-  CheckCircle2,
   CreditCard,
 } from "lucide-react";
-import { getCategoryIcon } from "@/lib/categoryIcons";
-import StarRating from "@/components/reviews/StarRating";
 import { fetchListingById } from "@/components/equipment/services/listings";
+import { EquipmentHeader } from "./EquipmentHeader";
+import { EquipmentPhotoGallery } from "./EquipmentPhotoGallery";
+import { EquipmentOverviewTab } from "./EquipmentOverviewTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import BookingSidebar from "@/components/booking/BookingSidebar";
 import AvailabilityCalendar from "@/components/AvailabilityCalendar";
-import EquipmentLocationMap from "./EquipmentLocationMap";
+import EquipmentLocationMap from "../EquipmentLocationMap";
 import ReviewList from "@/components/reviews/ReviewList";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { createMaxWidthQuery } from "@/config/breakpoints";
@@ -411,8 +410,6 @@ const EquipmentDetailDialog = ({
   })();
 
   const photos = data?.photos || [];
-  const primaryPhoto = photos[0];
-  const secondaryPhotos = photos.slice(1, 5); // Up to 4 secondary photos
 
   const getHeaderProps = () => {
     const title = data?.title ?? "Equipment details";
@@ -442,86 +439,21 @@ const EquipmentDetailDialog = ({
     return (
       <div className="space-y-6">
         {/* Header with meta info */}
-        <div className="space-y-3">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-foreground">
-                {data.title}
-              </h1>
-              <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" /> {data.location}
-                </div>
-                {avgRating > 0 && (
-                  <div className="flex items-center gap-2">
-                    <StarRating rating={avgRating} size="sm" />
-                    <span className="font-medium">{avgRating.toFixed(1)}</span>
-                    {data.reviews && data.reviews.length > 0 && (
-                      <span>({data.reviews.length})</span>
-                    )}
-                  </div>
-                )}
-                <Badge variant="outline" className="capitalize">
-                  {data.condition}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
+        <EquipmentHeader
+          title={data.title}
+          location={data.location}
+          condition={data.condition}
+          avgRating={avgRating}
+          reviewCount={data.reviews?.length || 0}
+        />
 
         <Separator />
 
         {/* Photo Gallery - Airbnb style */}
-        {photos.length > 0 && (
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-[60%_40%] gap-2 h-[300px] sm:h-[400px] md:h-[500px]">
-              {/* Primary large image */}
-              <div className="relative rounded-lg overflow-hidden border border-border">
-                <img
-                  src={primaryPhoto.photo_url}
-                  alt={data.title}
-                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                  loading="lazy"
-                />
-              </div>
-
-              {/* Secondary images grid */}
-              {secondaryPhotos.length > 0 && (
-                <div className="grid grid-cols-2 gap-2">
-                  {secondaryPhotos.map((photo, idx) => (
-                    <div
-                      key={photo.id}
-                      className="relative rounded-lg overflow-hidden border border-border group"
-                    >
-                      <img
-                        src={photo.photo_url}
-                        alt={`${data.title} - ${idx + 2}`}
-                        className="w-full h-full object-cover cursor-pointer group-hover:opacity-90 transition-opacity"
-                        loading="lazy"
-                      />
-                      {photos.length > 5 && idx === 3 && (
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-semibold">
-                          +{photos.length - 5} more
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  {/* Fill empty cells if needed */}
-                  {secondaryPhotos.length < 4 &&
-                    Array.from({ length: 4 - secondaryPhotos.length }).map(
-                      (_, idx) => (
-                        <div
-                          key={`empty-${idx}`}
-                          className="rounded-lg border border-border bg-muted"
-                          aria-hidden="true"
-                        />
-                      )
-                    )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <EquipmentPhotoGallery
+          photos={photos}
+          equipmentTitle={data.title}
+        />
 
         <Separator />
 
@@ -578,60 +510,11 @@ const EquipmentDetailDialog = ({
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6 mt-6">
-                <div>
-                  <h2 className="text-xl font-semibold mb-3">
-                    About this item
-                  </h2>
-                  <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-                    {data.description}
-                  </p>
-                </div>
-
-                <Card>
-                  <div className="p-4">
-                    <div className="flex flex-wrap items-center gap-4">
-                      {/* Condition */}
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs text-muted-foreground font-medium">
-                            Condition
-                          </span>
-                          <Badge variant="outline" className="capitalize w-fit">
-                            {data.condition}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {/* Vertical divider */}
-                      <div className="h-8 w-px bg-border" />
-
-                      {/* Category */}
-                      <div className="flex items-center gap-2">
-                        {data.category &&
-                          (() => {
-                            const CategoryIcon = getCategoryIcon(
-                              data.category.name
-                            );
-                            return (
-                              <CategoryIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                            );
-                          })()}
-                        {!data.category && (
-                          <Package className="h-4 w-4 text-muted-foreground shrink-0" />
-                        )}
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs text-muted-foreground font-medium">
-                            Category
-                          </span>
-                          <Badge variant="secondary" className="w-fit">
-                            {data.category?.name || "N/A"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                <EquipmentOverviewTab
+                  description={data.description}
+                  condition={data.condition}
+                  category={data.category}
+                />
               </TabsContent>
 
               <TabsContent value="availability" className="mt-6">
