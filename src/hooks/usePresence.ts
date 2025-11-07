@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "./useAuth";
 import { supabase } from "../lib/supabase";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { RealtimeChannel, REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
 
 interface UserPresence {
   user_id: string;
@@ -146,7 +146,7 @@ export const usePresence = () => {
     // Subscribe to channel
     channel.subscribe((status) => {
       void (async () => {
-        if (status === ("SUBSCRIBED" as const)) {
+        if (status === ("SUBSCRIBED" as REALTIME_SUBSCRIBE_STATES)) {
           // Track own presence after subscription succeeds
           try {
             await trackPresence();

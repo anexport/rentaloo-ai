@@ -187,7 +187,7 @@ const PaymentFormInner = ({
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => void onCancel()}
+                onClick={() => void onCancel?.()}
                 disabled={isProcessing || isCancelling}
               >
                 {isCancelling ? (

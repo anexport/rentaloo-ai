@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { supabase } from "../lib/supabase";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { RealtimeChannel, REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
 import type {
   ConversationWithDetails,
   MessageWithSender,
@@ -1312,7 +1312,7 @@ export const useMessaging = () => {
     });
 
     channel.subscribe((status) => {
-      if (status === ("CHANNEL_ERROR" as const)) {
+      if (status === ("CHANNEL_ERROR" as REALTIME_SUBSCRIBE_STATES)) {
         console.error("Realtime channel error for messages topic:", topic);
         setError("Failed to subscribe to message updates");
       }
@@ -1396,7 +1396,7 @@ export const useMessaging = () => {
     });
 
     channel.subscribe((status) => {
-      if (status === ("CHANNEL_ERROR" as const)) {
+      if (status === ("CHANNEL_ERROR" as REALTIME_SUBSCRIBE_STATES)) {
         console.error("Realtime channel error for user topic:", topic);
       }
     });
