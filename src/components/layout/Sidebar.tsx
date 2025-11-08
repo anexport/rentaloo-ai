@@ -192,7 +192,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
         {/* My Equipment Listings - Above Trust Score */}
         {hasEquipment && (
-          <div className="px-2 pb-4">
+          <div className="px-2 py-4 flex items-center justify-center">
             <Link
               to="/owner/dashboard"
               className={cn(
