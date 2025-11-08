@@ -24,9 +24,6 @@ export function useAddressAutocomplete(params?: {
   const opts = useMemo(() => {
     // Get API key from environment
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      console.error('VITE_GOOGLE_MAPS_API_KEY is not set');
-    }
 
     return {
       language:
@@ -34,7 +31,7 @@ export function useAddressAutocomplete(params?: {
         (typeof navigator !== "undefined" ? navigator.language : "en"),
       limit: params?.limit ?? 5,
       locationBias: params?.countrycodes, // Map countrycodes to locationBias
-      apiKey: apiKey || '', // Pass API key to Google provider
+      apiKey, // Pass API key to Google provider (can be undefined)
     };
   }, [params?.language, params?.limit, params?.countrycodes]);
 
@@ -61,7 +58,7 @@ export function useAddressAutocomplete(params?: {
 
     // Validate API key before making request
     if (!opts.apiKey) {
-      setError('Google Maps API key is not configured');
+      setError("Google Maps API key is not configured");
       setLoading(false);
       return;
     }
