@@ -429,27 +429,6 @@ const EquipmentDetailDialog = ({
     }
   }, [open, bookingRequestId]);
 
-  // Set up scroll listeners for mobile scroll detection
-  useEffect(() => {
-    if (!open || !isMobile) {
-      sheetContentRef.current = null;
-      return;
-    }
-
-    const scrollElement = sheetContentRef.current;
-    
-    // If ref is not available, fall back to window scroll with warning
-    if (!scrollElement) {
-      console.warn(
-        "[EquipmentDetailDialog] SheetContent ref is null, falling back to window scroll for FloatingBookingCTA"
-      );
-      return;
-    }
-
-    // Scroll listeners are handled by FloatingBookingCTA component
-    // The ref is now reliably set via callback ref when component mounts
-  }, [open, isMobile]);
-
   const avgRating = (() => {
     if (!data?.reviews || data.reviews.length === 0) return 0;
     const validRatings = data.reviews.filter(
