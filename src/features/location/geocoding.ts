@@ -1,4 +1,4 @@
-import { reverseGeocodeNominatim } from './providers/nominatim';
+import { reverseGeocodeGoogle } from './providers/google';
 
 export interface GeocodingOptions {
   signal?: AbortSignal;
@@ -52,8 +52,18 @@ export async function reverseGeocode(
     return cachedLabel;
   }
 
-  // Call Nominatim API
-  const result = await reverseGeocodeNominatim(lat, lon, opts);
+  // Get API key from environment
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  if (!apiKey) {
+    console.error('VITE_GOOGLE_MAPS_API_KEY is not set');
+    return null;
+  }
+
+  // Call Google Geocoding API
+  const result = await reverseGeocodeGoogle(lat, lon, {
+    ...opts,
+    apiKey,
+  });
   
   if (result) {
     // Cache the result

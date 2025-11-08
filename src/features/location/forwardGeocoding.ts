@@ -1,4 +1,4 @@
-import { searchNominatim, type NominatimSearchOptions } from './providers/nominatim';
+import { searchGooglePlaces, type GooglePlacesAutocompleteOptions } from './providers/google';
 
 export type Suggestion = { id: string; label: string; lat: number; lon: number };
 
@@ -21,13 +21,16 @@ export function getCachedSuggestions(
 
 export async function suggestLocations(
   query: string,
-  opts: NominatimSearchOptions = {}
+  opts: GooglePlacesAutocompleteOptions
 ): Promise<Suggestion[]> {
-  const cached = getCachedSuggestions(query, opts);
+  const cached = getCachedSuggestions(query, {
+    language: opts.language,
+    countrycodes: opts.locationBias,
+  });
   if (cached) return cached;
 
-  const k = key(query, opts.language, opts.countrycodes);
-  const items = await searchNominatim(query, opts);
+  const k = key(query, opts.language, opts.locationBias);
+  const items = await searchGooglePlaces(query, opts);
   cache.set(k, { ts: Date.now(), items });
   return items;
 }

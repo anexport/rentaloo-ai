@@ -21,16 +21,22 @@ export function useAddressAutocomplete(params?: {
   const minLength = params?.minLength ?? 2;
   const debounceMs = params?.debounceMs ?? 300;
 
-  const opts = useMemo(
-    () => ({
+  const opts = useMemo(() => {
+    // Get API key from environment
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.error('VITE_GOOGLE_MAPS_API_KEY is not set');
+    }
+
+    return {
       language:
         params?.language ??
         (typeof navigator !== "undefined" ? navigator.language : "en"),
       limit: params?.limit ?? 5,
-      countrycodes: params?.countrycodes,
-    }),
-    [params?.language, params?.limit, params?.countrycodes]
-  );
+      locationBias: params?.countrycodes, // Map countrycodes to locationBias
+      apiKey: apiKey || '', // Pass API key to Google provider
+    };
+  }, [params?.language, params?.limit, params?.countrycodes]);
 
   useEffect(() => {
     const q = query.trim();
@@ -44,13 +50,20 @@ export function useAddressAutocomplete(params?: {
     // Check cache immediately for instant results (no debounce for cached)
     const cached = getCachedSuggestions(q, {
       language: opts.language,
-      countrycodes: opts.countrycodes,
+      countrycodes: opts.locationBias,
     });
     if (cached) {
       setSuggestions(cached);
       setLoading(false);
       setError(null);
       return; // Return early for cached results - instant display!
+    }
+
+    // Validate API key before making request
+    if (!opts.apiKey) {
+      setError('Google Maps API key is not configured');
+      setLoading(false);
+      return;
     }
 
     // No cache hit - fetch with minimal debounce
