@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MailCheck, RefreshCw } from "lucide-react";
 import {
@@ -28,6 +28,23 @@ const EmailVerification = () => {
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [nextAllowedResend, setNextAllowedResend] = useState<number | null>(null);
+
+  // Clear the throttle when it expires
+  useEffect(() => {
+    if (nextAllowedResend === null) return;
+
+    const timeRemaining = nextAllowedResend - Date.now();
+    if (timeRemaining <= 0) {
+      setNextAllowedResend(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setNextAllowedResend(null);
+    }, timeRemaining);
+
+    return () => clearTimeout(timer);
+  }, [nextAllowedResend]);
 
   const handleResend = async () => {
     if (!email) {

@@ -54,6 +54,7 @@ const experienceLevels = ["beginner", "intermediate", "advanced"] as const;
 const RenterRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -86,6 +87,7 @@ const RenterRegistration = () => {
 
   const onSubmit = async (data: RenterFormData) => {
     setIsLoading(true);
+    setError(null);
     try {
       const { error } = await signUp(data.email, data.password, {
         role: "renter",
@@ -96,13 +98,12 @@ const RenterRegistration = () => {
       });
 
       if (error) {
-        console.error("Registration error:", error.message);
-        // Handle error (show toast notification)
+        setError(error.message);
       } else {
         void navigate("/verify", { state: { email: data.email } });
       }
     } catch (error) {
-      console.error("Registration error:", error);
+      setError(error instanceof Error ? error.message : "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -139,6 +140,13 @@ const RenterRegistration = () => {
               }}
               className="space-y-4"
             >
+              {/* Error Message */}
+              {error && (
+                <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
               {/* Full Name */}
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
