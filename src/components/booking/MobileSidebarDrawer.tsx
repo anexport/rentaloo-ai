@@ -29,6 +29,7 @@ interface MobileSidebarDrawerProps {
   onBooking: () => void;
   isCreatingBooking: boolean;
   user: User | null;
+  equipmentId?: string;
 }
 
 /**

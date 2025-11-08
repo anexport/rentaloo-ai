@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Sheet,
@@ -610,6 +612,7 @@ const EquipmentDetailDialog = ({
               onBooking={handleBooking}
               isCreatingBooking={isCreatingBooking}
               user={user}
+              equipmentId={listingId}
             />
           )}
         </div>
@@ -642,6 +645,7 @@ const EquipmentDetailDialog = ({
               onBooking={handleBooking}
               isCreatingBooking={isCreatingBooking}
               user={user}
+              equipmentId={listingId}
             />
           </>
         )}
@@ -668,6 +672,14 @@ const EquipmentDetailDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto">
+        <DialogTitle className="sr-only">
+          {data?.title || "Equipment Details"}
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          {data?.description 
+            ? `Details for ${data.title || "this equipment"}. ${data.description.substring(0, 150)}...`
+            : "View equipment details, availability, and booking information"}
+        </DialogDescription>
         {renderContent()}
       </DialogContent>
     </Dialog>

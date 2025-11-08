@@ -8,6 +8,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useDateRangePicker } from "@/hooks/booking/useDateRangePicker";
+import { useEquipmentAvailability } from "@/hooks/booking/useEquipmentAvailability";
+import { AvailabilityIndicatorCalendar } from "@/components/booking/AvailabilityIndicatorCalendar";
 import type { DateRange } from "react-day-picker";
 import type { BookingConflict } from "@/types/booking";
 import { startOfDay } from "date-fns";
@@ -20,6 +22,7 @@ interface DateSelectorProps {
   conflicts: BookingConflict[];
   loadingConflicts: boolean;
   minDate?: Date;
+  equipmentId?: string;
 }
 
 const DateSelector = ({
@@ -30,6 +33,7 @@ const DateSelector = ({
   conflicts,
   loadingConflicts,
   minDate,
+  equipmentId,
 }: DateSelectorProps) => {
   const {
     startDateOpen,
@@ -43,6 +47,12 @@ const DateSelector = ({
     onDateRangeChange,
     onStartDateSelect,
     onEndDateSelect,
+  });
+
+  // Fetch availability data
+  const { isDateAvailable, loading: availabilityLoading } = useEquipmentAvailability({
+    equipmentId,
+    enabled: !!equipmentId,
   });
 
   const today = minDate || new Date();
@@ -72,11 +82,13 @@ const DateSelector = ({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
+              <AvailabilityIndicatorCalendar
                 mode="single"
                 selected={dateRange?.from}
                 onSelect={handleStartDateSelect}
                 disabled={(date) => startOfDay(date) < startOfDay(today)}
+                isDateAvailable={isDateAvailable}
+                loading={availabilityLoading}
                 initialFocus
               />
             </PopoverContent>
@@ -100,7 +112,7 @@ const DateSelector = ({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
+              <AvailabilityIndicatorCalendar
                 mode="single"
                 selected={dateRange?.to}
                 onSelect={handleEndDateSelect}
@@ -114,6 +126,8 @@ const DateSelector = ({
                     (startDate && startOfDay(date) < startDate)
                   );
                 }}
+                isDateAvailable={isDateAvailable}
+                loading={availabilityLoading}
                 initialFocus
               />
             </PopoverContent>

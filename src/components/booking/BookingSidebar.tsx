@@ -26,6 +26,7 @@ interface BookingSidebarProps {
   onBooking: () => void;
   isCreatingBooking: boolean;
   user: User | null;
+  equipmentId?: string;
 }
 
 const BookingSidebar = ({
@@ -44,6 +45,7 @@ const BookingSidebar = ({
   onBooking,
   isCreatingBooking,
   user,
+  equipmentId,
 }: BookingSidebarProps) => {
   const isOwner = listing.owner?.id === user?.id;
   const hasValidDates = !!dateRange?.from && !!dateRange?.to;
@@ -88,6 +90,7 @@ const BookingSidebar = ({
             onEndDateSelect={onEndDateSelect}
             conflicts={conflicts}
             loadingConflicts={loadingConflicts}
+            equipmentId={equipmentId}
           />
         </section>
 
