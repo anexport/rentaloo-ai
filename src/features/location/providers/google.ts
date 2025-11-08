@@ -303,7 +303,12 @@ export async function searchGooglePlaces(
 
     // Add component restrictions if locationBias is provided
     if (locationBias) {
-      request.includedRegionCodes = locationBias.split('|');
+      // Normalize legacy comma-separated and pipe-separated values
+      // Split on both commas and pipes, trim, filter empty, and uppercase
+      request.includedRegionCodes = locationBias
+        .split(/[,\|]/)
+        .map(code => code.trim().toUpperCase())
+        .filter(code => code.length > 0);
     }
 
     // Fetch suggestions using static method (not instance method)
