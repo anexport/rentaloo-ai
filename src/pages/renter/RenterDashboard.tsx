@@ -150,7 +150,7 @@ const RenterDashboard = () => {
                     Manage your rental reservations
                   </p>
                 </div>
-                {renterBookings.length > 3 && (
+                {renterBookings.length > 3 && activeTab !== "bookings" && (
                   <Link to="/renter/dashboard?tab=bookings">
                     <Button variant="outline" size="sm">
                       View All
@@ -188,7 +188,10 @@ const RenterDashboard = () => {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {renterBookings.slice(0, 3).map((booking) => (
+                  {(activeTab === "bookings"
+                    ? renterBookings
+                    : renterBookings.slice(0, 3)
+                  ).map((booking) => (
                     <BookingRequestCard
                       key={booking.id}
                       bookingRequest={booking}

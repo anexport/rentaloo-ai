@@ -131,52 +131,54 @@ const QuickActions = () => {
         const Icon = action.icon;
         const isPrimary = action.variant === "default";
         return (
-          <Link key={action.title} to={action.href} className="group">
-            <Card
-              className={`h-full hover:shadow-lg transition-all duration-200 ${
-                isPrimary
-                  ? "border-primary/40 bg-primary/5"
-                  : "hover:border-primary/30"
-              }`}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between mb-3">
-                  <div
-                    className={`rounded-lg p-2.5 ${
-                      isPrimary ? "bg-primary/15" : "bg-muted"
-                    }`}
-                  >
-                    <Icon
-                      className={`h-5 w-5 ${
-                        isPrimary ? "text-primary" : "text-muted-foreground"
-                      }`}
-                    />
-                  </div>
-                  {action.badge && (
-                    <Badge variant="secondary" className="text-xs">
-                      {action.badge}
-                    </Badge>
-                  )}
-                </div>
-                <CardTitle className="text-lg font-semibold">
-                  {action.title}
-                </CardTitle>
-                <CardDescription className="text-sm">
-                  {action.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Button
-                  variant={action.variant}
-                  className={`w-full group-hover:translate-x-0.5 transition-transform ${
-                    isPrimary ? "shadow-sm" : ""
+          <Card
+            key={action.title}
+            className={`h-full hover:shadow-lg transition-all duration-200 ${
+              isPrimary
+                ? "border-primary/40 bg-primary/5"
+                : "hover:border-primary/30"
+            }`}
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between mb-3">
+                <div
+                  className={`rounded-lg p-2.5 ${
+                    isPrimary ? "bg-primary/15" : "bg-muted"
                   }`}
                 >
+                  <Icon
+                    className={`h-5 w-5 ${
+                      isPrimary ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  />
+                </div>
+                {action.badge && (
+                  <Badge variant="secondary" className="text-xs">
+                    {action.badge}
+                  </Badge>
+                )}
+              </div>
+              <CardTitle className="text-lg font-semibold">
+                {action.title}
+              </CardTitle>
+              <CardDescription className="text-sm">
+                {action.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Button
+                asChild
+                variant={action.variant}
+                className={`w-full group-hover:translate-x-0.5 transition-transform ${
+                  isPrimary ? "shadow-sm" : ""
+                }`}
+              >
+                <Link to={action.href} className="group">
                   {action.variant === "default" ? "Browse Now" : "View"}
-                </Button>
-              </CardContent>
-            </Card>
-          </Link>
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         );
       })}
     </div>
