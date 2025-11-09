@@ -53,7 +53,9 @@ const ExplorePage = () => {
 
   const handleLoginOpenChange = (open: boolean) => {
     if (open) {
-      setSearchParams({ login: "true" });
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("login", "true");
+      setSearchParams(newParams, { replace: true });
     } else {
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("login");

@@ -179,7 +179,10 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
             table: "messages",
             filter: `conversation_id=eq.${conversationId}`,
           },
-          () => {
+          (payload) => {
+            if (payload.new?.sender_id === user.id) {
+              return;
+            }
             void checkUnreadMessages();
           }
         );

@@ -64,11 +64,14 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
 
       if (error) {
         setError(error.message);
+      } else if (!returnedUser) {
+        // Explicit defensive check: authentication succeeded but user data is missing
+        setError("Authentication succeeded but user data is missing. Please try again.");
       } else {
         // Close modal
         onOpenChange(false);
         // Redirect based on user role from returned user
-        const role = returnedUser?.user_metadata?.role;
+        const role = returnedUser.user_metadata?.role;
         if (role === "renter") {
           void navigate("/renter/dashboard");
         } else if (role === "owner") {
