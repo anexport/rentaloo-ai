@@ -20,7 +20,7 @@ import VerificationBadge from "@/components/verification/VerificationBadge";
 import { useVerification } from "@/hooks/useVerification";
 import { getVerificationProgress } from "@/lib/verification";
 import { useAuth } from "@/hooks/useAuth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
 interface SidebarProps {
@@ -43,6 +43,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const [hasEquipment, setHasEquipment] = useState(false);
   const [pendingOwnerRequests, setPendingOwnerRequests] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Check if user has equipment listings and pending requests
   useEffect(() => {
@@ -95,9 +96,12 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
   // Check for unread messages
   useEffect(() => {
-    const checkUnreadMessages = async () => {
-      if (!user) return;
+    if (!user) {
+      setUnreadMessages(0);
+      return;
+    }
 
+    const checkUnreadMessages = async () => {
       try {
         // Get all conversations for the user
         const { data: participants, error: participantsError } = await supabase
@@ -137,26 +141,70 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       }
     };
 
+    // Initial check
     void checkUnreadMessages();
 
-    // Set up realtime subscription for new messages
-    const channel = supabase
-      .channel("sidebar-messages")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-        },
-        () => {
-          void checkUnreadMessages();
-        }
-      )
-      .subscribe();
+    // Set up scoped realtime subscriptions for user's conversations
+    const setupSubscriptions = async () => {
+      // Fetch user's conversation IDs
+      const { data: participants, error: participantsError } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("profile_id", user.id);
+
+      if (participantsError) {
+        console.error("Failed to fetch conversations:", participantsError);
+        return null;
+      }
+
+      if (!participants || participants.length === 0) {
+        // No conversations to watch
+        return null;
+      }
+
+      const conversationIds = participants.map((p) => p.conversation_id);
+
+      // Create a channel with filtered subscriptions for each conversation
+      // This ensures we only listen to messages in the user's conversations
+      // Channel name includes user ID to ensure uniqueness
+      const channel = supabase.channel(`sidebar-messages-${user.id}`);
+
+      // Subscribe to each conversation individually for precise filtering
+      conversationIds.forEach((conversationId) => {
+        channel.on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          () => {
+            void checkUnreadMessages();
+          }
+        );
+      });
+
+      channel.subscribe();
+
+      return channel;
+    };
+
+    // Clean up any existing channel before setting up new one
+    if (channelRef.current) {
+      void supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    void setupSubscriptions().then((ch) => {
+      channelRef.current = ch;
+    });
 
     return () => {
-      void supabase.removeChannel(channel);
+      if (channelRef.current) {
+        void supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [user]);
 
