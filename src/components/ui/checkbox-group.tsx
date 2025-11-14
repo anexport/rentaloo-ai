@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -20,35 +20,14 @@ export const CheckboxGroup = ({
   error,
   columns = 2,
 }: CheckboxGroupProps) => {
-  const isTogglingRef = useRef<string | null>(null);
-  const latestValueRef = useRef<string[]>(value);
-
-  // Keep the ref updated with the latest value
-  useEffect(() => {
-    latestValueRef.current = value;
-  }, [value]);
-
   const handleToggle = useCallback(
     (optionValue: string) => {
-      if (isTogglingRef.current === optionValue) {
-        return;
-      }
-
-      isTogglingRef.current = optionValue;
-
-      const currentValue = latestValueRef.current;
-      const newValue = currentValue.includes(optionValue)
-        ? currentValue.filter((v) => v !== optionValue)
-        : [...currentValue, optionValue];
-
+      const newValue = value.includes(optionValue)
+        ? value.filter((v) => v !== optionValue)
+        : [...value, optionValue];
       onChange(newValue);
-
-      // Clear the guard asynchronously to prevent sequential event handlers
-      setTimeout(() => {
-        isTogglingRef.current = null;
-      }, 0);
     },
-    [onChange]
+    [value, onChange]
   );
 
   return (
@@ -62,16 +41,13 @@ export const CheckboxGroup = ({
         )}
       >
         {options.map((option) => (
-          <div
+          <label
             key={option.value}
             className={cn(
               "flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors hover:bg-accent",
               value.includes(option.value) && "border-primary bg-accent"
             )}
-            // Remove the onClick handler entirely
-            // Let the checkbox's onCheckedChange handle the toggle
-            role="group"
-            aria-label={option.label}
+            htmlFor={option.value}
           >
             <Checkbox
               id={option.value}
@@ -79,22 +55,18 @@ export const CheckboxGroup = ({
               onCheckedChange={() => {
                 handleToggle(option.value);
               }}
-              aria-label={`Select ${option.label}`}
             />
             <div className="flex-1 space-y-1">
-              <Label
-                htmlFor={option.value}
-                className="text-sm font-medium leading-none cursor-pointer"
-              >
+              <span className="text-sm font-medium leading-none">
                 {option.label}
-              </Label>
+              </span>
               {option.description && (
                 <p className="text-xs text-muted-foreground">
                   {option.description}
                 </p>
               )}
             </div>
-          </div>
+          </label>
         ))}
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}

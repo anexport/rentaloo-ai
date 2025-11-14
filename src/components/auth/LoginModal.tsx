@@ -260,23 +260,25 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
           <div className="text-center space-y-2">
             <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <button
+              <Button
                 type="button"
-                className="text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer"
+                variant="link"
+                className="h-auto p-0 font-normal"
                 onClick={() => handleShowSignup("renter")}
               >
                 Sign up as a renter
-              </button>
+              </Button>
             </p>
             <p className="text-sm text-muted-foreground">
               Want to list equipment?{" "}
-              <button
+              <Button
                 type="button"
-                className="text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer"
+                variant="link"
+                className="h-auto p-0 font-normal"
                 onClick={() => handleShowSignup("owner")}
               >
                 Sign up as an owner
-              </button>
+              </Button>
             </p>
           </div>
         </div>
