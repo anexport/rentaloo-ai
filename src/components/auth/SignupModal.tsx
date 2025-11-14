@@ -24,21 +24,18 @@ const SignupModal = ({ open, onOpenChange, initialRole }: SignupModalProps) => {
   const [showRoleSelection, setShowRoleSelection] = useState(!initialRole);
   const navigate = useNavigate();
 
-  // Reset to role selection when modal closes
+  // Handle state updates when modal opens/closes or initialRole changes
   useEffect(() => {
     if (!open) {
+      // Reset when modal closes
       setSelectedRole(initialRole || null);
       setShowRoleSelection(!initialRole);
-    }
-  }, [open, initialRole]);
-
-  // Update role selection when initialRole changes
-  useEffect(() => {
-    if (initialRole) {
+    } else if (initialRole) {
+      // Update immediately when initialRole becomes non-null while modal is open
       setSelectedRole(initialRole);
       setShowRoleSelection(false);
     }
-  }, [initialRole]);
+  }, [open, initialRole]);
 
   const handleRoleSelect = (role: "renter" | "owner") => {
     setSelectedRole(role);
