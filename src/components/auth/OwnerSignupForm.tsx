@@ -47,7 +47,7 @@ const step2Schema = z.object({
   serviceArea: z.string().min(2, "Please enter your service area"),
   yearsExperience: z.coerce
     .number()
-    .min(0, "Please enter your years of experience")
+    .min(1, "Please enter your years of experience")
     .int("Years must be a whole number"),
 });
 
@@ -514,8 +514,8 @@ const OwnerSignupForm = ({
               <Input
                 id="yearsExperience"
                 type="number"
-                min="0"
-                {...register("yearsExperience")}
+                min="1"
+                {...register("yearsExperience", { valueAsNumber: true })}
                 placeholder="5"
                 className={errors.yearsExperience ? "border-destructive" : ""}
                 aria-invalid={!!errors.yearsExperience}

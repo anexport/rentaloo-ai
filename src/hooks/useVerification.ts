@@ -37,8 +37,6 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
     setError(null);
 
     try {
-      if (!targetUserId) throw new Error("No user ID available");
-
       // Fetch profile, reviews, renter bookings, and equipment IDs in parallel
       const [
         { data: profileData, error: profileError },
