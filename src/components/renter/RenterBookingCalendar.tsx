@@ -93,31 +93,53 @@ const RenterBookingCalendar = ({
     }
   };
 
+  // Get primary status for a date (highest priority booking)
+  const getPrimaryStatus = (bookings: BookingRequestWithDetails[]): string => {
+    if (bookings.length === 0) return "";
+
+    // Priority: approved > pending > completed > cancelled > declined
+    const priorities = {
+      approved: 1,
+      pending: 2,
+      completed: 3,
+      cancelled: 4,
+      declined: 5,
+    };
+
+    return bookings.reduce((prev, current) => {
+      const prevPriority = priorities[prev.status as keyof typeof priorities] || 999;
+      const currentPriority = priorities[current.status as keyof typeof priorities] || 999;
+      return currentPriority < prevPriority ? current : prev;
+    }).status;
+  };
+
   // Custom day renderer with booking indicators
   const DayContent = (date: Date) => {
     const bookings = getBookingsForDate(date);
     const hasBookings = bookings.length > 0;
+    const primaryStatus = hasBookings ? getPrimaryStatus(bookings) : "";
 
     return (
-      <div className="relative w-full h-full flex flex-col items-center justify-center">
-        <span className={cn("text-sm", hasBookings && "font-semibold")}>
-          {format(date, "d")}
-        </span>
-        {hasBookings && (
-          <div className="flex gap-0.5 mt-1">
-            {bookings.slice(0, 3).map((booking, idx) => (
-              <div
-                key={`${booking.id}-${idx}`}
-                className={cn(
-                  "w-1.5 h-1.5 rounded-full",
-                  getStatusColor(booking.status)
-                )}
-                title={`${booking.equipment.title} - ${getStatusLabel(booking.status)}`}
-              />
-            ))}
-            {bookings.length > 3 && (
-              <div className="w-1.5 h-1.5 rounded-full bg-gray-300" title={`+${bookings.length - 3} more`} />
-            )}
+      <div className="relative w-full h-full flex items-center justify-center p-2">
+        <div className="flex flex-col items-center gap-1">
+          <span className={cn(
+            "text-sm font-medium",
+            hasBookings && "text-foreground"
+          )}>
+            {format(date, "d")}
+          </span>
+          {hasBookings && (
+            <div className={cn(
+              "w-1 h-1 rounded-full",
+              getStatusColor(primaryStatus)
+            )} />
+          )}
+        </div>
+        {bookings.length > 1 && (
+          <div className="absolute top-1 right-1">
+            <span className="text-[10px] font-semibold text-muted-foreground bg-muted rounded-full w-4 h-4 flex items-center justify-center">
+              {bookings.length}
+            </span>
           </div>
         )}
       </div>
@@ -182,7 +204,7 @@ const RenterBookingCalendar = ({
             showOutsideDays={false}
             className="w-full"
             classNames={{
-              months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+              months: "flex flex-col w-full",
               month: "space-y-4 w-full",
               caption: "flex justify-center pt-1 relative items-center hidden",
               caption_label: "text-sm font-medium",
@@ -192,26 +214,24 @@ const RenterBookingCalendar = ({
               ),
               nav_button_previous: "absolute left-1",
               nav_button_next: "absolute right-1",
-              table: "w-full border-collapse space-y-1",
-              head_row: "flex w-full",
+              table: "w-full border-collapse",
+              head_row: "flex w-full mb-2",
               head_cell:
-                "text-muted-foreground rounded-md w-full font-normal text-[0.8rem]",
-              row: "flex w-full mt-2",
+                "text-muted-foreground rounded-md w-full font-semibold text-xs uppercase tracking-wide text-center py-2",
+              row: "flex w-full",
               cell: cn(
-                "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 w-full h-16",
-                "[&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50"
+                "relative p-0.5 text-center w-full aspect-square",
+                "[&:has([aria-selected])]:bg-accent/50"
               ),
               day: cn(
-                "h-full w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+                "h-full w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent/50 rounded-lg transition-all border border-transparent hover:border-border"
               ),
               day_selected:
-                "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-              day_today: "bg-accent text-accent-foreground font-semibold",
+                "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 hover:border-primary/30",
+              day_today: "bg-accent/50 border-accent-foreground/20 font-bold",
               day_outside:
-                "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-              day_disabled: "text-muted-foreground opacity-50",
-              day_range_middle:
-                "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                "text-muted-foreground/40 opacity-40",
+              day_disabled: "text-muted-foreground/30 opacity-30",
               day_hidden: "invisible",
             }}
             components={{
@@ -221,29 +241,26 @@ const RenterBookingCalendar = ({
 
           {/* Legend */}
           <div className="mt-6 pt-4 border-t border-border">
-            <p className="text-sm font-medium text-muted-foreground mb-3">
-              Status Legend:
-            </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="text-xs text-muted-foreground">Approved</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                <span className="text-sm text-foreground">Approved</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <span className="text-xs text-muted-foreground">Pending</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+                <span className="text-sm text-foreground">Pending</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500" />
-                <span className="text-xs text-muted-foreground">Completed</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                <span className="text-sm text-foreground">Completed</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <span className="text-xs text-muted-foreground">Declined</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                <span className="text-sm text-foreground">Declined</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-gray-500" />
-                <span className="text-xs text-muted-foreground">Cancelled</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-gray-500" />
+                <span className="text-sm text-foreground">Cancelled</span>
               </div>
             </div>
           </div>
@@ -251,24 +268,29 @@ const RenterBookingCalendar = ({
       </Card>
 
       {/* Selected Date Details */}
-      <Card className="lg:col-span-1 h-fit">
-        <CardHeader>
-          <CardTitle className="text-lg">
+      <Card className="lg:col-span-1 h-fit sticky top-4">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold">
             {selectedDate
-              ? format(selectedDate, "MMMM d, yyyy")
+              ? format(selectedDate, "EEEE, MMMM d")
               : "Select a date"}
           </CardTitle>
+          {selectedDate && selectedDateBookings.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {selectedDateBookings.length} {selectedDateBookings.length === 1 ? "booking" : "bookings"}
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           {selectedDate && selectedDateBookings.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {selectedDateBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
+                  className="p-3 rounded-md border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-semibold text-sm">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h4 className="font-medium text-sm line-clamp-1">
                       {booking.equipment.title}
                     </h4>
                     <Badge
@@ -279,33 +301,40 @@ const RenterBookingCalendar = ({
                             ? "secondary"
                             : "outline"
                       }
-                      className="text-xs"
+                      className="text-[10px] px-2 py-0 shrink-0"
                     >
                       {getStatusLabel(booking.status)}
                     </Badge>
                   </div>
-                  <div className="space-y-1 text-xs text-muted-foreground">
-                    <p>
-                      <span className="font-medium">Dates:</span>{" "}
-                      {booking.start_date && format(parseISO(booking.start_date), "MMM d")} -{" "}
-                      {booking.end_date && format(parseISO(booking.end_date), "MMM d")}
-                    </p>
-                    <p>
-                      <span className="font-medium">Total:</span> $
-                      {booking.total_amount}
-                    </p>
+                  <div className="space-y-0.5 text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground/70">Period</span>
+                      <span className="font-medium text-foreground">
+                        {booking.start_date && format(parseISO(booking.start_date), "MMM d")} -{" "}
+                        {booking.end_date && format(parseISO(booking.end_date), "MMM d")}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground/70">Amount</span>
+                      <span className="font-semibold text-foreground">
+                        ${booking.total_amount}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : selectedDate ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <CalendarIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No bookings on this date</p>
+            <div className="text-center py-12 text-muted-foreground">
+              <CalendarIcon className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium">No bookings</p>
+              <p className="text-xs mt-1 text-muted-foreground/70">on this date</p>
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <p className="text-sm">Click on a date to see bookings</p>
+            <div className="text-center py-12 text-muted-foreground">
+              <CalendarIcon className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium">Select a date</p>
+              <p className="text-xs mt-1 text-muted-foreground/70">to view bookings</p>
             </div>
           )}
         </CardContent>
