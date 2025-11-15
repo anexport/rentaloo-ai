@@ -250,7 +250,15 @@ const FiltersSheet = ({
   );
 
   const TriggerButton = () => (
-    <Button variant="outline" size="sm" className="relative">
+    <Button
+      variant="outline"
+      size="sm"
+      className="relative"
+      onClick={() => {
+        console.log("Filter button clicked!");
+        setIsOpen(true);
+      }}
+    >
       <Filter className="h-4 w-4 mr-2" />
       Filters
       {activeFilterCount > 0 && (
@@ -266,46 +274,46 @@ const FiltersSheet = ({
 
   if (isDesktop) {
     return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <TriggerButton />
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Filters</DialogTitle>
-            <DialogDescription>
-              Refine your search to find the perfect equipment
-            </DialogDescription>
-          </DialogHeader>
-          <FiltersContent />
-          <DialogFooter>
-            <FiltersFooter />
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <>
+        <TriggerButton />
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Filters</DialogTitle>
+              <DialogDescription>
+                Refine your search to find the perfect equipment
+              </DialogDescription>
+            </DialogHeader>
+            <FiltersContent />
+            <DialogFooter>
+              <FiltersFooter />
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <TriggerButton />
-      </SheetTrigger>
-      <SheetContent side="bottom" className="h-[85vh]">
-        <SheetHeader>
-          <SheetTitle>Filters</SheetTitle>
-          <SheetDescription>
-            Refine your search to find the perfect equipment
-          </SheetDescription>
-        </SheetHeader>
-        <div className="overflow-y-auto h-[calc(100%-120px)] py-4">
-          <FiltersContent />
-        </div>
-        <SheetFooter>
-          <FiltersFooter />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+    <>
+      <TriggerButton />
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent side="bottom" className="h-[85vh]">
+          <SheetHeader>
+            <SheetTitle>Filters</SheetTitle>
+            <SheetDescription>
+              Refine your search to find the perfect equipment
+            </SheetDescription>
+          </SheetHeader>
+          <div className="overflow-y-auto h-[calc(100%-120px)] py-4">
+            <FiltersContent />
+          </div>
+          <SheetFooter>
+            <FiltersFooter />
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 
