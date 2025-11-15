@@ -21,12 +21,28 @@ function isListingQueryResult(item: unknown): item is Omit<Listing, "reviews"> {
   const candidate = item as Record<string, unknown>;
 
   // Validate required equipment fields
-  return (
+  const hasValidBasicFields =
     typeof candidate.id === "string" &&
     typeof candidate.title === "string" &&
     typeof candidate.owner_id === "string" &&
-    Array.isArray(candidate.photos)
-  );
+    Array.isArray(candidate.photos);
+
+  if (!hasValidBasicFields) return false;
+
+  // Validate category (should be object or null)
+  const hasValidCategory =
+    candidate.category === null ||
+    (typeof candidate.category === "object" && candidate.category !== null);
+
+  // Validate owner structure (should be null or have id and email)
+  const hasValidOwner =
+    candidate.owner === null ||
+    (typeof candidate.owner === "object" &&
+      candidate.owner !== null &&
+      "id" in candidate.owner &&
+      "email" in candidate.owner);
+
+  return hasValidCategory && hasValidOwner;
 }
 
 export type ListingsFilters = {

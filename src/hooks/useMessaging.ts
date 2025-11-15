@@ -1,10 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { supabase } from "../lib/supabase";
-import type {
-  RealtimeChannel,
-  PostgrestFilterBuilder,
-} from "@supabase/supabase-js";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import type {
   ConversationWithDetails,
   MessageWithSender,
