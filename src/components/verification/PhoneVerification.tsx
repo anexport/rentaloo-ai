@@ -31,8 +31,21 @@ const PhoneVerification = ({
   }, [countdown]);
 
   const handleSendCode = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setError("Please enter a valid phone number");
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    const digitsOnly = phoneNumber.replace(/\D/g, '');
+    
+    if (!phoneNumber) {
+      setError("Phone number is required");
+      return;
+    }
+    
+    if (!phoneRegex.test(phoneNumber)) {
+      setError("Phone number contains invalid characters");
+      return;
+    }
+    
+    if (digitsOnly.length < 10 || digitsOnly.length > 15) {
+      setError("Please enter a valid phone number (10-15 digits)");
       return;
     }
 
