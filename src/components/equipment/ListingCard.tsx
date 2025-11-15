@@ -97,6 +97,8 @@ const ListingCard = ({ listing, onOpen }: Props) => {
                 src={listing.photos[currentImageIndex]?.photo_url || ""}
                 alt={listing.title}
                 className="w-full h-full object-cover transition-opacity duration-300"
+                loading="lazy"
+                decoding="async"
               />
 
               {hasMultipleImages && (

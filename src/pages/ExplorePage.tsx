@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePrefetchData } from "@/hooks/usePrefetchData";
 import SearchBarPopover from "@/components/explore/SearchBarPopover";
 import type { SearchBarFilters } from "@/types/search";
 import CategoryBar from "@/components/explore/CategoryBar";
 import CategoryBarSkeleton from "@/components/explore/CategoryBarSkeleton";
+import VirtualListingGrid from "@/components/equipment/VirtualListingGrid";
 import ListingCard from "@/components/equipment/ListingCard";
 import EquipmentDetailDialog from "@/components/equipment/detail/EquipmentDetailDialog";
 import ListingCardSkeleton from "@/components/equipment/ListingCardSkeleton";
@@ -15,9 +17,19 @@ import FiltersSheet, {
 import ExploreHeader from "@/components/layout/ExploreHeader";
 import LoginModal from "@/components/auth/LoginModal";
 import SignupModal from "@/components/auth/SignupModal";
+import HeroSection from "@/components/explore/HeroSection";
+import HowItWorksSection from "@/components/explore/HowItWorksSection";
+import OwnerCTASection from "@/components/explore/OwnerCTASection";
+import SocialProofSection from "@/components/explore/SocialProofSection";
+import FeaturedListingsSection from "@/components/explore/FeaturedListingsSection";
+import EmptyState from "@/components/explore/EmptyState";
+import ListingsGridHeader, {
+  type SortOption,
+} from "@/components/explore/ListingsGridHeader";
 import {
   fetchListings,
   type ListingsFilters,
+  type Listing,
 } from "@/components/equipment/services/listings";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -27,6 +39,7 @@ const ExplorePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [categoryId, setCategoryId] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("recommended");
   const [searchFilters, setSearchFilters] = useState<SearchBarFilters>({
     search: "",
     location: "",
@@ -48,6 +61,9 @@ const ExplorePage = () => {
   const [selectedListingId, setSelectedListingId] = useState<string | null>(
     null
   );
+
+  // Prefetch critical data
+  usePrefetchData();
 
   // Login modal state from URL query param
   const loginOpen = searchParams.get("login") === "true";
@@ -152,18 +168,101 @@ const ExplorePage = () => {
     return count;
   }, [filterValues]);
 
+  // Sort listings
+  const sortedListings = useMemo(() => {
+    if (!data) return [];
+
+    const sorted = [...data];
+
+    switch (sortBy) {
+      case "price-low":
+        return sorted.sort((a, b) => a.daily_rate - b.daily_rate);
+      case "price-high":
+        return sorted.sort((a, b) => b.daily_rate - a.daily_rate);
+      case "newest":
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      case "rating": {
+        return sorted.sort((a, b) => {
+          const avgA =
+            a.reviews && a.reviews.length > 0
+              ? a.reviews.reduce((sum, r) => sum + r.rating, 0) /
+                a.reviews.length
+              : 0;
+          const avgB =
+            b.reviews && b.reviews.length > 0
+              ? b.reviews.reduce((sum, r) => sum + r.rating, 0) /
+                b.reviews.length
+              : 0;
+          return avgB - avgA;
+        });
+      }
+      case "recommended":
+      default:
+        return sorted;
+    }
+  }, [data, sortBy]);
+
+  const handleOpenListing = (listing: Listing) => {
+    setSelectedListingId(listing.id);
+    setDetailsOpen(true);
+  };
+
+  const handleClearFilters = () => {
+    setSearchFilters({
+      search: "",
+      location: "",
+      condition: "all",
+      priceMin: undefined,
+      priceMax: undefined,
+      dateRange: undefined,
+      equipmentType: undefined,
+    });
+    setFilterValues({
+      priceRange: [0, 500],
+      conditions: [],
+      equipmentTypes: [],
+      verified: false,
+    });
+    setCategoryId("all");
+  };
+
+  const hasSearched =
+    debouncedFilters.search ||
+    debouncedFilters.location ||
+    categoryId !== "all";
+
   return (
     <div className="min-h-screen bg-background">
       <ExploreHeader onLoginClick={() => handleLoginOpenChange(true)} />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Hero Search */}
-        <div className="mb-6">
+
+      {/* Hero Section with Search */}
+      {!hasSearched && (
+        <HeroSection>
           <SearchBarPopover
             value={searchFilters}
             onChange={setSearchFilters}
             onSubmit={handleSubmitSearch}
           />
-        </div>
+        </HeroSection>
+      )}
+
+      {/* How It Works Section */}
+      {!hasSearched && <HowItWorksSection />}
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Search bar for when user has searched */}
+        {hasSearched && (
+          <div className="mb-6">
+            <SearchBarPopover
+              value={searchFilters}
+              onChange={setSearchFilters}
+              onSubmit={handleSubmitSearch}
+            />
+          </div>
+        )}
 
         {/* Categories */}
         <div className="sticky top-16 z-10 bg-background py-3 -mx-4 px-4 sm:px-6 lg:px-8 border-b border-border">
@@ -177,13 +276,17 @@ const ExplorePage = () => {
           )}
         </div>
 
-        {/* Filters row */}
-        <div className="flex items-center justify-between mt-4 mb-3">
-          <p className="text-sm text-muted-foreground">
-            {isFetching
-              ? "Updating results..."
-              : `${data?.length ?? 0} results`}
-          </p>
+        {/* Filters row and Grid Header */}
+        <div className="mt-4 mb-3">
+          <ListingsGridHeader
+            resultCount={data?.length ?? 0}
+            location={debouncedFilters.location}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+          />
+        </div>
+
+        <div className="flex items-center justify-end mb-3">
           <FiltersSheet
             value={filterValues}
             onChange={setFilterValues}
@@ -216,26 +319,29 @@ const ExplorePage = () => {
               ))}
             </div>
           ) : !data || data.length === 0 ? (
-            <div className="text-center py-10">
-              <div className="text-muted-foreground">
-                No equipment found. Try adjusting your search.
-              </div>
-            </div>
+            <EmptyState
+              filters={effectiveFilters}
+              onClearFilters={handleClearFilters}
+              onCategorySelect={setCategoryId}
+            />
+          ) : sortedListings.length > 50 ? (
+            <VirtualListingGrid
+              listings={sortedListings}
+              onOpenListing={handleOpenListing}
+            />
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data.map((item) => (
+              {sortedListings.map((item) => (
                 <ListingCard
                   key={item.id}
                   listing={item}
-                  onOpen={(listing) => {
-                    setSelectedListingId(listing.id);
-                    setDetailsOpen(true);
-                  }}
+                  onOpen={handleOpenListing}
                 />
               ))}
             </div>
           )}
         </div>
+
         <EquipmentDetailDialog
           open={detailsOpen}
           onOpenChange={(open) => {
@@ -251,6 +357,17 @@ const ExplorePage = () => {
           initialRole={signupRole}
         />
       </main>
+
+      {/* Featured Listings Section */}
+      {!hasSearched && (
+        <FeaturedListingsSection onOpenListing={handleOpenListing} />
+      )}
+
+      {/* Owner CTA Section */}
+      {!hasSearched && <OwnerCTASection />}
+
+      {/* Social Proof Section */}
+      {!hasSearched && <SocialProofSection />}
     </div>
   );
 };

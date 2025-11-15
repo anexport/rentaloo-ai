@@ -22,6 +22,7 @@ export type ListingsFilters = {
   priceMax?: number;
   location?: string;
   condition?: Database["public"]["Enums"]["equipment_condition"] | "all";
+  limit?: number;
 };
 
 export const fetchListings = async (
@@ -66,6 +67,10 @@ export const fetchListings = async (
     query = query.or(
       `title.ilike.%${sanitized}%,description.ilike.%${sanitized}%`
     );
+  }
+
+  if (typeof filters.limit === "number" && filters.limit > 0) {
+    query = query.limit(filters.limit);
   }
 
   const { data, error } = await query;
