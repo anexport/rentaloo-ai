@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { DayPicker, type DateRange } from "react-day-picker";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BookingRequestWithDetails } from "@/types/booking";
-import { format, parseISO, eachDayOfInterval } from "date-fns";
+import { format, parseISO, eachDayOfInterval, isSameDay } from "date-fns";
+import { DayButton } from "react-day-picker";
+import type { DayPickerProps } from "react-day-picker";
 
 interface RenterBookingCalendarProps {
   bookingRequests: BookingRequestWithDetails[];
@@ -113,39 +115,6 @@ const RenterBookingCalendar = ({
     }).status;
   };
 
-  // Custom day renderer with booking indicators
-  const DayContent = (date: Date) => {
-    const bookings = getBookingsForDate(date);
-    const hasBookings = bookings.length > 0;
-    const primaryStatus = hasBookings ? getPrimaryStatus(bookings) : "";
-
-    return (
-      <div className="relative w-full h-full flex items-center justify-center p-2">
-        <div className="flex flex-col items-center gap-1">
-          <span className={cn(
-            "text-sm font-medium",
-            hasBookings && "text-foreground"
-          )}>
-            {format(date, "d")}
-          </span>
-          {hasBookings && (
-            <div className={cn(
-              "w-1 h-1 rounded-full",
-              getStatusColor(primaryStatus)
-            )} />
-          )}
-        </div>
-        {bookings.length > 1 && (
-          <div className="absolute top-1 right-1">
-            <span className="text-[10px] font-semibold text-muted-foreground bg-muted rounded-full w-4 h-4 flex items-center justify-center">
-              {bookings.length}
-            </span>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   const handleDateClick = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
@@ -156,6 +125,45 @@ const RenterBookingCalendar = ({
   const selectedDateBookings = selectedDate
     ? getBookingsForDate(selectedDate)
     : [];
+
+  // Create modifiers for dates with bookings
+  const datesWithBookings = useMemo(() => {
+    return Array.from(bookingsByDate.keys()).map((dateKey) => parseISO(dateKey));
+  }, [bookingsByDate]);
+
+  // Custom day button to show booking indicators
+  const CustomDayButton = ({ day, modifiers, ...props }: React.ComponentProps<typeof DayButton>) => {
+    const bookings = getBookingsForDate(day.date);
+    const hasBookings = bookings.length > 0;
+    const primaryStatus = hasBookings ? getPrimaryStatus(bookings) : "";
+
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "h-full w-full p-0 font-normal relative hover:bg-accent rounded-md",
+          modifiers.selected && "bg-primary/10 text-primary hover:bg-primary/20",
+          modifiers.today && "bg-accent font-bold"
+        )}
+        {...props}
+      >
+        <div className="flex flex-col items-center justify-center gap-1">
+          <span className="text-sm">{format(day.date, "d")}</span>
+          {hasBookings && (
+            <div className={cn("w-1.5 h-1.5 rounded-full", getStatusColor(primaryStatus))} />
+          )}
+        </div>
+        {bookings.length > 1 && (
+          <div className="absolute top-0.5 right-0.5">
+            <span className="text-[9px] font-semibold text-muted-foreground bg-muted rounded-full w-3.5 h-3.5 flex items-center justify-center">
+              {bookings.length}
+            </span>
+          </div>
+        )}
+      </Button>
+    );
+  };
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
@@ -195,47 +203,17 @@ const RenterBookingCalendar = ({
           </div>
         </CardHeader>
         <CardContent>
-          <DayPicker
+          <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={handleDateClick}
             month={currentMonth}
             onMonthChange={setCurrentMonth}
             showOutsideDays={false}
+            captionLayout="label"
             className="w-full"
-            classNames={{
-              months: "flex flex-col w-full",
-              month: "space-y-4 w-full",
-              caption: "flex justify-center pt-1 relative items-center hidden",
-              caption_label: "text-sm font-medium",
-              nav: "space-x-1 flex items-center",
-              nav_button: cn(
-                "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
-              ),
-              nav_button_previous: "absolute left-1",
-              nav_button_next: "absolute right-1",
-              table: "w-full border-collapse",
-              head_row: "flex w-full mb-2",
-              head_cell:
-                "text-muted-foreground rounded-md w-full font-semibold text-xs uppercase tracking-wide text-center py-2",
-              row: "flex w-full",
-              cell: cn(
-                "relative p-0.5 text-center w-full aspect-square",
-                "[&:has([aria-selected])]:bg-accent/50"
-              ),
-              day: cn(
-                "h-full w-full p-0 font-normal aria-selected:opacity-100 hover:bg-accent/50 rounded-lg transition-all border border-transparent hover:border-border"
-              ),
-              day_selected:
-                "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 hover:border-primary/30",
-              day_today: "bg-accent/50 border-accent-foreground/20 font-bold",
-              day_outside:
-                "text-muted-foreground/40 opacity-40",
-              day_disabled: "text-muted-foreground/30 opacity-30",
-              day_hidden: "invisible",
-            }}
             components={{
-              DayContent: ({ date }) => DayContent(date),
+              DayButton: CustomDayButton,
             }}
           />
 
