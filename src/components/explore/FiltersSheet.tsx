@@ -68,6 +68,7 @@ const FiltersSheet = ({
   activeFilterCount,
 }: Props) => {
   const [localValue, setLocalValue] = useState<FilterValues>(value);
+  const [isOpen, setIsOpen] = useState(false);
   const isDesktop = useMediaQuery(createMinWidthQuery("md"));
   const prevValueRef = useRef<FilterValues>(value);
 
@@ -91,6 +92,7 @@ const FiltersSheet = ({
 
   const handleApply = () => {
     onChange(localValue);
+    setIsOpen(false);
   };
 
   const handleClear = () => {
@@ -264,7 +266,7 @@ const FiltersSheet = ({
 
   if (isDesktop) {
     return (
-      <Dialog>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <TriggerButton />
         </DialogTrigger>
@@ -285,7 +287,7 @@ const FiltersSheet = ({
   }
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <TriggerButton />
       </SheetTrigger>
