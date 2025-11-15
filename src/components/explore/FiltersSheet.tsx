@@ -254,10 +254,7 @@ const FiltersSheet = ({
       variant="outline"
       size="sm"
       className="relative"
-      onClick={() => {
-        console.log("Filter button clicked!");
-        setIsOpen(true);
-      }}
+      onClick={() => setIsOpen(true)}
     >
       <Filter className="h-4 w-4 mr-2" />
       Filters

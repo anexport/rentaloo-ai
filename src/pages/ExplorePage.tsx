@@ -23,9 +23,6 @@ import OwnerCTASection from "@/components/explore/OwnerCTASection";
 import SocialProofSection from "@/components/explore/SocialProofSection";
 import FeaturedListingsSection from "@/components/explore/FeaturedListingsSection";
 import EmptyState from "@/components/explore/EmptyState";
-import ListingsGridHeader, {
-  type SortOption,
-} from "@/components/explore/ListingsGridHeader";
 import {
   fetchListings,
   type ListingsFilters,
@@ -33,6 +30,20 @@ import {
 } from "@/components/equipment/services/listings";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type SortOption =
+  | "recommended"
+  | "price-low"
+  | "price-high"
+  | "newest"
+  | "rating";
 
 const ExplorePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -277,22 +288,44 @@ const ExplorePage = () => {
         </div>
 
         {/* Filters row and Grid Header */}
-        <div className="mt-4 mb-3">
-          <ListingsGridHeader
-            resultCount={data?.length ?? 0}
-            location={debouncedFilters.location}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-          />
-        </div>
-
-        <div className="flex items-center justify-end mb-3">
-          <FiltersSheet
-            value={filterValues}
-            onChange={setFilterValues}
-            resultCount={data?.length ?? 0}
-            activeFilterCount={activeFilterCount}
-          />
+        <div className="flex items-center justify-between gap-4 mt-4 mb-4">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold">
+              {data?.length ?? 0} {(data?.length ?? 0) === 1 ? "item" : "items"}
+              {debouncedFilters.location && (
+                <span className="text-muted-foreground font-normal">
+                  {" "}
+                  in {debouncedFilters.location}
+                </span>
+              )}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Available for rent near you
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <FiltersSheet
+              value={filterValues}
+              onChange={setFilterValues}
+              resultCount={data?.length ?? 0}
+              activeFilterCount={activeFilterCount}
+            />
+            <Select
+              value={sortBy}
+              onValueChange={(value) => setSortBy(value as SortOption)}
+            >
+              <SelectTrigger className="w-[180px]" aria-label="Sort by">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recommended">Recommended</SelectItem>
+                <SelectItem value="price-low">Price: Low to High</SelectItem>
+                <SelectItem value="price-high">Price: High to Low</SelectItem>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="rating">Highest Rated</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <Separator />
 
