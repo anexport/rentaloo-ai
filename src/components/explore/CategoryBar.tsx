@@ -2,14 +2,17 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import { Package } from "lucide-react";
 import { toast } from "@/hooks/useToast";
+import { cn } from "@/lib/utils";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
+
+type CategoryWithCount = Category & {
+  item_count?: number;
+};
 
 type Props = {
   activeCategoryId: string;
@@ -17,7 +20,8 @@ type Props = {
 };
 
 const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   useEffect(() => {
     const load = async () => {
@@ -27,7 +31,7 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
           .select("*")
           .is("parent_id", null)
           .order("name");
-        
+
         if (error) {
           console.error("Error fetching categories:", error);
           toast({
@@ -38,11 +42,32 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
           setCategories([]);
           return;
         }
-        
-        setCategories(data || []);
+
+        // Fetch counts for each category
+        const categoriesWithCounts = await Promise.all(
+          (data || []).map(async (cat) => {
+            const { count } = await supabase
+              .from("equipment")
+              .select("*", { count: "exact", head: true })
+              .eq("category_id", cat.id)
+              .eq("is_available", true);
+
+            return { ...cat, item_count: count || 0 };
+          })
+        );
+
+        // Get total count for "All"
+        const { count: total } = await supabase
+          .from("equipment")
+          .select("*", { count: "exact", head: true })
+          .eq("is_available", true);
+
+        setTotalCount(total || 0);
+        setCategories(categoriesWithCounts);
       } catch (err) {
         console.error("Unexpected error fetching categories:", err);
-        const message = err instanceof Error ? err.message : "An unexpected error occurred";
+        const message =
+          err instanceof Error ? err.message : "An unexpected error occurred";
         toast({
           title: "Error loading categories",
           description: message,
@@ -54,61 +79,123 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
     void load();
   }, []);
 
-  return (
-    <div className="w-full">
-      <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex items-center gap-2">
-          <Button
-            variant={activeCategoryId === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => onCategoryChange("all")}
-            aria-label="All categories"
-            className="flex flex-col h-auto py-2 px-4 gap-1"
+  const CategoryCard = ({
+    id,
+    name,
+    icon: Icon,
+    count,
+    isActive,
+    onClick,
+  }: {
+    id: string;
+    name: string;
+    icon: React.ElementType;
+    count?: number;
+    isActive: boolean;
+    onClick: () => void;
+  }) => (
+    <button
+      onClick={onClick}
+      aria-label={`Category ${name}`}
+      className={cn(
+        "group relative flex flex-col items-center gap-3 px-6 py-4 rounded-2xl transition-all duration-300 min-w-[120px] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+        isActive
+          ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25"
+          : "bg-card hover:bg-muted/50 border border-border hover:border-primary/30 hover:shadow-md"
+      )}
+    >
+      {/* Icon */}
+      <div
+        className={cn(
+          "relative p-3 rounded-xl transition-all duration-300",
+          isActive
+            ? "bg-white/20"
+            : "bg-primary/10 group-hover:bg-primary/15 group-hover:scale-110"
+        )}
+      >
+        <Icon
+          className={cn(
+            "h-7 w-7 transition-colors",
+            isActive ? "text-primary-foreground" : "text-primary"
+          )}
+        />
+      </div>
+
+      {/* Category Name */}
+      <div className="space-y-1 text-center">
+        <div
+          className={cn(
+            "text-sm font-semibold transition-colors",
+            isActive ? "text-primary-foreground" : "text-foreground"
+          )}
+        >
+          {name}
+        </div>
+
+        {/* Item Count */}
+        {typeof count === "number" && (
+          <div
+            className={cn(
+              "text-xs transition-colors",
+              isActive
+                ? "text-primary-foreground/80"
+                : "text-muted-foreground group-hover:text-foreground"
+            )}
           >
-            <Package className="h-5 w-5" />
-            <span className="text-xs">All</span>
-          </Button>
+            {count.toLocaleString()} {count === 1 ? "item" : "items"}
+          </div>
+        )}
+      </div>
+
+      {/* Active Indicator */}
+      {isActive && (
+        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-12 bg-primary-foreground rounded-full" />
+      )}
+    </button>
+  );
+
+  return (
+    <div className="w-full py-2">
+      <ScrollArea className="w-full">
+        <div className="flex items-stretch gap-3 pb-2">
+          {/* All Categories */}
+          <CategoryCard
+            id="all"
+            name="All"
+            icon={Package}
+            count={totalCount}
+            isActive={activeCategoryId === "all"}
+            onClick={() => onCategoryChange("all")}
+          />
+
+          {/* Individual Categories */}
           {categories.map((cat) => {
             const Icon = getCategoryIcon(cat.name);
             return (
-              <HoverCard key={cat.id} openDelay={300}>
-                <HoverCardTrigger asChild>
-                  <Button
-                    variant={activeCategoryId === cat.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => onCategoryChange(cat.id)}
-                    aria-label={`Category ${cat.name}`}
-                    className="flex flex-col h-auto py-2 px-4 gap-1 relative"
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="text-xs">{cat.name}</span>
-                    {cat.name.toLowerCase().includes("new") && (
-                      <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                        N
-                      </Badge>
-                    )}
-                  </Button>
-                </HoverCardTrigger>
-                <HoverCardContent className="w-64">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-5 w-5 text-primary" />
-                      <h4 className="text-sm font-semibold">{cat.name}</h4>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Browse {cat.name.toLowerCase()} equipment available for rent near you.
-                    </p>
-                  </div>
-                </HoverCardContent>
-              </HoverCard>
+              <div key={cat.id} className="relative">
+                <CategoryCard
+                  id={cat.id}
+                  name={cat.name}
+                  icon={Icon}
+                  count={cat.item_count}
+                  isActive={activeCategoryId === cat.id}
+                  onClick={() => onCategoryChange(cat.id)}
+                />
+
+                {/* "New" badge for new categories */}
+                {cat.name.toLowerCase().includes("new") && (
+                  <Badge className="absolute -top-2 -right-2 h-6 px-2 text-[10px] font-bold shadow-md animate-pulse">
+                    NEW
+                  </Badge>
+                )}
+              </div>
             );
           })}
         </div>
-        <ScrollBar orientation="horizontal" />
+        <ScrollBar orientation="horizontal" className="h-2" />
       </ScrollArea>
     </div>
   );
 };
 
 export default CategoryBar;
-
