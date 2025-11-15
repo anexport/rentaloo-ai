@@ -17,6 +17,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import PageHeader from "@/components/layout/PageHeader";
 import StatsOverview from "@/components/renter/StatsOverview";
 import NotificationsPanel from "@/components/renter/NotificationsPanel";
+import RenterBookingCalendar from "@/components/renter/RenterBookingCalendar";
 import { useVerification } from "@/hooks/useVerification";
 import { getVerificationProgress } from "@/lib/verification";
 import { useToast } from "@/hooks/useToast";
@@ -135,7 +136,30 @@ const RenterDashboard = () => {
           <StatsOverview />
         </div>
 
+        {/* Booking Calendar Section */}
+        {activeTab === "calendar" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                  Calendar View
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Visualize your bookings across time
+                </p>
+              </div>
+              <Link to="/renter/dashboard">
+                <Button variant="outline" size="sm">
+                  Back to List
+                </Button>
+              </Link>
+            </div>
+            <RenterBookingCalendar bookingRequests={renterBookings} />
+          </div>
+        )}
+
         {/* Main Content Grid - Two Column Layout on Large Screens */}
+        {activeTab !== "calendar" && (
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Left Column - Bookings (takes 2 columns on large screens) */}
           <div className="lg:col-span-2 space-y-6">
@@ -150,13 +174,23 @@ const RenterDashboard = () => {
                     Manage your rental reservations
                   </p>
                 </div>
-                {renterBookings.length > 3 && activeTab !== "bookings" && (
-                  <Link to="/renter/dashboard?tab=bookings">
-                    <Button variant="outline" size="sm">
-                      View All
-                    </Button>
-                  </Link>
-                )}
+                <div className="flex gap-2">
+                  {renterBookings.length > 0 && (
+                    <Link to="/renter/dashboard?tab=calendar">
+                      <Button variant="outline" size="sm">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Calendar View
+                      </Button>
+                    </Link>
+                  )}
+                  {renterBookings.length > 3 && activeTab !== "bookings" && (
+                    <Link to="/renter/dashboard?tab=bookings">
+                      <Button variant="outline" size="sm">
+                        View All
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
               {renterLoading ? (
                 <Card>
@@ -228,6 +262,7 @@ const RenterDashboard = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </DashboardLayout>
   );
