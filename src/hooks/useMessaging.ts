@@ -391,7 +391,7 @@ const handleError = (
  * @throws TimeoutError if the timeout is reached
  */
 const withTimeout = <T>(
-  promise: Promise<T>,
+  promise: PromiseLike<T>,
   timeoutMs: number = 10000,
   errorMessage: string = "Operation timed out"
 ): Promise<T> => {
@@ -404,7 +404,7 @@ const withTimeout = <T>(
   });
 
   // Wrap in Promise.resolve() to normalize non-standard promises
-  // This ensures .finally() is available even for promise-like objects
+  // This ensures .finally() is available even for promise-like objects (like Supabase queries)
   const normalizedPromise = Promise.resolve(promise);
 
   return Promise.race([
@@ -553,9 +553,7 @@ export const useMessaging = () => {
                 supabase
                   .from("conversation_participants")
                   .select("conversation_id")
-                  .eq("profile_id", user.id) as unknown as Promise<
-                  SupabaseResponse<ConversationParticipantIdRow[]>
-                >,
+                  .eq("profile_id", user.id),
                 10000,
                 "Failed to fetch user conversations: request timed out"
               );
@@ -590,9 +588,7 @@ export const useMessaging = () => {
                 .in("id", userConversationIdArray)
                 .order("updated_at", {
                   ascending: false,
-                }) as unknown as Promise<
-                SupabaseResponse<ConversationSummaryRow[]>
-              >,
+                }),
               10000,
               "Failed to fetch conversation summaries: request timed out"
             ),
@@ -678,7 +674,7 @@ export const useMessaging = () => {
                         .in(
                           "id",
                           Array.from(participantIds)
-                        ) as unknown as Promise<SupabaseResponse<ProfileRow[]>>,
+                        ),
                       10000,
                       "Failed to fetch profiles: request timed out"
                     ),
@@ -704,9 +700,7 @@ export const useMessaging = () => {
                         .in(
                           "id",
                           Array.from(lastMessageIds)
-                        ) as unknown as Promise<
-                        SupabaseResponse<MessageRowWithSender[]>
-                      >,
+                        ),
                       10000,
                       "Failed to fetch messages: request timed out"
                     ),
@@ -732,9 +726,7 @@ export const useMessaging = () => {
                         .in(
                           "id",
                           Array.from(bookingRequestIds)
-                        ) as unknown as Promise<
-                        SupabaseResponse<BookingRequestWithEquipmentNullable[]>
-                      >,
+                        ),
                       10000,
                       "Failed to fetch booking requests: request timed out"
                     ),
@@ -753,9 +745,7 @@ export const useMessaging = () => {
                         .from("conversation_participants")
                         .select("conversation_id, last_read_at")
                         .in("conversation_id", Array.from(conversationIds))
-                        .eq("profile_id", user.id) as unknown as Promise<
-                        SupabaseResponse<ConversationParticipantReadRow[]>
-                      >,
+                        .eq("profile_id", user.id),
                       10000,
                       "Failed to fetch conversation participants: request timed out"
                     ),
@@ -858,9 +848,7 @@ export const useMessaging = () => {
                 .eq("conversation_id", conversationId)
                 .order("created_at", {
                   ascending: true,
-                }) as unknown as Promise<
-                SupabaseResponse<MessageRowWithSender[]>
-              >,
+                }),
               10000,
               "Failed to fetch messages: request timed out"
             ),
@@ -896,7 +884,7 @@ export const useMessaging = () => {
                 withTimeout(
                   supabase.rpc("mark_conversation_read", {
                     p_conversation: conversationId,
-                  }) as unknown as Promise<SupabaseResponse<undefined>>,
+                  }),
                   10000,
                   "Failed to mark conversation as read: request timed out"
                 ),
@@ -954,9 +942,7 @@ export const useMessaging = () => {
               sender:profiles(*)
             `
                 )
-                .single() as unknown as Promise<
-                SupabaseResponse<MessageRowWithSender>
-              >,
+                .single(),
               10000,
               "Failed to send message: request timed out"
             ),
@@ -989,9 +975,7 @@ export const useMessaging = () => {
               supabase
                 .from("conversations")
                 .update({ updated_at: timestamp })
-                .eq("id", messageData.conversation_id) as unknown as Promise<
-                SupabaseResponse<undefined>
-              >,
+                .eq("id", messageData.conversation_id),
               10000,
               "Failed to update conversation: request timed out"
             ),
@@ -1043,11 +1027,7 @@ export const useMessaging = () => {
                   .from("conversations")
                   .select("*")
                   .eq("booking_request_id", bookingRequestId)
-                  .single() as unknown as Promise<
-                  SupabaseResponse<
-                    Database["public"]["Tables"]["conversations"]["Row"]
-                  >
-                >,
+                  .single(),
                 10000,
                 "Failed to check existing conversation: request timed out"
               ),
@@ -1071,9 +1051,7 @@ export const useMessaging = () => {
                 supabase
                   .from("conversation_participants")
                   .select("conversation_id")
-                  .eq("profile_id", user.id) as unknown as Promise<
-                  SupabaseResponse<ConversationParticipantIdRow[]>
-                >,
+                  .eq("profile_id", user.id),
                 10000,
                 "Failed to fetch user conversations: request timed out"
               ),
@@ -1094,9 +1072,7 @@ export const useMessaging = () => {
                     supabase
                       .from("conversation_participants")
                       .select("profile_id")
-                      .eq("conversation_id", convId) as unknown as Promise<
-                      SupabaseResponse<ConversationParticipantProfileRow[]>
-                    >,
+                      .eq("conversation_id", convId),
                     10000,
                     "Failed to fetch conversation participants: request timed out"
                   ),
@@ -1122,11 +1098,7 @@ export const useMessaging = () => {
                         .from("conversations")
                         .select("*")
                         .eq("id", convId)
-                        .single() as unknown as Promise<
-                        SupabaseResponse<
-                          Database["public"]["Tables"]["conversations"]["Row"]
-                        >
-                      >,
+                        .single(),
                       10000,
                       "Failed to fetch existing conversation: request timed out"
                     ),
@@ -1154,11 +1126,7 @@ export const useMessaging = () => {
                     participants: uniqueParticipants, // Keep for backwards compatibility
                   })
                   .select()
-                  .single() as unknown as Promise<
-                  SupabaseResponse<
-                    Database["public"]["Tables"]["conversations"]["Row"]
-                  >
-                >,
+                  .single(),
                 10000,
                 "Failed to create conversation: request timed out"
               ),
@@ -1184,9 +1152,7 @@ export const useMessaging = () => {
             withTimeout(
               supabase
                 .from("conversation_participants")
-                .insert(participantInserts) as unknown as Promise<
-                SupabaseResponse<undefined>
-              >,
+                .insert(participantInserts),
               10000,
               "Failed to add conversation participants: request timed out"
             ),
@@ -1280,9 +1246,7 @@ export const useMessaging = () => {
             `
                   )
                   .eq("id", messageId)
-                  .single() as unknown as Promise<
-                  SupabaseResponse<MessageRowWithSender>
-                >,
+                  .single(),
                 10000,
                 "Failed to fetch new message: request timed out"
               ),

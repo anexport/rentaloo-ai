@@ -50,7 +50,10 @@ const DocumentUpload = ({
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result as string);
+        // Validate that result is a string (readAsDataURL returns string or null)
+        if (typeof reader.result === "string") {
+          setPreview(reader.result);
+        }
       };
       reader.readAsDataURL(file);
     } else {

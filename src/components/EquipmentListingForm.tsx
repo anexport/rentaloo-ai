@@ -30,31 +30,14 @@ const equipmentFormSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
   category_id: z.string().min(1, "Category is required"),
   daily_rate: z
-    .any()
-    .transform((val) => {
-      if (val === "" || val === null || val === undefined) {
-        return Number.NaN;
-      }
-
-      if (typeof val === "number") {
-        return Number.isFinite(val) ? val : Number.NaN;
-      }
-
-      if (typeof val === "string") {
-        const trimmed = val.trim();
-        if (trimmed === "") {
-          return Number.NaN;
-        }
-        const parsed = Number(trimmed);
-        return Number.isFinite(parsed) ? parsed : Number.NaN;
-      }
-
-      return Number.NaN;
-    })
-    .refine((n) => Number.isFinite(n), {
-      message: "Daily rate is required",
-    })
-    .refine((n) => n >= 1, {
+    .union([z.number(), z.string()])
+    .pipe(
+      z.coerce.number({
+        required_error: "Daily rate is required",
+        invalid_type_error: "Daily rate must be a valid number",
+      })
+    )
+    .refine((n) => Number.isFinite(n) && n >= 1, {
       message: "Daily rate must be at least $1",
     }),
   condition: z.enum(["new", "excellent", "good", "fair"]),
@@ -183,7 +166,10 @@ const EquipmentListingForm = ({
     newPhotos.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPhotoPreviews((prev) => [...prev, reader.result as string]);
+        // Validate that result is a string (readAsDataURL returns string or null)
+        if (typeof reader.result === "string") {
+          setPhotoPreviews((prev) => [...prev, reader.result]);
+        }
       };
       reader.readAsDataURL(file);
     });
