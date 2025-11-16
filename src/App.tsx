@@ -9,7 +9,8 @@ import { Toaster } from "@/components/ui/toaster";
 import EmailVerification from "@/pages/auth/EmailVerification";
 import RenterDashboard from "@/pages/renter/RenterDashboard";
 import OwnerDashboard from "@/pages/owner/OwnerDashboard";
-import ExplorePage from "@/pages/ExplorePage";
+import HomePage from "@/pages/HomePage";
+import BrowsePage from "@/pages/BrowsePage";
 import EquipmentDetailPage from "@/pages/equipment/EquipmentDetailPage";
 import MessagingPage from "@/pages/MessagingPage";
 import PaymentConfirmation from "@/pages/payment/PaymentConfirmation";
@@ -33,21 +34,22 @@ function App() {
       <div className="min-h-screen bg-background">
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<ExplorePage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/explore" element={<BrowsePage />} />
           <Route
             path="/register/renter"
-            element={<Navigate to="/?signup=true&role=renter" replace />}
+            element={<Navigate to="/explore?signup=true&role=renter" replace />}
           />
           <Route
             path="/register/owner"
-            element={<Navigate to="/?signup=true&role=owner" replace />}
+            element={<Navigate to="/explore?signup=true&role=owner" replace />}
           />
           <Route
             path="/login"
-            element={<Navigate to="/?login=true" replace />}
+            element={<Navigate to="/explore?login=true" replace />}
           />
           <Route path="/verify" element={<EmailVerification />} />
-          <Route path="/equipment" element={<Navigate to="/" replace />} />
+          <Route path="/equipment" element={<Navigate to="/explore" replace />} />
           <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
 
           {/* Protected routes */}
