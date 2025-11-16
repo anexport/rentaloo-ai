@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePrefetchData } from "@/hooks/usePrefetchData";
 import HeroSection from "@/components/explore/HeroSection";
@@ -12,23 +13,32 @@ import { ArrowRight } from "lucide-react";
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const [searchFilters, setSearchFilters] = useState<SearchBarFilters>({
+    search: "",
+    location: "",
+    condition: "all",
+    priceMin: undefined,
+    priceMax: undefined,
+    dateRange: undefined,
+    equipmentType: undefined,
+  });
 
   // Prefetch data for better performance when navigating to explore page
   usePrefetchData();
 
-  const handleSearch = (filters: SearchBarFilters) => {
+  const handleSearchSubmit = () => {
     const params = new URLSearchParams();
 
-    if (filters.search) params.set("search", filters.search);
-    if (filters.location) params.set("location", filters.location);
-    if (filters.category && filters.category !== "all") {
-      params.set("category", filters.category);
+    if (searchFilters.search) params.set("search", searchFilters.search);
+    if (searchFilters.location) params.set("location", searchFilters.location);
+    if (searchFilters.category && searchFilters.category !== "all") {
+      params.set("category", searchFilters.category);
     }
-    if (filters.priceMin !== undefined) {
-      params.set("priceMin", filters.priceMin.toString());
+    if (searchFilters.priceMin !== undefined) {
+      params.set("priceMin", searchFilters.priceMin.toString());
     }
-    if (filters.priceMax !== undefined) {
-      params.set("priceMax", filters.priceMax.toString());
+    if (searchFilters.priceMax !== undefined) {
+      params.set("priceMax", searchFilters.priceMax.toString());
     }
 
     navigate(`/explore?${params.toString()}`);
@@ -42,7 +52,11 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <HeroSection>
-        <SearchBarPopover onFiltersChange={handleSearch} />
+        <SearchBarPopover
+          value={searchFilters}
+          onChange={setSearchFilters}
+          onSubmit={handleSearchSubmit}
+        />
       </HeroSection>
 
       {/* Browse All CTA */}
