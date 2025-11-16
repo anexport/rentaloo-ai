@@ -6,7 +6,6 @@ import { getCategoryIcon } from "@/lib/categoryIcons";
 import { Package } from "lucide-react";
 import { toast } from "@/hooks/useToast";
 import { cn } from "@/lib/utils";
-import { CATEGORY_NAME_MAX_WIDTH } from "@/config/pagination";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 
@@ -21,6 +20,7 @@ type Props = {
 
 const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
+  const [countsLoading, setCountsLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -39,14 +39,25 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
             variant: "destructive",
           });
           setCategories([]);
+          setCountsLoading(false);
           return;
         }
 
+        // Set categories first without counts (shows categories immediately)
+        setCategories((data || []).map((cat) => ({ ...cat, item_count: 0 })));
+
         // Fetch ALL equipment counts in a single query
-        const { data: equipmentData } = await supabase
+        const { data: equipmentData, error: equipmentError } = await supabase
           .from("equipment")
           .select("category_id")
           .eq("is_available", true);
+
+        if (equipmentError) {
+          console.error("Error fetching equipment counts:", equipmentError);
+          // Continue without counts rather than failing completely
+          setCountsLoading(false);
+          return;
+        }
 
         // Create count map from the results
         const countMap = new Map<string, number>();
@@ -62,6 +73,7 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
         }));
 
         setCategories(categoriesWithCounts);
+        setCountsLoading(false);
       } catch (err) {
         console.error("Unexpected error fetching categories:", err);
         const message =
@@ -72,6 +84,7 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
           variant: "destructive",
         });
         setCategories([]);
+        setCountsLoading(false);
       }
     };
     void load();
@@ -84,6 +97,7 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
     count,
     isActive,
     onClick,
+    loading = false,
   }: {
     id: string;
     name: string;
@@ -91,6 +105,7 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
     count?: number;
     isActive: boolean;
     onClick: () => void;
+    loading?: boolean;
   }) => (
     <button
       type="button"
@@ -113,12 +128,10 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
       />
 
       {/* Category Name */}
-      <span className="truncate" style={{ maxWidth: CATEGORY_NAME_MAX_WIDTH }}>
-        {name}
-      </span>
+      <span className="max-w-[140px] truncate">{name}</span>
 
       {/* Count Badge */}
-      {typeof count === "number" && count > 0 && (
+      {(loading || (typeof count === "number" && count > 0)) && (
         <Badge
           variant={isActive ? "outline" : "secondary"}
           className={cn(
@@ -128,7 +141,7 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
               : "bg-muted text-muted-foreground"
           )}
         >
-          {count > 99 ? "99+" : count}
+          {loading ? "..." : count! > 99 ? "99+" : count}
         </Badge>
       )}
     </button>
@@ -158,6 +171,7 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
               count={cat.item_count}
               isActive={activeCategoryId === cat.id}
               onClick={() => onCategoryChange(cat.id)}
+              loading={countsLoading}
             />
           );
         })}

@@ -6,6 +6,7 @@ import {
   VIRTUAL_SCROLL_THRESHOLD,
   VIRTUAL_SCROLL_ROOT_MARGIN,
 } from "@/config/pagination";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type Props = {
   listings: Listing[];
@@ -30,6 +31,11 @@ const VirtualListingGrid = ({
 }: Props) => {
   const [visibleCount, setVisibleCount] = useState(threshold);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Responsive skeleton count matching grid layout
+  const isDesktop = useMediaQuery("(min-width: 1024px)"); // lg breakpoint
+  const isTablet = useMediaQuery("(min-width: 768px)"); // md breakpoint
+  const skeletonCount = isDesktop ? 3 : isTablet ? 2 : 1;
 
   useEffect(() => {
     // Reset visible count when listings change
@@ -83,7 +89,7 @@ const VirtualListingGrid = ({
       {hasMore && (
         <div ref={sentinelRef} className="mt-6">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: skeletonCount }).map((_, i) => (
               <ListingCardSkeleton key={i} />
             ))}
           </div>

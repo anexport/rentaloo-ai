@@ -11,6 +11,7 @@ import VirtualListingGrid from "@/components/equipment/VirtualListingGrid";
 import ListingCard from "@/components/equipment/ListingCard";
 import EquipmentDetailDialog from "@/components/equipment/detail/EquipmentDetailDialog";
 import ListingCardSkeleton from "@/components/equipment/ListingCardSkeleton";
+import { VIRTUAL_SCROLL_THRESHOLD } from "@/config/pagination";
 import FiltersSheet, {
   type FilterValues,
 } from "@/components/explore/FiltersSheet";
@@ -197,13 +198,13 @@ const ExplorePage = () => {
         );
       case "rating": {
         return sorted.sort((a, b) => {
-          const avgA = a.reviews?.length
-            ? a.reviews.reduce((sum, r) => sum + r.rating, 0) /
-              a.reviews.length
+          const reviewsA = a.reviews ?? [];
+          const reviewsB = b.reviews ?? [];
+          const avgA = reviewsA.length
+            ? reviewsA.reduce((sum, r) => sum + r.rating, 0) / reviewsA.length
             : 0;
-          const avgB = b.reviews?.length
-            ? b.reviews.reduce((sum, r) => sum + r.rating, 0) /
-              b.reviews.length
+          const avgB = reviewsB.length
+            ? reviewsB.reduce((sum, r) => sum + r.rating, 0) / reviewsB.length
             : 0;
           return avgB - avgA;
         });
@@ -354,7 +355,7 @@ const ExplorePage = () => {
               filters={effectiveFilters}
               onClearFilters={handleClearFilters}
             />
-          ) : sortedListings.length > 50 ? (
+          ) : sortedListings.length > VIRTUAL_SCROLL_THRESHOLD ? (
             <VirtualListingGrid
               listings={sortedListings}
               onOpenListing={handleOpenListing}

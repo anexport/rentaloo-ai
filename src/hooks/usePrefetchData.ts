@@ -10,8 +10,12 @@ export const usePrefetchData = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
     // Prefetch categories
     const prefetchCategories = async () => {
+      if (signal.aborted) return;
       await queryClient.prefetchQuery({
         queryKey: ["categories"],
         queryFn: async () => {
@@ -19,7 +23,8 @@ export const usePrefetchData = () => {
             .from("categories")
             .select("*")
             .is("parent_id", null)
-            .order("name");
+            .order("name")
+            .abortSignal(signal);
 
           if (error) throw error;
           return data;
@@ -30,6 +35,7 @@ export const usePrefetchData = () => {
 
     // Prefetch featured/popular listings
     const prefetchFeaturedListings = async () => {
+      if (signal.aborted) return;
       await queryClient.prefetchQuery({
         queryKey: ["featured-listings"],
         queryFn: () => fetchListings({ limit: 4 }),
@@ -39,6 +45,7 @@ export const usePrefetchData = () => {
 
     // Prefetch default listings (first page)
     const prefetchDefaultListings = async () => {
+      if (signal.aborted) return;
       await queryClient.prefetchQuery({
         queryKey: ["listings", {}],
         queryFn: () => fetchListings({}),
@@ -48,15 +55,25 @@ export const usePrefetchData = () => {
 
     // Run prefetches in parallel with error handling
     void Promise.all([
-      prefetchCategories().catch((err) =>
-        console.error("Failed to prefetch categories:", err)
-      ),
-      prefetchFeaturedListings().catch((err) =>
-        console.error("Failed to prefetch featured listings:", err)
-      ),
-      prefetchDefaultListings().catch((err) =>
-        console.error("Failed to prefetch default listings:", err)
-      ),
+      prefetchCategories().catch((err) => {
+        if (!signal.aborted) {
+          console.error("Failed to prefetch categories:", err);
+        }
+      }),
+      prefetchFeaturedListings().catch((err) => {
+        if (!signal.aborted) {
+          console.error("Failed to prefetch featured listings:", err);
+        }
+      }),
+      prefetchDefaultListings().catch((err) => {
+        if (!signal.aborted) {
+          console.error("Failed to prefetch default listings:", err);
+        }
+      }),
     ]);
+
+    return () => {
+      abortController.abort();
+    };
   }, [queryClient]);
 };
