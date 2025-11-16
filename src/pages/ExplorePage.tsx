@@ -11,7 +11,11 @@ import VirtualListingGrid from "@/components/equipment/VirtualListingGrid";
 import ListingCard from "@/components/equipment/ListingCard";
 import EquipmentDetailDialog from "@/components/equipment/detail/EquipmentDetailDialog";
 import ListingCardSkeleton from "@/components/equipment/ListingCardSkeleton";
-import { VIRTUAL_SCROLL_THRESHOLD } from "@/config/pagination";
+import {
+  VIRTUAL_SCROLL_THRESHOLD,
+  DEFAULT_PRICE_MIN,
+  DEFAULT_PRICE_MAX,
+} from "@/config/pagination";
 import FiltersSheet, {
   type FilterValues,
 } from "@/components/explore/FiltersSheet";
@@ -63,7 +67,7 @@ const ExplorePage = () => {
   });
 
   const [filterValues, setFilterValues] = useState<FilterValues>({
-    priceRange: [0, 500],
+    priceRange: [DEFAULT_PRICE_MIN, DEFAULT_PRICE_MAX],
     conditions: [],
     equipmentTypes: [],
     verified: false,
@@ -233,7 +237,7 @@ const ExplorePage = () => {
       equipmentType: undefined,
     });
     setFilterValues({
-      priceRange: [0, 500],
+      priceRange: [DEFAULT_PRICE_MIN, DEFAULT_PRICE_MAX],
       conditions: [],
       equipmentTypes: [],
       verified: false,

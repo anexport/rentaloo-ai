@@ -77,7 +77,7 @@ const VirtualListingGrid = ({
       console.error("Failed to create IntersectionObserver:", error);
       // Fallback: show all items if observer creation fails
       setVisibleCount(listings.length);
-      return;
+      // Don't return - let cleanup handle any partially created observer
     }
 
     return () => {

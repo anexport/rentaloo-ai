@@ -56,6 +56,9 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
         // Set categories first without counts (shows categories immediately)
         setCategories((data || []).map((cat) => ({ ...cat, item_count: 0 })));
 
+        // Check if already aborted before starting equipment query
+        if (signal.aborted) return;
+
         // Fetch ALL equipment counts in a single query
         const { data: equipmentData, error: equipmentError } = await supabase
           .from("equipment")
