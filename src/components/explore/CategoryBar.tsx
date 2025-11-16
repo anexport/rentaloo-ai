@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { getCategoryIcon } from "@/lib/categoryIcons";
 import { Package } from "lucide-react";
 import { toast } from "@/hooks/useToast";
 import { cn } from "@/lib/utils";
+import { MAX_DISPLAY_COUNT } from "@/config/pagination";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 
@@ -23,15 +24,21 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
   const [countsLoading, setCountsLoading] = useState(true);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
     const load = async () => {
       try {
         const { data, error } = await supabase
           .from("categories")
           .select("*")
           .is("parent_id", null)
-          .order("name");
+          .order("name")
+          .abortSignal(signal);
 
         if (error) {
+          // Don't show error toast if request was aborted
+          if (signal.aborted) return;
           console.error("Error fetching categories:", error);
           toast({
             title: "Error loading categories",
@@ -43,6 +50,9 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
           return;
         }
 
+        // Don't update state if component unmounted
+        if (signal.aborted) return;
+
         // Set categories first without counts (shows categories immediately)
         setCategories((data || []).map((cat) => ({ ...cat, item_count: 0 })));
 
@@ -50,14 +60,20 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
         const { data: equipmentData, error: equipmentError } = await supabase
           .from("equipment")
           .select("category_id")
-          .eq("is_available", true);
+          .eq("is_available", true)
+          .abortSignal(signal);
 
         if (equipmentError) {
+          // Don't show error toast if request was aborted
+          if (signal.aborted) return;
           console.error("Error fetching equipment counts:", equipmentError);
           // Continue without counts rather than failing completely
           setCountsLoading(false);
           return;
         }
+
+        // Don't update state if component unmounted
+        if (signal.aborted) return;
 
         // Create count map from the results
         const countMap = new Map<string, number>();
@@ -75,6 +91,8 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
         setCategories(categoriesWithCounts);
         setCountsLoading(false);
       } catch (err) {
+        // Don't show error toast if request was aborted
+        if (signal.aborted) return;
         console.error("Unexpected error fetching categories:", err);
         const message =
           err instanceof Error ? err.message : "An unexpected error occurred";
@@ -88,6 +106,10 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
       }
     };
     void load();
+
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   const CategoryPill = ({
@@ -141,7 +163,11 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
               : "bg-muted text-muted-foreground"
           )}
         >
-          {loading ? "..." : count! > 99 ? "99+" : count}
+          {loading
+            ? "..."
+            : count! > MAX_DISPLAY_COUNT
+              ? `${MAX_DISPLAY_COUNT}+`
+              : count}
         </Badge>
       )}
     </button>
@@ -180,4 +206,4 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
   );
 };
 
-export default CategoryBar;
+export default memo(CategoryBar);

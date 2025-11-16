@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Filter } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { createMinWidthQuery } from "@/config/breakpoints";
+import { DEFAULT_PRICE_MIN, DEFAULT_PRICE_MAX } from "@/config/pagination";
 
 export type FilterValues = {
   priceRange: [number, number];
@@ -91,13 +92,13 @@ const FiltersSheet = ({
   }, [value]);
 
   const handleApply = () => {
-    onChange(localValue);
     setIsOpen(false);
+    onChange(localValue);
   };
 
   const handleClear = () => {
     const cleared: FilterValues = {
-      priceRange: [0, 500],
+      priceRange: [DEFAULT_PRICE_MIN, DEFAULT_PRICE_MAX],
       conditions: [],
       equipmentTypes: [],
       verified: false,
@@ -148,8 +149,8 @@ const FiltersSheet = ({
                     priceRange: val as [number, number],
                   })
                 }
-                min={0}
-                max={500}
+                min={DEFAULT_PRICE_MIN}
+                max={DEFAULT_PRICE_MAX}
                 step={10}
                 className="w-full"
               />

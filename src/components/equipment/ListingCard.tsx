@@ -47,6 +47,11 @@ const ListingCard = ({ listing, onOpen }: Props) => {
     setImageError(false);
   }, [listing.photos, listing.id]);
 
+  // Reset image error when navigating between images
+  useEffect(() => {
+    setImageError(false);
+  }, [currentImageIndex]);
+
   const handleOpen = () => {
     if (onOpen) onOpen(listing);
   };

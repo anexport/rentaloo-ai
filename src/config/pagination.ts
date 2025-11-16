@@ -23,3 +23,15 @@ export const VIRTUAL_SCROLL_ROOT_MARGIN = "200px";
  * Maximum width for category name text before truncation
  */
 export const CATEGORY_NAME_MAX_WIDTH = "140px";
+
+/**
+ * Maximum count to display in badges before showing "X+"
+ * Example: counts > 99 will show "99+"
+ */
+export const MAX_DISPLAY_COUNT = 99;
+
+/**
+ * Default price range for equipment filters
+ */
+export const DEFAULT_PRICE_MIN = 0;
+export const DEFAULT_PRICE_MAX = 500;

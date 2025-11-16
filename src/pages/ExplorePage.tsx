@@ -315,7 +315,7 @@ const ExplorePage = () => {
               value={sortBy}
               onValueChange={(value) => setSortBy(value as SortOption)}
             >
-              <SelectTrigger className="w-[180px]" aria-label="Sort by">
+              <SelectTrigger className="min-w-[180px]" aria-label="Sort by">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>

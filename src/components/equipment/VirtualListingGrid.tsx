@@ -46,27 +46,45 @@ const VirtualListingGrid = ({
     if (!sentinelRef.current) return;
     if (visibleCount >= listings.length) return;
 
-    const element = sentinelRef.current;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const first = entries[0];
-        if (first?.isIntersecting) {
-          // Load more items when sentinel comes into view
-          setVisibleCount((prev) =>
-            Math.min(prev + threshold, listings.length)
-          );
-        }
-      },
-      {
-        rootMargin: VIRTUAL_SCROLL_ROOT_MARGIN, // Start loading before user reaches the end
-      }
-    );
+    // IntersectionObserver may not be supported in older browsers
+    if (typeof IntersectionObserver === "undefined") {
+      // Fallback: show all items if IntersectionObserver is not supported
+      setVisibleCount(listings.length);
+      return;
+    }
 
-    observer.observe(element);
+    const element = sentinelRef.current;
+    let observer: IntersectionObserver | null = null;
+
+    try {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const first = entries[0];
+          if (first?.isIntersecting) {
+            // Load more items when sentinel comes into view
+            setVisibleCount((prev) =>
+              Math.min(prev + threshold, listings.length)
+            );
+          }
+        },
+        {
+          rootMargin: VIRTUAL_SCROLL_ROOT_MARGIN, // Start loading before user reaches the end
+        }
+      );
+
+      observer.observe(element);
+    } catch (error) {
+      console.error("Failed to create IntersectionObserver:", error);
+      // Fallback: show all items if observer creation fails
+      setVisibleCount(listings.length);
+      return;
+    }
 
     return () => {
-      if (element) observer.unobserve(element);
-      observer.disconnect();
+      if (observer && element) {
+        observer.unobserve(element);
+        observer.disconnect();
+      }
     };
   }, [visibleCount, listings.length, threshold]);
 

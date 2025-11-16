@@ -94,14 +94,16 @@ export const fetchListings = async (
   // Fetch all reviews in a single query
   const reviewsMap = new Map<string, Array<Pick<ReviewRow, "rating">>>();
   if (ownerIds.length > 0) {
-    let reviewsQuery = supabase
-      .from("reviews")
-      .select("rating, reviewee_id")
-      .in("reviewee_id", ownerIds);
-
-    if (signal) {
-      reviewsQuery = reviewsQuery.abortSignal(signal);
-    }
+    const reviewsQuery = signal
+      ? supabase
+          .from("reviews")
+          .select("rating, reviewee_id")
+          .in("reviewee_id", ownerIds)
+          .abortSignal(signal)
+      : supabase
+          .from("reviews")
+          .select("rating, reviewee_id")
+          .in("reviewee_id", ownerIds);
 
     const { data: reviews } = await reviewsQuery;
 
