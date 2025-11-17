@@ -25,6 +25,45 @@ interface PresenceLeavePayload {
   leftPresences: UserPresence[];
 }
 
+// Type guards for runtime validation of presence data
+function isUserPresence(obj: unknown): obj is UserPresence {
+  if (!obj || typeof obj !== "object") return false;
+  const candidate = obj as Record<string, unknown>;
+  return (
+    typeof candidate.user_id === "string" &&
+    typeof candidate.online_at === "string" &&
+    (candidate.status === "online" ||
+      candidate.status === "away" ||
+      candidate.status === "busy")
+  );
+}
+
+function isPresenceArray(arr: unknown): arr is UserPresence[] {
+  return Array.isArray(arr) && arr.every(isUserPresence);
+}
+
+function isSupabasePresenceState(obj: unknown): obj is SupabasePresenceState {
+  if (!obj || typeof obj !== "object") return false;
+  const candidate = obj as Record<string, unknown>;
+  return Object.values(candidate).every(isPresenceArray);
+}
+
+function isPresenceJoinPayload(obj: unknown): obj is PresenceJoinPayload {
+  if (!obj || typeof obj !== "object") return false;
+  const candidate = obj as Record<string, unknown>;
+  return (
+    "newPresences" in candidate && isPresenceArray(candidate.newPresences)
+  );
+}
+
+function isPresenceLeavePayload(obj: unknown): obj is PresenceLeavePayload {
+  if (!obj || typeof obj !== "object") return false;
+  const candidate = obj as Record<string, unknown>;
+  return (
+    "leftPresences" in candidate && isPresenceArray(candidate.leftPresences)
+  );
+}
+
 const PRESENCE_HEARTBEAT_INTERVAL = 300000; // 5 minutes
 
 export const usePresence = () => {
@@ -91,12 +130,18 @@ export const usePresence = () => {
     // Handle presence sync (initial state)
     channel.on("presence", { event: "sync" }, () => {
       const rawState = channel.presenceState();
-      const state = rawState as unknown as SupabasePresenceState;
+
+      // Validate presence state before using
+      if (!isSupabasePresenceState(rawState)) {
+        console.error("Invalid presence state received:", rawState);
+        return;
+      }
+
       const userIds = new Set<string>();
 
       // Extract user IDs from presence state
-      Object.keys(state).forEach((key) => {
-        const presences = state[key];
+      Object.keys(rawState).forEach((key) => {
+        const presences = rawState[key];
         if (presences && presences.length > 0) {
           presences.forEach((presence) => {
             if (presence.user_id) {
@@ -111,8 +156,13 @@ export const usePresence = () => {
 
     // Handle users joining
     channel.on("presence", { event: "join" }, (payload) => {
-      const typedPayload = payload as unknown as PresenceJoinPayload;
-      const { newPresences } = typedPayload;
+      // Validate payload before using
+      if (!isPresenceJoinPayload(payload)) {
+        console.error("Invalid presence join payload received:", payload);
+        return;
+      }
+
+      const { newPresences } = payload;
       setOnlineUsers((prev) => {
         const updated = new Set(prev);
         if (newPresences) {
@@ -128,8 +178,13 @@ export const usePresence = () => {
 
     // Handle users leaving
     channel.on("presence", { event: "leave" }, (payload) => {
-      const typedPayload = payload as unknown as PresenceLeavePayload;
-      const { leftPresences } = typedPayload;
+      // Validate payload before using
+      if (!isPresenceLeavePayload(payload)) {
+        console.error("Invalid presence leave payload received:", payload);
+        return;
+      }
+
+      const { leftPresences } = payload;
       setOnlineUsers((prev) => {
         const updated = new Set(prev);
         if (leftPresences) {

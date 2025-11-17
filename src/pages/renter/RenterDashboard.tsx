@@ -65,12 +65,6 @@ const RenterDashboard = () => {
   }, [renterError, toast]);
 
   const progress = profile ? getVerificationProgress(profile) : 0;
-  const hasAnyVerification =
-    !!profile &&
-    (profile.identityVerified ||
-      profile.phoneVerified ||
-      profile.emailVerified ||
-      profile.addressVerified);
 
   return (
     <DashboardLayout>
@@ -83,11 +77,10 @@ const RenterDashboard = () => {
           />
         </div>
 
-        {/* High-Emphasis Banner for 0% progress and no uploads */}
+        {/* High-Emphasis Banner for unverified identity */}
         {!verificationLoading &&
           profile &&
-          progress === 0 &&
-          !hasAnyVerification && (
+          !profile.identityVerified && (
             <Card className="border-destructive/40 bg-destructive/5 ring-1 ring-destructive/20">
               <CardContent className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-4">
                 <div className="flex items-start gap-3">
@@ -99,7 +92,7 @@ const RenterDashboard = () => {
                       Complete your verification
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Your account is unverified (0%). Verify now to start
+                      Your account is {progress}% verified. Complete identity verification to start
                       renting safely.
                     </p>
                   </div>

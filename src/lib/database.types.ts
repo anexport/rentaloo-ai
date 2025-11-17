@@ -604,28 +604,43 @@ export type Database = {
       };
       profiles: {
         Row: {
+          address_verified: boolean | null;
           created_at: string | null;
           email: string;
+          email_verified: boolean | null;
           id: string;
+          identity_verified: boolean | null;
           last_seen_at: string | null;
+          phone_verified: boolean | null;
           role: Database["public"]["Enums"]["user_role"];
           updated_at: string | null;
+          verified_at: string | null;
         };
         Insert: {
+          address_verified?: boolean | null;
           created_at?: string | null;
           email: string;
+          email_verified?: boolean | null;
           id?: string;
+          identity_verified?: boolean | null;
           last_seen_at?: string | null;
+          phone_verified?: boolean | null;
           role: Database["public"]["Enums"]["user_role"];
           updated_at?: string | null;
+          verified_at?: string | null;
         };
         Update: {
+          address_verified?: boolean | null;
           created_at?: string | null;
           email?: string;
+          email_verified?: boolean | null;
           id?: string;
+          identity_verified?: boolean | null;
           last_seen_at?: string | null;
+          phone_verified?: boolean | null;
           role?: Database["public"]["Enums"]["user_role"];
           updated_at?: string | null;
+          verified_at?: string | null;
         };
         Relationships: [];
       };
