@@ -16,6 +16,7 @@ import PaymentConfirmation from "@/pages/payment/PaymentConfirmation";
 import PaymentsPage from "@/pages/renter/PaymentsPage";
 import VerifyIdentity from "@/pages/verification/VerifyIdentity";
 import ProfileSettings from "@/pages/ProfileSettings";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   const { user, loading } = useAuth();
@@ -29,48 +30,51 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="min-h-screen bg-background">
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<ExplorePage />} />
-          <Route
-            path="/register/renter"
-            element={<Navigate to="/?signup=true&role=renter" replace />}
-          />
-          <Route
-            path="/register/owner"
-            element={<Navigate to="/?signup=true&role=owner" replace />}
-          />
-          <Route
-            path="/login"
-            element={<Navigate to="/?login=true" replace />}
-          />
-          <Route path="/verify" element={<EmailVerification />} />
-          <Route path="/equipment" element={<Navigate to="/" replace />} />
-          <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
+    <>
+      <Analytics />
+      <Router>
+        <div className="min-h-screen bg-background">
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<ExplorePage />} />
+            <Route
+              path="/register/renter"
+              element={<Navigate to="/?signup=true&role=renter" replace />}
+            />
+            <Route
+              path="/register/owner"
+              element={<Navigate to="/?signup=true&role=owner" replace />}
+            />
+            <Route
+              path="/login"
+              element={<Navigate to="/?login=true" replace />}
+            />
+            <Route path="/verify" element={<EmailVerification />} />
+            <Route path="/equipment" element={<Navigate to="/" replace />} />
+            <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
 
-          {/* Protected routes */}
-          {user && (
-            <>
-              <Route path="/renter" element={<RenterDashboard />} />
-              <Route path="/renter/dashboard" element={<RenterDashboard />} />
-              <Route path="/renter/payments" element={<PaymentsPage />} />
-              <Route path="/owner" element={<OwnerDashboard />} />
-              <Route path="/owner/dashboard" element={<OwnerDashboard />} />
-              <Route path="/messages" element={<MessagingPage />} />
-              <Route
-                path="/payment/confirmation"
-                element={<PaymentConfirmation />}
-              />
-              <Route path="/verification" element={<VerifyIdentity />} />
-              <Route path="/settings" element={<ProfileSettings />} />
-            </>
-          )}
-        </Routes>
-        <Toaster />
-      </div>
-    </Router>
+            {/* Protected routes */}
+            {user && (
+              <>
+                <Route path="/renter" element={<RenterDashboard />} />
+                <Route path="/renter/dashboard" element={<RenterDashboard />} />
+                <Route path="/renter/payments" element={<PaymentsPage />} />
+                <Route path="/owner" element={<OwnerDashboard />} />
+                <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+                <Route path="/messages" element={<MessagingPage />} />
+                <Route
+                  path="/payment/confirmation"
+                  element={<PaymentConfirmation />}
+                />
+                <Route path="/verification" element={<VerifyIdentity />} />
+                <Route path="/settings" element={<ProfileSettings />} />
+              </>
+            )}
+          </Routes>
+          <Toaster />
+        </div>
+      </Router>
+    </>
   );
 }
 
