@@ -270,14 +270,14 @@ const buttonVariants = cva("base-classes", {
 
 ## Database Schema
 
-**Statistics:** 21 profiles, 23 categories, 15 equipment listings, 2 bookings, 2 conversations, 28 migrations
+**Statistics:** 21 profiles, 23 categories, 15 equipment listings, 2 bookings, 2 conversations, 26 migrations
 
 ### Core Tables Overview
 
 | Table | Purpose | Key Fields | RLS |
 |-------|---------|------------|-----|
-| `profiles` | Base user info | email, role (enum), timestamps | ✅ |
-| `renter_profiles` | Renter-specific data | profile_id, preferences (JSONB), verification_status | ✅ |
+| `profiles` | Base user info | email, role (enum), verification flags (booleans), timestamps | ✅ |
+| `renter_profiles` | Renter-specific data | profile_id, preferences (JSONB), experience_level | ✅ |
 | `owner_profiles` | Owner-specific data | profile_id, business_info (JSONB), earnings_total | ✅ |
 | `categories` | Equipment categories | name, parent_id (self-ref), sport_type, attributes (JSONB) | ✅ |
 | `equipment` | Listings | owner_id, category_id, title, daily_rate, condition (enum), location, lat/lng | ✅ |
@@ -296,10 +296,11 @@ const buttonVariants = cva("base-classes", {
 ### Custom Enums
 ```sql
 user_role: 'renter' | 'owner'
-verification_status: 'unverified' | 'pending' | 'verified'
 equipment_condition: 'new' | 'excellent' | 'good' | 'fair'
 booking_status: 'pending' | 'approved' | 'declined' | 'cancelled' | 'completed'
 ```
+
+**Note:** Verification is tracked using boolean flags in the `profiles` table (`identity_verified`, `phone_verified`, `email_verified`, `address_verified`).
 
 ### Key Relationships
 1. `auth.users` → `profiles` → `renter_profiles` OR `owner_profiles`
