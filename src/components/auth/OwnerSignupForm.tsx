@@ -325,6 +325,8 @@ const OwnerSignupForm = ({
               </Label>
               <Input
                 id="businessName"
+                type="text"
+                autoComplete="organization"
                 {...register("businessName")}
                 placeholder="Your business name"
                 className={errors.businessName ? "border-destructive" : ""}
@@ -494,6 +496,8 @@ const OwnerSignupForm = ({
               </Label>
               <Input
                 id="serviceArea"
+                type="text"
+                autoComplete="off"
                 {...register("serviceArea")}
                 placeholder="50 miles radius"
                 className={errors.serviceArea ? "border-destructive" : ""}
@@ -531,6 +535,7 @@ const OwnerSignupForm = ({
                 id="yearsExperience"
                 type="number"
                 inputMode="numeric"
+                autoComplete="off"
                 min="1"
                 {...register("yearsExperience", { valueAsNumber: true })}
                 placeholder="5"

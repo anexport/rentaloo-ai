@@ -12,6 +12,7 @@ import {
   MapPin,
   ArrowRight,
   Check,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -265,8 +266,9 @@ const RenterSignupForm = ({
                 }
               />
               {errors.fullName && (
-                <p id="fullName-error" className="text-sm text-destructive">
-                  {errors.fullName.message}
+                <p id="fullName-error" className="text-sm text-destructive flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{errors.fullName.message}</span>
                 </p>
               )}
             </div>
@@ -291,8 +293,9 @@ const RenterSignupForm = ({
                 aria-describedby={errors.email ? "email-error" : undefined}
               />
               {errors.email && (
-                <p id="email-error" className="text-sm text-destructive">
-                  {errors.email.message}
+                <p id="email-error" className="text-sm text-destructive flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{errors.email.message}</span>
                 </p>
               )}
             </div>
@@ -333,8 +336,9 @@ const RenterSignupForm = ({
               </div>
               <PasswordStrength password={password || ""} />
               {errors.password && (
-                <p id="password-error" className="text-sm text-destructive">
-                  {errors.password.message}
+                <p id="password-error" className="text-sm text-destructive flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{errors.password.message}</span>
                 </p>
               )}
             </div>

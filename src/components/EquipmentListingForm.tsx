@@ -342,6 +342,8 @@ const EquipmentListingForm = ({
               <Label htmlFor="title">Equipment Title *</Label>
               <Input
                 id="title"
+                type="text"
+                autoComplete="off"
                 {...register("title")}
                 placeholder="e.g., Professional Mountain Bike"
               />
@@ -379,6 +381,7 @@ const EquipmentListingForm = ({
             <Label htmlFor="description">Description *</Label>
             <Textarea
               id="description"
+              autoComplete="off"
               {...register("description")}
               placeholder="Describe your equipment, its features, and any important details..."
               rows={4}
@@ -441,6 +444,8 @@ const EquipmentListingForm = ({
               <Label htmlFor="location">Location *</Label>
               <Input
                 id="location"
+                type="text"
+                autoComplete="address-level2"
                 {...register("location")}
                 placeholder="City, State"
               />
