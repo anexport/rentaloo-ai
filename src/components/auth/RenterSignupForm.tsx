@@ -254,6 +254,8 @@ const RenterSignupForm = ({
               </Label>
               <Input
                 id="fullName"
+                type="text"
+                autoComplete="name"
                 {...register("fullName")}
                 placeholder="John Doe"
                 className={errors.fullName ? "border-destructive" : ""}
@@ -279,6 +281,9 @@ const RenterSignupForm = ({
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
+                autoCapitalize="off"
+                spellCheck="false"
                 {...register("email")}
                 placeholder="john@example.com"
                 className={errors.email ? "border-destructive" : ""}
@@ -302,9 +307,10 @@ const RenterSignupForm = ({
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   {...register("password")}
                   placeholder="Create a strong password"
-                  className={errors.password ? "border-destructive" : ""}
+                  className={errors.password ? "border-destructive pr-12" : "pr-12"}
                   aria-invalid={!!errors.password}
                   aria-describedby={
                     errors.password ? "password-error" : undefined
@@ -313,8 +319,8 @@ const RenterSignupForm = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  size="icon-sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -343,9 +349,10 @@ const RenterSignupForm = ({
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   {...register("confirmPassword")}
                   placeholder="Confirm your password"
-                  className={errors.confirmPassword ? "border-destructive" : ""}
+                  className={errors.confirmPassword ? "border-destructive pr-12" : "pr-12"}
                   aria-invalid={!!errors.confirmPassword}
                   aria-describedby={
                     errors.confirmPassword ? "confirmPassword-error" : undefined
@@ -354,8 +361,8 @@ const RenterSignupForm = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  size="icon-sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   aria-label={
                     showConfirmPassword ? "Hide password" : "Show password"
@@ -401,6 +408,8 @@ const RenterSignupForm = ({
               </Label>
               <Input
                 id="location"
+                type="text"
+                autoComplete="address-level2"
                 {...register("location")}
                 placeholder="San Francisco, CA"
                 className={errors.location ? "border-destructive" : ""}
