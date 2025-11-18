@@ -489,15 +489,18 @@ const EquipmentListingForm = ({
                       alt={`Existing ${index + 1}`}
                       className="w-full h-32 object-cover rounded-lg border border-border"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="destructive"
+                      size="icon-sm"
                       onClick={() => {
                         void removeExistingPhoto(url);
                       }}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 rounded-full max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                      aria-label="Delete photo"
                     >
                       <X className="h-4 w-4" />
-                    </button>
+                    </Button>
                     {index === 0 && (
                       <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
                         Primary
@@ -518,13 +521,16 @@ const EquipmentListingForm = ({
                       alt={`Preview ${index + 1}`}
                       className="w-full h-32 object-cover rounded-lg border border-border"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="destructive"
+                      size="icon-sm"
                       onClick={() => removePhoto(index)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 rounded-full max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                      aria-label="Delete photo"
                     >
                       <X className="h-4 w-4" />
-                    </button>
+                    </Button>
                     {index === 0 && existingPhotos.length === 0 && (
                       <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
                         Primary

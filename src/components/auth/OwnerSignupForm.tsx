@@ -140,12 +140,14 @@ type OwnerSignupFormProps = {
   onSuccess: (email: string) => void;
   onBack: () => void;
   onShowLogin: () => void;
+  onScrollToTop: () => void;
 };
 
 const OwnerSignupForm = ({
   onSuccess,
   onBack,
   onShowLogin,
+  onScrollToTop,
 }: OwnerSignupFormProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
@@ -156,11 +158,8 @@ const OwnerSignupForm = ({
 
   // Scroll to top when step changes
   useEffect(() => {
-    const dialogElement = document.querySelector('[role="dialog"]');
-    if (dialogElement) {
-      dialogElement.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [currentStep]);
+    onScrollToTop();
+  }, [currentStep, onScrollToTop]);
 
   const {
     register,

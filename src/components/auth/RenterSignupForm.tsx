@@ -113,12 +113,14 @@ type RenterSignupFormProps = {
   onSuccess: (email: string) => void;
   onBack: () => void;
   onShowLogin: () => void;
+  onScrollToTop: () => void;
 };
 
 const RenterSignupForm = ({
   onSuccess,
   onBack,
   onShowLogin,
+  onScrollToTop,
 }: RenterSignupFormProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
@@ -129,11 +131,8 @@ const RenterSignupForm = ({
 
   // Scroll to top when step changes
   useEffect(() => {
-    const dialogElement = document.querySelector('[role="dialog"]');
-    if (dialogElement) {
-      dialogElement.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [currentStep]);
+    onScrollToTop();
+  }, [currentStep, onScrollToTop]);
 
   const {
     register,
