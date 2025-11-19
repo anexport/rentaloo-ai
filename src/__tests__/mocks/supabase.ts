@@ -63,20 +63,40 @@ export const mockSupabaseRealtime = {
   })),
 };
 
+// Create a chainable query builder mock
+const createQueryBuilder = (): any => {
+  const builder: any = {
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    eq: vi.fn(),
+    gte: vi.fn(),
+    lte: vi.fn(),
+    in: vi.fn(),
+    ilike: vi.fn(),
+    or: vi.fn(),
+    order: vi.fn(),
+    single: vi.fn(() =>
+      Promise.resolve({
+        data: null,
+        error: null,
+      })
+    ),
+  };
+
+  // Make all methods (except single) return the builder for chaining
+  Object.keys(builder).forEach((key) => {
+    if (key !== 'single' && typeof builder[key] === 'function') {
+      builder[key].mockReturnValue(builder);
+    }
+  });
+
+  return builder;
+};
+
 // Mock Supabase from/select methods
-export const mockSupabaseFrom = vi.fn(() => ({
-  select: vi.fn().mockReturnThis(),
-  insert: vi.fn().mockReturnThis(),
-  update: vi.fn().mockReturnThis(),
-  delete: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockReturnThis(),
-  single: vi.fn(() =>
-    Promise.resolve({
-      data: null,
-      error: null,
-    })
-  ),
-}));
+export const mockSupabaseFrom = vi.fn(() => createQueryBuilder());
 
 // Complete Supabase client mock
 export const mockSupabase = {
