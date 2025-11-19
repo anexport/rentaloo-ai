@@ -11,7 +11,9 @@ export const calculateBookingTotal = (
   dailyRate: number,
   startDate: string,
   endDate: string,
-  customRates?: AvailabilitySlot[]
+  customRates?: AvailabilitySlot[],
+  insuranceType?: InsuranceType,
+  depositAmount?: number
 ): BookingCalculation => {
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -38,16 +40,26 @@ export const calculateBookingTotal = (
 
   // Calculate fees (5% service fee)
   const serviceFeeRate = 0.05;
-  const fees = subtotal * serviceFeeRate;
-  const total = subtotal + fees;
+  const serviceFee = subtotal * serviceFeeRate;
+
+  // Calculate insurance cost
+  const insurance = insuranceType ? calculateInsuranceCost(subtotal, insuranceType) : 0;
+
+  // Deposit amount
+  const deposit = depositAmount || 0;
+
+  // Calculate total
+  const total = subtotal + serviceFee + insurance + deposit;
 
   return {
-    daily_rate: dailyRate,
+    dailyRate: dailyRate,
     days,
     subtotal,
-    fees,
+    serviceFee,
+    tax: 0,
+    insurance,
+    deposit,
     total,
-    currency: "USD",
   };
 };
 
@@ -93,7 +105,7 @@ export const checkBookingConflicts = async (
       p_equipment_id: equipmentId,
       p_start_date: startDate,
       p_end_date: endDate,
-      p_exclude_booking_id: excludeBookingId || null,
+      p_exclude_booking_id: excludeBookingId || undefined,
     }
   );
 
@@ -251,25 +263,25 @@ export const getBookingStatusText = (status: string): string => {
  */
 export const INSURANCE_OPTIONS: InsuranceOption[] = [
   {
-    type: 'none',
-    label: 'No Insurance',
-    coverage: 'No coverage',
+    type: "none",
+    label: "No Insurance",
+    coverage: "No coverage",
     cost_percentage: 0,
-    description: 'You assume full liability for any damage',
+    description: "You assume full liability for any damage",
   },
   {
-    type: 'basic',
-    label: 'Basic Protection',
-    coverage: 'Up to 50% of equipment value',
+    type: "basic",
+    label: "Basic Protection",
+    coverage: "Up to 50% of equipment value",
     cost_percentage: 5,
-    description: 'Covers accidental damage up to 50% of equipment value',
+    description: "Covers accidental damage up to 50% of equipment value",
   },
   {
-    type: 'premium',
-    label: 'Premium Protection',
-    coverage: 'Up to 100% of equipment value',
+    type: "premium",
+    label: "Premium Protection",
+    coverage: "Up to 100% of equipment value",
     cost_percentage: 10,
-    description: 'Full coverage for accidental damage',
+    description: "Full coverage for accidental damage",
   },
 ];
 
@@ -283,7 +295,28 @@ export function calculateInsuranceCost(
   rentalSubtotal: number,
   insuranceType: InsuranceType
 ): number {
-  const option = INSURANCE_OPTIONS.find(opt => opt.type === insuranceType);
+  const option = INSURANCE_OPTIONS.find((opt) => opt.type === insuranceType);
   if (!option) return 0;
-  return Number((rentalSubtotal * option.cost_percentage / 100).toFixed(2));
+  return Number(((rentalSubtotal * option.cost_percentage) / 100).toFixed(2));
+}
+
+/**
+ * Calculate damage deposit amount based on equipment configuration
+ * @param equipment - Equipment with deposit settings
+ * @returns The calculated deposit amount in dollars
+ */
+export function calculateDamageDeposit(equipment: {
+  damage_deposit_amount?: number | null;
+  damage_deposit_percentage?: number | null;
+  daily_rate: number;
+}): number {
+  if (equipment.damage_deposit_amount) {
+    return Number(equipment.damage_deposit_amount);
+  }
+  if (equipment.damage_deposit_percentage) {
+    return Number(
+      ((equipment.daily_rate * equipment.damage_deposit_percentage) / 100).toFixed(2)
+    );
+  }
+  return 0;
 }

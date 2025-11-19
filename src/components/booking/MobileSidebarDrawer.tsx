@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sheet";
 import BookingSidebar from "./BookingSidebar";
 import type { Listing } from "@/components/equipment/services/listings";
-import type { BookingCalculation, BookingConflict } from "@/types/booking";
+import type { BookingCalculation, BookingConflict, InsuranceType } from "@/types/booking";
 import type { DateRange } from "react-day-picker";
 import type { User } from "@supabase/supabase-js";
 
@@ -26,6 +26,8 @@ interface MobileSidebarDrawerProps {
   calculation: BookingCalculation | null;
   watchedStartDate: string;
   watchedEndDate: string;
+  selectedInsurance: InsuranceType;
+  onInsuranceChange: (type: InsuranceType) => void;
   onBooking: () => void;
   isCreatingBooking: boolean;
   user: User | null;

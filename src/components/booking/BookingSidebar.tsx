@@ -110,6 +110,7 @@ const BookingSidebar = ({
                 calculation={calculation}
                 startDate={watchedStartDate}
                 endDate={watchedEndDate}
+                insuranceType={selectedInsurance}
               />
             </section>
 

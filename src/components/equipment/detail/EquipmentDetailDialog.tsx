@@ -37,8 +37,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import { supabase } from "@/lib/supabase";
 import type { Listing } from "@/components/equipment/services/listings";
-import type { BookingCalculation, BookingConflict } from "@/types/booking";
-import { calculateBookingTotal, checkBookingConflicts } from "@/lib/booking";
+import type { BookingCalculation, BookingConflict, InsuranceType } from "@/types/booking";
+import { calculateBookingTotal, checkBookingConflicts, calculateInsuranceCost } from "@/lib/booking";
 import { formatDateForStorage } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 
@@ -76,6 +76,7 @@ const EquipmentDetailDialog = ({
   const [isCreatingBooking, setIsCreatingBooking] = useState(false);
   const [isCancellingBooking, setIsCancellingBooking] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [selectedInsurance, setSelectedInsurance] = useState<InsuranceType>("none");
   const requestIdRef = useRef(0);
   const sheetContentRef = useRef<HTMLElement | null>(null);
   
@@ -144,10 +145,19 @@ const EquipmentDetailDialog = ({
     (startDate: string, endDate: string) => {
       if (!data) return;
 
+      // Calculate damage deposit from equipment settings
+      const damageDeposit = data.damage_deposit_amount
+        || (data.damage_deposit_percentage
+          ? (data.daily_rate * (data.damage_deposit_percentage / 100))
+          : 0);
+
       const newCalculation = calculateBookingTotal(
         data.daily_rate,
         startDate,
-        endDate
+        endDate,
+        undefined, // customRates - not used yet
+        selectedInsurance,
+        damageDeposit
       );
       setCalculation(newCalculation);
       handleCalculationChange(newCalculation, startDate, endDate);
@@ -187,8 +197,15 @@ const EquipmentDetailDialog = ({
 
       void checkConflicts();
     },
-    [data, handleCalculationChange]
+    [data, handleCalculationChange, selectedInsurance]
   );
+
+  // Recalculate when insurance selection changes
+  useEffect(() => {
+    if (watchedStartDate && watchedEndDate) {
+      calculateBooking(watchedStartDate, watchedEndDate);
+    }
+  }, [selectedInsurance, watchedStartDate, watchedEndDate, calculateBooking]);
 
   // Handle start date selection
   const handleStartDateSelect = useCallback(
@@ -328,6 +345,17 @@ const EquipmentDetailDialog = ({
       const startDate = formatDateForStorage(dateRange.from);
       const endDate = formatDateForStorage(dateRange.to);
 
+      // Calculate insurance cost
+      const insuranceCost = calculation?.subtotal
+        ? calculateInsuranceCost(calculation.subtotal, selectedInsurance)
+        : 0;
+
+      // Calculate damage deposit from equipment settings
+      const damageDeposit = data.damage_deposit_amount
+        || (data.damage_deposit_percentage
+          ? (data.daily_rate * (data.damage_deposit_percentage / 100))
+          : 0);
+
       const bookingData = {
         equipment_id: data.id,
         renter_id: user.id,
@@ -336,6 +364,9 @@ const EquipmentDetailDialog = ({
         total_amount: calculation?.total || 0,
         status: "pending" as const,
         message: null,
+        insurance_type: selectedInsurance,
+        insurance_cost: insuranceCost,
+        damage_deposit_amount: damageDeposit,
       };
 
       const { data: newBooking, error } = await supabase
@@ -375,6 +406,7 @@ const EquipmentDetailDialog = ({
     loadingConflicts,
     isCreatingBooking,
     isMobile,
+    selectedInsurance,
   ]);
 
   // Handle booking button click
@@ -444,6 +476,7 @@ const EquipmentDetailDialog = ({
       setIsCancellingBooking(false);
       setMobileSidebarOpen(false);
       setActiveTab("overview");
+      setSelectedInsurance("none");
     }
   }, [open, bookingRequestId]);
 
@@ -685,6 +718,11 @@ const EquipmentDetailDialog = ({
                         : undefined
                     }
                     onCalculationChange={handleCalculationChange}
+                    insuranceType={selectedInsurance}
+                    depositAmount={data.damage_deposit_amount
+                      || (data.damage_deposit_percentage
+                        ? (data.daily_rate * (data.damage_deposit_percentage / 100))
+                        : undefined)}
                   />
                 )}
               </TabsContent>
@@ -706,6 +744,8 @@ const EquipmentDetailDialog = ({
               calculation={calculation}
               watchedStartDate={watchedStartDate}
               watchedEndDate={watchedEndDate}
+              selectedInsurance={selectedInsurance}
+              onInsuranceChange={setSelectedInsurance}
               onBooking={handleBooking}
               isCreatingBooking={isCreatingBooking}
               user={user}
@@ -739,6 +779,8 @@ const EquipmentDetailDialog = ({
               calculation={calculation}
               watchedStartDate={watchedStartDate}
               watchedEndDate={watchedEndDate}
+              selectedInsurance={selectedInsurance}
+              onInsuranceChange={setSelectedInsurance}
               onBooking={handleBooking}
               isCreatingBooking={isCreatingBooking}
               user={user}
