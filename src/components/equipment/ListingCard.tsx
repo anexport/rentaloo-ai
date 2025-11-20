@@ -11,13 +11,15 @@ import {
 import { MapPin, ChevronLeft, ChevronRight, Heart, Package } from "lucide-react";
 import StarRating from "@/components/reviews/StarRating";
 import type { Listing } from "@/components/equipment/services/listings";
+import { cn } from "@/lib/utils";
 
 type Props = {
   listing: Listing;
   onOpen?: (listing: Listing) => void;
+  className?: string;
 };
 
-const ListingCard = ({ listing, onOpen }: Props) => {
+const ListingCard = ({ listing, onOpen, className }: Props) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -85,9 +87,9 @@ const ListingCard = ({ listing, onOpen }: Props) => {
 
   return (
     <TooltipProvider>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <Card className={cn("overflow-hidden hover:shadow-lg transition-shadow flex flex-col", className)}>
         <div
-          className="aspect-video bg-muted relative overflow-hidden cursor-pointer group"
+          className="aspect-video bg-muted relative overflow-hidden cursor-pointer group flex-shrink-0"
           onClick={handleOpen}
           role="button"
           tabIndex={0}
@@ -199,7 +201,7 @@ const ListingCard = ({ listing, onOpen }: Props) => {
             </Badge>
           </div>
         </div>
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col flex-1">
           <div className="flex justify-between items-start mb-2">
             <h3 className="font-semibold text-lg line-clamp-1">
               {listing.title}
@@ -211,33 +213,35 @@ const ListingCard = ({ listing, onOpen }: Props) => {
               <div className="text-sm text-muted-foreground">per day</div>
             </div>
           </div>
-          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-            {listing.description}
-          </p>
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center space-x-1">
-                  <MapPin className="h-4 w-4" />
-                  <span className="truncate max-w-[120px]">
-                    {listing.location}
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>{listing.location}</TooltipContent>
-            </Tooltip>
-            <div className="flex items-center space-x-2">
-              {avgRating > 0 ? (
-                <>
-                  <StarRating rating={avgRating} size="sm" />
-                  <span className="text-xs">{avgRating.toFixed(1)}</span>
-                </>
-              ) : (
-                <span className="text-xs">No reviews</span>
-              )}
+          <div className="flex-1">
+            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+              {listing.description}
+            </p>
+            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-1">
+                    <MapPin className="h-4 w-4" />
+                    <span className="truncate max-w-[120px]">
+                      {listing.location}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>{listing.location}</TooltipContent>
+              </Tooltip>
+              <div className="flex items-center space-x-2">
+                {avgRating > 0 ? (
+                  <>
+                    <StarRating rating={avgRating} size="sm" />
+                    <span className="text-xs">{avgRating.toFixed(1)}</span>
+                  </>
+                ) : (
+                  <span className="text-xs">No reviews</span>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-auto">
             <Button
               variant="outline"
               className="flex-1"

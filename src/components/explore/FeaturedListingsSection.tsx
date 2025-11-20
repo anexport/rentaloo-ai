@@ -130,7 +130,7 @@ const FeaturedListingsSection = ({ onOpenListing }: Props) => {
                 key={listing.id}
                 className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_calc(50%-12px)] lg:flex-[0_0_calc(25%-18px)]"
               >
-                <ListingCard listing={listing} onOpen={onOpenListing} />
+                <ListingCard listing={listing} onOpen={onOpenListing} className="h-full" />
               </div>
             ))}
           </div>
