@@ -73,11 +73,11 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* How It Works */}
-      <HowItWorksSection />
-
       {/* Featured Listings */}
       <FeaturedListingsSection />
+
+      {/* How It Works */}
+      <HowItWorksSection />
 
       {/* Owner CTA */}
       <OwnerCTASection />
