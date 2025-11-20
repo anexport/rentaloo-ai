@@ -157,6 +157,9 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
     end_date: string;
     total_amount: number;
     message?: string;
+    insurance_type?: string;
+    insurance_cost?: number;
+    damage_deposit_amount?: number;
   }) => {
     if (!user) throw new Error("User not authenticated");
 

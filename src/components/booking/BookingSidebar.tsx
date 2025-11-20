@@ -4,9 +4,10 @@ import PricingHeader from "./sidebar/PricingHeader";
 import LocationContact from "./sidebar/LocationContact";
 import DateSelector from "./sidebar/DateSelector";
 import PricingBreakdown from "./sidebar/PricingBreakdown";
+import InsuranceSelector from "./sidebar/InsuranceSelector";
 import BookingButton from "./sidebar/BookingButton";
 import type { Listing } from "@/components/equipment/services/listings";
-import type { BookingCalculation, BookingConflict } from "@/types/booking";
+import type { BookingCalculation, BookingConflict, InsuranceType } from "@/types/booking";
 import type { DateRange } from "react-day-picker";
 import type { User } from "@supabase/supabase-js";
 
@@ -23,6 +24,8 @@ interface BookingSidebarProps {
   calculation: BookingCalculation | null;
   watchedStartDate: string;
   watchedEndDate: string;
+  selectedInsurance: InsuranceType;
+  onInsuranceChange: (type: InsuranceType) => void;
   onBooking: () => void;
   isCreatingBooking: boolean;
   user: User | null;
@@ -42,6 +45,8 @@ const BookingSidebar = ({
   calculation,
   watchedStartDate,
   watchedEndDate,
+  selectedInsurance,
+  onInsuranceChange,
   onBooking,
   isCreatingBooking,
   user,
@@ -105,8 +110,26 @@ const BookingSidebar = ({
                 calculation={calculation}
                 startDate={watchedStartDate}
                 endDate={watchedEndDate}
+                insuranceType={selectedInsurance}
               />
             </section>
+
+            {hasValidDates && calculation && (
+              <>
+                <Separator />
+
+                <section aria-labelledby="insurance-section">
+                  <h3 id="insurance-section" className="sr-only">
+                    Insurance Options
+                  </h3>
+                  <InsuranceSelector
+                    selectedInsurance={selectedInsurance}
+                    onInsuranceChange={onInsuranceChange}
+                    rentalSubtotal={calculation.subtotal}
+                  />
+                </section>
+              </>
+            )}
 
             <BookingButton
               user={user}

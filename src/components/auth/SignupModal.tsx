@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mountain, User, Store } from "lucide-react";
 import {
@@ -23,6 +23,16 @@ const SignupModal = ({ open, onOpenChange, initialRole }: SignupModalProps) => {
   );
   const [showRoleSelection, setShowRoleSelection] = useState(!initialRole);
   const navigate = useNavigate();
+  const dialogElementRef = useRef<Element | null>(null);
+
+  // Callback to scroll dialog to top (using cached ref)
+  const scrollToTop = useCallback(() => {
+    // Cache dialog element on first call
+    if (!dialogElementRef.current) {
+      dialogElementRef.current = document.querySelector('[role="dialog"]');
+    }
+    dialogElementRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   // Handle state updates when modal opens/closes or initialRole changes
   useEffect(() => {
@@ -30,12 +40,19 @@ const SignupModal = ({ open, onOpenChange, initialRole }: SignupModalProps) => {
       // Reset when modal closes
       setSelectedRole(initialRole || null);
       setShowRoleSelection(!initialRole);
+      // Clear cached dialog ref when modal closes
+      dialogElementRef.current = null;
     } else if (initialRole) {
       // Update immediately when initialRole becomes non-null while modal is open
       setSelectedRole(initialRole);
       setShowRoleSelection(false);
     }
   }, [open, initialRole]);
+
+  // Scroll to top when role changes or when returning to role selection
+  useEffect(() => {
+    scrollToTop();
+  }, [selectedRole, showRoleSelection, scrollToTop]);
 
   const handleRoleSelect = (role: "renter" | "owner") => {
     setSelectedRole(role);
@@ -149,6 +166,7 @@ const SignupModal = ({ open, onOpenChange, initialRole }: SignupModalProps) => {
               onSuccess={handleSignupSuccess}
               onBack={handleBackToRoleSelection}
               onShowLogin={handleShowLogin}
+              onScrollToTop={scrollToTop}
             />
           </>
         ) : selectedRole === "owner" ? (
@@ -163,6 +181,7 @@ const SignupModal = ({ open, onOpenChange, initialRole }: SignupModalProps) => {
               onSuccess={handleSignupSuccess}
               onBack={handleBackToRoleSelection}
               onShowLogin={handleShowLogin}
+              onScrollToTop={scrollToTop}
             />
           </>
         ) : null}

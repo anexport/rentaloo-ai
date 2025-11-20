@@ -15,6 +15,49 @@ export type Listing = EquipmentRow & {
   reviews?: Array<Pick<ReviewRow, "rating">>;
 };
 
+// Type helper to validate and safely cast query results
+function isListingQueryResult(item: unknown): item is Omit<Listing, "reviews"> {
+  if (!item || typeof item !== "object") return false;
+  const candidate = item as Record<string, unknown>;
+
+  // Validate required equipment fields
+  const hasValidBasicFields =
+    typeof candidate.id === "string" &&
+    typeof candidate.title === "string" &&
+    typeof candidate.description === "string" &&
+    typeof candidate.owner_id === "string" &&
+    typeof candidate.category_id === "string" &&
+    typeof candidate.daily_rate === "number" &&
+    typeof candidate.condition === "string" &&
+    typeof candidate.location === "string" &&
+    typeof candidate.is_available === "boolean" &&
+    Array.isArray(candidate.photos);
+
+  if (!hasValidBasicFields) return false;
+
+  // Validate optional numeric fields (should be number or null)
+  const hasValidOptionalFields =
+    (candidate.latitude === null || typeof candidate.latitude === "number") &&
+    (candidate.longitude === null || typeof candidate.longitude === "number");
+
+  if (!hasValidOptionalFields) return false;
+
+  // Validate category (should be object or null)
+  const hasValidCategory =
+    candidate.category === null ||
+    (typeof candidate.category === "object" && candidate.category !== null);
+
+  // Validate owner structure (should be null or have id and email)
+  const hasValidOwner =
+    candidate.owner === null ||
+    (typeof candidate.owner === "object" &&
+      candidate.owner !== null &&
+      "id" in candidate.owner &&
+      "email" in candidate.owner);
+
+  return hasValidCategory && hasValidOwner;
+}
+
 export type ListingsFilters = {
   search?: string;
   categoryId?: string;
@@ -84,11 +127,15 @@ export const fetchListings = async (
   const { data, error } = await query;
   if (error) throw error;
 
-  const listings = (data || []) as unknown as Listing[];
+  // Validate and safely convert query results
+  const validatedListings = (data || []).filter(isListingQueryResult) as Omit<
+    Listing,
+    "reviews"
+  >[];
 
   // Collect all unique owner IDs
   const ownerIds = [
-    ...new Set(listings.map((item) => item.owner?.id).filter(Boolean)),
+    ...new Set(validatedListings.map((item) => item.owner?.id).filter(Boolean)),
   ] as string[];
 
   // Fetch all reviews in a single query
@@ -118,9 +165,9 @@ export const fetchListings = async (
   }
 
   // Map over listings once to attach reviews
-  const listingsWithReviews = listings.map((item) => {
+  const listingsWithReviews: Listing[] = validatedListings.map((item) => {
     const reviews = item.owner?.id ? reviewsMap.get(item.owner.id) || [] : [];
-    return { ...item, reviews } as Listing;
+    return { ...item, reviews };
   });
 
   return listingsWithReviews;
@@ -142,7 +189,12 @@ export const fetchListingById = async (id: string): Promise<Listing | null> => {
   if (error) throw error;
   if (!data) return null;
 
-  const base = data as unknown as Listing;
+  // Validate the query result
+  if (!isListingQueryResult(data)) {
+    throw new Error("Invalid listing data received from database");
+  }
+
+  const base = data as Omit<Listing, "reviews">;
   if (!base.owner?.id) return { ...base, reviews: [] };
 
   const { data: reviews } = await supabase

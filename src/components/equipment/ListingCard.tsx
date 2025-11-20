@@ -106,6 +106,7 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
               <img
                 src={listing.photos[currentImageIndex]?.photo_url || ""}
                 alt={listing.title}
+                loading="lazy"
                 className="w-full h-full object-cover transition-opacity duration-300"
                 loading="lazy"
                 decoding="async"
@@ -117,25 +118,29 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
                   {/* Navigation arrows */}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
+                      <Button
                         onClick={handlePrevImage}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        size="icon-sm"
+                        variant="ghost"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white shadow-md max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground"
                         aria-label="Previous image"
                       >
                         <ChevronLeft className="h-5 w-5" />
-                      </button>
+                      </Button>
                     </TooltipTrigger>
                     <TooltipContent>Previous photo</TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
+                      <Button
                         onClick={handleNextImage}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        size="icon-sm"
+                        variant="ghost"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white shadow-md max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground"
                         aria-label="Next image"
                       >
                         <ChevronRight className="h-5 w-5" />
-                      </button>
+                      </Button>
                     </TooltipTrigger>
                     <TooltipContent>Next photo</TooltipContent>
                   </Tooltip>

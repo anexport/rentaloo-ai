@@ -17,6 +17,7 @@ import PaymentConfirmation from "@/pages/payment/PaymentConfirmation";
 import PaymentsPage from "@/pages/renter/PaymentsPage";
 import VerifyIdentity from "@/pages/verification/VerifyIdentity";
 import ProfileSettings from "@/pages/ProfileSettings";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   const { user, loading } = useAuth();
@@ -52,27 +53,28 @@ function App() {
           <Route path="/equipment" element={<Navigate to="/explore" replace />} />
           <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
 
-          {/* Protected routes */}
-          {user && (
-            <>
-              <Route path="/renter" element={<RenterDashboard />} />
-              <Route path="/renter/dashboard" element={<RenterDashboard />} />
-              <Route path="/renter/payments" element={<PaymentsPage />} />
-              <Route path="/owner" element={<OwnerDashboard />} />
-              <Route path="/owner/dashboard" element={<OwnerDashboard />} />
-              <Route path="/messages" element={<MessagingPage />} />
-              <Route
-                path="/payment/confirmation"
-                element={<PaymentConfirmation />}
-              />
-              <Route path="/verification" element={<VerifyIdentity />} />
-              <Route path="/settings" element={<ProfileSettings />} />
-            </>
-          )}
-        </Routes>
-        <Toaster />
-      </div>
-    </Router>
+            {/* Protected routes */}
+            {user && (
+              <>
+                <Route path="/renter" element={<RenterDashboard />} />
+                <Route path="/renter/dashboard" element={<RenterDashboard />} />
+                <Route path="/renter/payments" element={<PaymentsPage />} />
+                <Route path="/owner" element={<OwnerDashboard />} />
+                <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+                <Route path="/messages" element={<MessagingPage />} />
+                <Route
+                  path="/payment/confirmation"
+                  element={<PaymentConfirmation />}
+                />
+                <Route path="/verification" element={<VerifyIdentity />} />
+                <Route path="/settings" element={<ProfileSettings />} />
+              </>
+            )}
+          </Routes>
+          <Toaster />
+        </div>
+      </Router>
+    </>
   );
 }
 

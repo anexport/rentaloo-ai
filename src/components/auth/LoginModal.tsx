@@ -156,6 +156,9 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
+                autoCapitalize="off"
+                spellCheck="false"
                 {...register("email")}
                 placeholder="Enter your email"
               />
@@ -173,14 +176,16 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   {...register("password")}
                   placeholder="Enter your password"
+                  className="pr-12"
                 />
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  size="icon-sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                   onClick={handleTogglePassword}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >

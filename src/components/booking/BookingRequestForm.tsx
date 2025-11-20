@@ -9,6 +9,7 @@ import type {
   BookingFormData,
   BookingCalculation,
   BookingConflict,
+  InsuranceType,
 } from "../../types/booking";
 import {
   calculateBookingTotal,
@@ -65,6 +66,8 @@ interface BookingRequestFormProps {
     startDate: string,
     endDate: string
   ) => void;
+  insuranceType?: InsuranceType;
+  depositAmount?: number;
 }
 
 const BookingRequestForm = ({
@@ -74,6 +77,8 @@ const BookingRequestForm = ({
   isEmbedded = false,
   initialDates,
   onCalculationChange,
+  insuranceType = "none",
+  depositAmount,
 }: BookingRequestFormProps) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -119,10 +124,21 @@ const BookingRequestForm = ({
   // Using database function for optimal performance (leverages index)
   useEffect(() => {
     if (watchedStartDate && watchedEndDate) {
+      // Calculate damage deposit if not provided
+      const calculatedDeposit = depositAmount !== undefined
+        ? depositAmount
+        : (equipment.damage_deposit_amount
+          || (equipment.damage_deposit_percentage
+            ? (equipment.daily_rate * (equipment.damage_deposit_percentage / 100))
+            : 0));
+
       const newCalculation = calculateBookingTotal(
         equipment.daily_rate,
         watchedStartDate,
-        watchedEndDate
+        watchedEndDate,
+        undefined, // customRates - not used yet
+        insuranceType,
+        calculatedDeposit
       );
       setCalculation(newCalculation);
       onCalculationChange?.(newCalculation, watchedStartDate, watchedEndDate);
@@ -177,7 +193,7 @@ const BookingRequestForm = ({
       setCalculation(null);
       onCalculationChange?.(null, "", "");
     }
-  }, [watchedStartDate, watchedEndDate, equipment.daily_rate, equipment.id, onCalculationChange]);
+  }, [watchedStartDate, watchedEndDate, equipment.daily_rate, equipment.damage_deposit_amount, equipment.damage_deposit_percentage, equipment.id, insuranceType, depositAmount, onCalculationChange]);
 
   const onSubmit = async (data: BookingFormData) => {
     if (!user || conflicts.length > 0) return;
@@ -191,6 +207,12 @@ const BookingRequestForm = ({
     setIsSubmitting(true);
 
     try {
+      // Calculate insurance cost from the calculation
+      const insuranceCost = calculation?.insurance || 0;
+
+      // Calculate damage deposit
+      const damageDeposit = calculation?.deposit || 0;
+
       const bookingData = {
         equipment_id: equipment.id,
         renter_id: user.id,
@@ -199,6 +221,9 @@ const BookingRequestForm = ({
         total_amount: calculation?.total || 0,
         status: "pending" as const,
         message: data.message || null,
+        insurance_type: insuranceType,
+        insurance_cost: insuranceCost,
+        damage_deposit_amount: damageDeposit,
       };
 
       const { data: newBooking, error } = await supabase

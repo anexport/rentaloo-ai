@@ -361,6 +361,7 @@ const AvailabilityCalendar = ({
                   <Input
                     id="customPrice"
                     type="number"
+                    inputMode="decimal"
                     step="0.01"
                     min="0"
                     placeholder={defaultDailyRate.toString()}

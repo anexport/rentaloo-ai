@@ -128,7 +128,7 @@ export const FloatingBookingCTA = ({
   return (
     <div
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-50 p-4",
+        "fixed bottom-0 left-0 right-0 z-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]",
         "bg-gradient-to-t from-background via-background to-transparent pt-8",
         "animate-in slide-in-from-bottom duration-300",
         className

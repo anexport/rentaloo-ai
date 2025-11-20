@@ -44,7 +44,7 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
         { count: renterCount, error: renterCountError },
         { data: equipmentData, error: equipmentError },
       ] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", targetUserId).single(),
+        supabase.from("profiles").select("*").eq("id", targetUserId).maybeSingle(),
         supabase.from("reviews").select("rating").eq("reviewee_id", targetUserId),
         supabase
           .from("booking_requests")
@@ -59,6 +59,11 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
 
       // Profile error is fatal - we cannot proceed without profile data
       if (profileError) throw profileError;
+
+      // If profile doesn't exist, throw a more descriptive error
+      if (!profileData) {
+        throw new Error("Profile not found. Please ensure your account is properly set up.");
+      }
 
       // Non-critical errors: log warnings and default to safe values
       if (reviewsError) {
