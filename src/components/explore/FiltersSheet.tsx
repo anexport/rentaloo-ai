@@ -143,12 +143,17 @@ const FiltersSheet = ({
               </div>
               <Slider
                 value={localValue.priceRange}
-                onValueChange={(val) =>
+                onValueChange={(val) => {
+                  // Ensure priceMin <= priceMax
+                  const [min, max] = val as [number, number];
                   setLocalValue({
                     ...localValue,
-                    priceRange: val as [number, number],
-                  })
-                }
+                    priceRange: [
+                      Math.min(min, max),
+                      Math.max(min, max),
+                    ] as [number, number],
+                  });
+                }}
                 min={DEFAULT_PRICE_MIN}
                 max={DEFAULT_PRICE_MAX}
                 step={10}

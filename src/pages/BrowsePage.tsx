@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -73,9 +73,14 @@ const BrowsePage = () => {
     null
   );
 
-  // Initialize filters from URL params on mount only
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Track if we've initialized from URL params
+  const hasInitialized = useRef(false);
+
+  // Initialize filters from URL params once on mount
   useEffect(() => {
+    // Only initialize once
+    if (hasInitialized.current) return;
+
     const search = searchParams.get("search");
     const location = searchParams.get("location");
     const category = searchParams.get("category");
@@ -91,17 +96,22 @@ const BrowsePage = () => {
 
       if (category) setCategoryId(category);
       if (priceMin || priceMax) {
+        const minPrice = priceMin ? parseInt(priceMin) : DEFAULT_PRICE_MIN;
+        const maxPrice = priceMax ? parseInt(priceMax) : DEFAULT_PRICE_MAX;
+
+        // Validate that priceMin <= priceMax
         setFilterValues((prev) => ({
           ...prev,
           priceRange: [
-            priceMin ? parseInt(priceMin) : prev.priceRange[0],
-            priceMax ? parseInt(priceMax) : prev.priceRange[1],
+            Math.min(minPrice, maxPrice),
+            Math.max(minPrice, maxPrice),
           ],
         }));
       }
+
+      hasInitialized.current = true;
     }
-    // Empty deps: intentionally runs only on mount to avoid infinite loop
-  }, []);
+  }, [searchParams]);
 
   // Login modal state from URL query param
   const loginOpen = searchParams.get("login") === "true";
