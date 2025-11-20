@@ -65,10 +65,12 @@ export type ListingsFilters = {
   priceMax?: number;
   location?: string;
   condition?: Database["public"]["Enums"]["equipment_condition"] | "all";
+  limit?: number;
 };
 
 export const fetchListings = async (
-  filters: ListingsFilters = {}
+  filters: ListingsFilters = {},
+  signal?: AbortSignal
 ): Promise<Listing[]> => {
   let query = supabase
     .from("equipment")
@@ -81,6 +83,10 @@ export const fetchListings = async (
     )
     .eq("is_available", true)
     .order("created_at", { ascending: false });
+
+  if (signal) {
+    query = query.abortSignal(signal);
+  }
 
   if (filters.categoryId && filters.categoryId !== "all") {
     query = query.eq("category_id", filters.categoryId);
@@ -111,6 +117,13 @@ export const fetchListings = async (
     );
   }
 
+  if (typeof filters.limit === "number" && filters.limit > 0) {
+    query = query.limit(filters.limit);
+  } else {
+    // Default limit to prevent unbounded queries
+    query = query.limit(100);
+  }
+
   const { data, error } = await query;
   if (error) throw error;
 
@@ -128,10 +141,18 @@ export const fetchListings = async (
   // Fetch all reviews in a single query
   const reviewsMap = new Map<string, Array<Pick<ReviewRow, "rating">>>();
   if (ownerIds.length > 0) {
-    const { data: reviews } = await supabase
-      .from("reviews")
-      .select("rating, reviewee_id")
-      .in("reviewee_id", ownerIds);
+    const reviewsQuery = signal
+      ? supabase
+          .from("reviews")
+          .select("rating, reviewee_id")
+          .in("reviewee_id", ownerIds)
+          .abortSignal(signal)
+      : supabase
+          .from("reviews")
+          .select("rating, reviewee_id")
+          .in("reviewee_id", ownerIds);
+
+    const { data: reviews } = await reviewsQuery;
 
     // Build map from reviewee_id to reviews
     if (reviews) {
