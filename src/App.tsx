@@ -31,27 +31,28 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="min-h-screen bg-background">
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/explore" element={<BrowsePage />} />
-          <Route
-            path="/register/renter"
-            element={<Navigate to="/explore?signup=true&role=renter" replace />}
-          />
-          <Route
-            path="/register/owner"
-            element={<Navigate to="/explore?signup=true&role=owner" replace />}
-          />
-          <Route
-            path="/login"
-            element={<Navigate to="/explore?login=true" replace />}
-          />
-          <Route path="/verify" element={<EmailVerification />} />
-          <Route path="/equipment" element={<Navigate to="/explore" replace />} />
-          <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
+    <>
+      <Router>
+        <div className="min-h-screen bg-background">
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/explore" element={<BrowsePage />} />
+            <Route
+              path="/register/renter"
+              element={<Navigate to="/explore?signup=true&role=renter" replace />}
+            />
+            <Route
+              path="/register/owner"
+              element={<Navigate to="/explore?signup=true&role=owner" replace />}
+            />
+            <Route
+              path="/login"
+              element={<Navigate to="/explore?login=true" replace />}
+            />
+            <Route path="/verify" element={<EmailVerification />} />
+            <Route path="/equipment" element={<Navigate to="/explore" replace />} />
+            <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
 
             {/* Protected routes */}
             {user && (
@@ -74,6 +75,7 @@ function App() {
           <Toaster />
         </div>
       </Router>
+      <Analytics />
     </>
   );
 }
