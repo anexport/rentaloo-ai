@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { usePrefetchData } from "@/hooks/usePrefetchData";
 import SearchBarPopover from "@/components/explore/SearchBarPopover";
 import type { SearchBarFilters } from "@/types/search";
 import CategoryBar from "@/components/explore/CategoryBar";
@@ -19,14 +18,8 @@ import {
 import FiltersSheet, {
   type FilterValues,
 } from "@/components/explore/FiltersSheet";
-import ExploreHeader from "@/components/layout/ExploreHeader";
 import LoginModal from "@/components/auth/LoginModal";
 import SignupModal from "@/components/auth/SignupModal";
-import HeroSection from "@/components/explore/HeroSection";
-import HowItWorksSection from "@/components/explore/HowItWorksSection";
-import OwnerCTASection from "@/components/explore/OwnerCTASection";
-import SocialProofSection from "@/components/explore/SocialProofSection";
-import FeaturedListingsSection from "@/components/explore/FeaturedListingsSection";
 import EmptyState from "@/components/explore/EmptyState";
 import {
   fetchListings,
@@ -42,6 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ChevronRight } from "lucide-react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 type SortOption =
   | "recommended"
@@ -78,8 +73,45 @@ const ExplorePage = () => {
     null
   );
 
-  // Prefetch critical data
-  usePrefetchData();
+  // Track if we've initialized from URL params
+  const hasInitialized = useRef(false);
+
+  // Initialize filters from URL params once on mount
+  useEffect(() => {
+    // Only initialize once
+    if (hasInitialized.current) return;
+
+    const search = searchParams.get("search");
+    const location = searchParams.get("location");
+    const category = searchParams.get("category");
+    const priceMin = searchParams.get("priceMin");
+    const priceMax = searchParams.get("priceMax");
+
+    if (search || location || category || priceMin || priceMax) {
+      setSearchFilters((prev) => ({
+        ...prev,
+        search: search || prev.search,
+        location: location || prev.location,
+      }));
+
+      if (category) setCategoryId(category);
+      if (priceMin || priceMax) {
+        const minPrice = priceMin ? parseInt(priceMin) : DEFAULT_PRICE_MIN;
+        const maxPrice = priceMax ? parseInt(priceMax) : DEFAULT_PRICE_MAX;
+
+        // Validate that priceMin <= priceMax
+        setFilterValues((prev) => ({
+          ...prev,
+          priceRange: [
+            Math.min(minPrice, maxPrice),
+            Math.max(minPrice, maxPrice),
+          ],
+        }));
+      }
+
+      hasInitialized.current = true;
+    }
+  }, [searchParams]);
 
   // Login modal state from URL query param
   const loginOpen = searchParams.get("login") === "true";
@@ -98,17 +130,12 @@ const ExplorePage = () => {
 
   // Signup modal state from URL query params
   const signupOpen = searchParams.get("signup") === "true";
-  const roleParam = searchParams.get("role");
-  const signupRole =
-    roleParam === "renter" || roleParam === "owner" ? roleParam : undefined;
+  const signupRole = searchParams.get("role") as "renter" | "owner" | null;
 
   const handleSignupOpenChange = (open: boolean) => {
     if (open) {
       const newParams = new URLSearchParams(searchParams);
       newParams.set("signup", "true");
-      if (signupRole) {
-        newParams.set("role", signupRole);
-      }
       setSearchParams(newParams, { replace: true });
     } else {
       const newParams = new URLSearchParams(searchParams);
@@ -118,71 +145,45 @@ const ExplorePage = () => {
     }
   };
 
-  // Close modal and redirect authenticated users after OAuth
-  useEffect(() => {
-    if (user && (loginOpen || signupOpen)) {
-      // Close modal by removing login/signup params
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("login");
-      newParams.delete("signup");
-      newParams.delete("role");
-      setSearchParams(newParams, { replace: true });
-      // Redirect based on user role
-      const role = user.user_metadata?.role;
-      if (role === "renter") {
-        void navigate("/renter/dashboard");
-      } else if (role === "owner") {
-        void navigate("/owner/dashboard");
-      }
-    }
-  }, [user, loginOpen, signupOpen, navigate, searchParams, setSearchParams]);
-
-  // Debounce filters for querying
-  const [debouncedFilters, setDebouncedFilters] = useState(searchFilters);
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedFilters(searchFilters), 300);
-    return () => clearTimeout(t);
-  }, [searchFilters]);
-
-  const effectiveFilters: ListingsFilters = useMemo(
-    () => ({
-      search: debouncedFilters.search,
-      location: debouncedFilters.location,
-      condition:
-        debouncedFilters.condition !== "all"
-          ? debouncedFilters.condition
-          : undefined,
-      priceMin:
-        filterValues.priceRange[0] > DEFAULT_PRICE_MIN ? filterValues.priceRange[0] : undefined,
-      priceMax:
-        filterValues.priceRange[1] < DEFAULT_PRICE_MAX
-          ? filterValues.priceRange[1]
-          : undefined,
-      categoryId,
-    }),
-    [debouncedFilters, categoryId, filterValues]
-  );
-
-  const { data, isLoading, refetch, isFetching, isError } = useQuery({
-    queryKey: ["listings", effectiveFilters],
-    queryFn: () => fetchListings(effectiveFilters),
-  });
-
-  const handleSubmitSearch = () => {
-    void refetch();
+  const handleSubmitSearch = (filters: SearchBarFilters) => {
+    setSearchFilters(filters);
   };
 
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (filterValues.priceRange[0] > DEFAULT_PRICE_MIN || filterValues.priceRange[1] < DEFAULT_PRICE_MAX)
-      count++;
-    if (filterValues.conditions.length > 0)
-      count += filterValues.conditions.length;
-    if (filterValues.equipmentTypes.length > 0)
-      count += filterValues.equipmentTypes.length;
-    if (filterValues.verified) count++;
-    return count;
-  }, [filterValues]);
+  // Debounce filters for better performance
+  const debouncedFilters = useDebounce(searchFilters, 300);
+
+  // Build filters for API
+  const effectiveFilters: ListingsFilters = useMemo(() => {
+    const filters: ListingsFilters = {};
+
+    if (debouncedFilters.search && debouncedFilters.search.trim()) {
+      filters.search = debouncedFilters.search.trim();
+    }
+
+    if (debouncedFilters.location && debouncedFilters.location.trim()) {
+      filters.location = debouncedFilters.location.trim();
+    }
+
+    if (categoryId !== "all") {
+      filters.categoryId = categoryId;
+    }
+
+    if (
+      filterValues.priceRange[0] > DEFAULT_PRICE_MIN ||
+      filterValues.priceRange[1] < DEFAULT_PRICE_MAX
+    ) {
+      filters.priceMin = filterValues.priceRange[0];
+      filters.priceMax = filterValues.priceRange[1];
+    }
+
+    return filters;
+  }, [debouncedFilters, categoryId, filterValues.priceRange]);
+
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
+    queryKey: ["listings", effectiveFilters],
+    queryFn: () => fetchListings(effectiveFilters),
+    staleTime: 1000 * 60 * 5,
+  });
 
   // Sort listings
   const sortedListings = useMemo(() => {
@@ -229,6 +230,20 @@ const ExplorePage = () => {
     setDetailsOpen(true);
   };
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (
+      filterValues.priceRange[0] > DEFAULT_PRICE_MIN ||
+      filterValues.priceRange[1] < DEFAULT_PRICE_MAX
+    ) {
+      count++;
+    }
+    if (filterValues.conditions.length > 0) count++;
+    if (filterValues.equipmentTypes.length > 0) count++;
+    if (filterValues.verified) count++;
+    return count;
+  }, [filterValues]);
+
   const handleClearFilters = () => {
     setSearchFilters({
       search: "",
@@ -248,44 +263,38 @@ const ExplorePage = () => {
     setCategoryId("all");
   };
 
-  const hasSearched =
-    debouncedFilters.search ||
-    debouncedFilters.location ||
-    categoryId !== "all";
-
   return (
     <div className="min-h-screen bg-background">
-      <ExploreHeader onLoginClick={() => handleLoginOpenChange(true)} />
-
-      {/* Hero Section with Search */}
-      {!hasSearched && (
-        <HeroSection>
+      {/* Sticky Header with Search */}
+      <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <SearchBarPopover
             value={searchFilters}
             onChange={setSearchFilters}
             onSubmit={handleSubmitSearch}
           />
-        </HeroSection>
-      )}
-
-      {/* How It Works Section */}
-      {!hasSearched && <HowItWorksSection />}
+        </div>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Search bar for when user has searched */}
-        {hasSearched && (
-          <div className="mb-6">
-            <SearchBarPopover
-              value={searchFilters}
-              onChange={setSearchFilters}
-              onSubmit={handleSubmitSearch}
-            />
-          </div>
-        )}
+        {/* Breadcrumbs */}
+        <nav className="mb-4 flex items-center text-sm text-muted-foreground">
+          <Link to="/" className="hover:text-foreground transition-colors">
+            Home
+          </Link>
+          <ChevronRight className="h-4 w-4 mx-2" />
+          <span className="text-foreground">Browse Equipment</span>
+          {categoryId !== "all" && (
+            <>
+              <ChevronRight className="h-4 w-4 mx-2" />
+              <span className="text-foreground capitalize">{categoryId}</span>
+            </>
+          )}
+        </nav>
 
-        {/* Categories */}
-        <div className="sticky top-16 z-10 bg-background py-3 -mx-4 px-4 sm:px-6 lg:px-8 border-b border-border">
-          {isLoading ? (
+        {/* Categories - Sticky */}
+        <div className="sticky top-[73px] z-40 bg-background py-3 -mx-4 px-4 sm:px-6 lg:px-8 border-b border-border">
+          {isLoading && !data ? (
             <CategoryBarSkeleton />
           ) : (
             <CategoryBar
@@ -397,17 +406,6 @@ const ExplorePage = () => {
           initialRole={signupRole}
         />
       </main>
-
-      {/* Featured Listings Section */}
-      {!hasSearched && (
-        <FeaturedListingsSection onOpenListing={handleOpenListing} />
-      )}
-
-      {/* Owner CTA Section */}
-      {!hasSearched && <OwnerCTASection />}
-
-      {/* Social Proof Section */}
-      {!hasSearched && <SocialProofSection />}
     </div>
   );
 };

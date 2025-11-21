@@ -1,7 +1,10 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { usePrefetchData } from "@/hooks/usePrefetchData";
+import ExploreHeader from "@/components/layout/ExploreHeader";
+import LoginModal from "@/components/auth/LoginModal";
+import SignupModal from "@/components/auth/SignupModal";
 import HeroSection from "@/components/explore/HeroSection";
 import HowItWorksSection from "@/components/explore/HowItWorksSection";
 import OwnerCTASection from "@/components/explore/OwnerCTASection";
@@ -50,7 +53,40 @@ type SortOption =
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [categoryId, setCategoryId] = useState<string>("all");
+
+  // Login modal state from URL query param
+  const loginOpen = searchParams.get("login") === "true";
+
+  const handleLoginOpenChange = (open: boolean) => {
+    if (open) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("login", "true");
+      setSearchParams(newParams, { replace: true });
+    } else {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("login");
+      setSearchParams(newParams, { replace: true });
+    }
+  };
+
+  // Signup modal state from URL query params
+  const signupOpen = searchParams.get("signup") === "true";
+  const signupRole = searchParams.get("role") as "renter" | "owner" | null;
+
+  const handleSignupOpenChange = (open: boolean) => {
+    if (open) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("signup", "true");
+      setSearchParams(newParams, { replace: true });
+    } else {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("signup");
+      newParams.delete("role");
+      setSearchParams(newParams, { replace: true });
+    }
+  };
   const [sortBy, setSortBy] = useState<SortOption>("recommended");
   const [searchFilters, setSearchFilters] = useState<SearchBarFilters>({
     search: "",
@@ -220,6 +256,12 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header with Sign In / Sign Up */}
+      <ExploreHeader
+        onLoginClick={() => handleLoginOpenChange(true)}
+        onSignupClick={() => handleSignupOpenChange(true)}
+      />
+
       {/* Hero Section */}
       <HeroSection>
         <SearchBarPopover
@@ -391,6 +433,14 @@ export default function HomePage() {
           if (!open) setSelectedListingId(null);
         }}
         listingId={selectedListingId ?? undefined}
+      />
+
+      {/* Auth Modals */}
+      <LoginModal open={loginOpen} onOpenChange={handleLoginOpenChange} />
+      <SignupModal
+        open={signupOpen}
+        onOpenChange={handleSignupOpenChange}
+        initialRole={signupRole}
       />
     </div>
   );

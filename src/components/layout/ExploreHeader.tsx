@@ -12,9 +12,10 @@ import { toast } from "@/hooks/useToast";
 type Props = {
   scrolled?: boolean;
   onLoginClick?: () => void;
+  onSignupClick?: () => void;
 };
 
-const ExploreHeader = ({ scrolled: controlledScrolled, onLoginClick }: Props) => {
+const ExploreHeader = ({ scrolled: controlledScrolled, onLoginClick, onSignupClick }: Props) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -129,18 +130,12 @@ const ExploreHeader = ({ scrolled: controlledScrolled, onLoginClick }: Props) =>
               </>
             ) : (
               <>
-                <Button variant="ghost" asChild>
-                  <Link to="/">Explore</Link>
-                </Button>
-                <Button variant="secondary" asChild>
-                  <Link to="/register/owner">List your equipment</Link>
-                </Button>
                 <ThemeToggle variant="icon" />
                 <Button variant="ghost" onClick={() => onLoginClick?.()}>
                   Sign In
                 </Button>
-                <Button asChild>
-                  <Link to="/register/renter">Get Started</Link>
+                <Button onClick={() => onSignupClick?.()}>
+                  Get Started
                 </Button>
               </>
             )}
@@ -208,12 +203,6 @@ const ExploreHeader = ({ scrolled: controlledScrolled, onLoginClick }: Props) =>
                     </>
                   ) : (
                     <>
-                      <Button variant="ghost" className="justify-start" asChild>
-                        <Link to="/">Explore</Link>
-                      </Button>
-                      <Button variant="default" className="justify-start" asChild>
-                        <Link to="/register/owner">List your equipment</Link>
-                      </Button>
                       <Button
                         variant="ghost"
                         className="justify-start"
@@ -221,8 +210,8 @@ const ExploreHeader = ({ scrolled: controlledScrolled, onLoginClick }: Props) =>
                       >
                         Sign In
                       </Button>
-                      <Button className="justify-start" asChild>
-                        <Link to="/register/renter">Get Started</Link>
+                      <Button className="justify-start" onClick={() => onSignupClick?.()}>
+                        Get Started
                       </Button>
                     </>
                   )}
