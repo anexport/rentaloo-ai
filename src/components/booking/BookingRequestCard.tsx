@@ -30,7 +30,10 @@ import {
   Clock,
   CreditCard,
   Shield,
+  ClipboardCheck,
+  AlertTriangle,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import MessagingInterface from "../messaging/MessagingInterface";
 import PaymentForm from "../payment/PaymentForm";
 import RenterScreening from "../verification/RenterScreening";
@@ -49,6 +52,7 @@ const BookingRequestCard = ({
   const { user } = useAuth();
   const { getOrCreateConversation } = useMessaging();
   const { processRefund } = usePayment();
+  const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -362,6 +366,38 @@ const BookingRequestCard = ({
               Payment received! Booking is confirmed.
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* Inspection Buttons - Show when booking is approved and paid */}
+        {bookingRequest.status === "approved" && hasPayment && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/inspection/${bookingRequest.id}/pickup`)}
+            >
+              <ClipboardCheck className="h-4 w-4 mr-1" />
+              Pickup Inspection
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/inspection/${bookingRequest.id}/return`)}
+            >
+              <ClipboardCheck className="h-4 w-4 mr-1" />
+              Return Inspection
+            </Button>
+            {isOwner && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => navigate(`/claims/file/${bookingRequest.id}`)}
+              >
+                <AlertTriangle className="h-4 w-4 mr-1" />
+                File Damage Claim
+              </Button>
+            )}
+          </div>
         )}
 
         {bookingRequest.status === "cancelled" && (

@@ -17,6 +17,9 @@ import PaymentConfirmation from "@/pages/payment/PaymentConfirmation";
 import PaymentsPage from "@/pages/renter/PaymentsPage";
 import VerifyIdentity from "@/pages/verification/VerifyIdentity";
 import ProfileSettings from "@/pages/ProfileSettings";
+import EquipmentInspectionPage from "@/pages/inspection/EquipmentInspectionPage";
+import FileClaimPage from "@/pages/claims/FileClaimPage";
+import ReviewClaimPage from "@/pages/claims/ReviewClaimPage";
 import { Analytics } from "@vercel/analytics/react";
 
 function App() {
@@ -69,6 +72,18 @@ function App() {
                 />
                 <Route path="/verification" element={<VerifyIdentity />} />
                 <Route path="/settings" element={<ProfileSettings />} />
+                <Route
+                  path="/inspection/:bookingId/:type"
+                  element={<EquipmentInspectionPage />}
+                />
+                <Route
+                  path="/claims/file/:bookingId"
+                  element={<FileClaimPage />}
+                />
+                <Route
+                  path="/claims/review/:claimId"
+                  element={<ReviewClaimPage />}
+                />
               </>
             )}
           </Routes>

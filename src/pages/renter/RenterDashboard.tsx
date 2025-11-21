@@ -20,6 +20,7 @@ import NotificationsPanel from "@/components/renter/NotificationsPanel";
 import { useVerification } from "@/hooks/useVerification";
 import { getVerificationProgress } from "@/lib/verification";
 import { useToast } from "@/hooks/useToast";
+import PendingClaimsList from "@/components/claims/PendingClaimsList";
 
 const RenterDashboard = () => {
   const { user } = useAuth();
@@ -114,6 +115,9 @@ const RenterDashboard = () => {
 
         {/* Notifications Panel */}
         <NotificationsPanel />
+
+        {/* Pending Damage Claims */}
+        <PendingClaimsList />
 
         {/* Stats Overview Section */}
         <div className="space-y-4">
