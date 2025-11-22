@@ -20,13 +20,31 @@ export interface BookingFormData {
   message?: string;
 }
 
+export type InsuranceType = 'none' | 'basic' | 'premium';
+
+export interface InsuranceOption {
+  type: InsuranceType;
+  label: string;
+  coverage: string;
+  cost_percentage: number;
+  description: string;
+}
+
+export interface BookingWithInsurance extends BookingRequest {
+  insurance_type: InsuranceType;
+  insurance_cost: number;
+  damage_deposit_amount: number;
+}
+
 export interface BookingCalculation {
-  daily_rate: number;
   days: number;
+  dailyRate: number;
   subtotal: number;
-  fees: number;
+  serviceFee: number;
+  tax: number;
+  insurance: number;
+  deposit: number;
   total: number;
-  currency: string;
 }
 
 export interface AvailabilitySlot {

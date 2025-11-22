@@ -1,14 +1,14 @@
 {
   "organization_id": "default",
-  "project_id": "28783f66-1638-421c-908f-18e5f1c13910",
+  "project_id": "17226d79-e616-41c9-aab2-4841a6661a27",
   "project_short_id": "PROJ-1",
   "project_name": "rentaloo-ai",
   "project_description": null,
   "repository": {
-    "id": "aadfc046-3228-4585-959d-6f29659c7e9a",
+    "id": "cfc1e232-68a3-42c0-8a95-de2f42ff72b6",
     "owner": "anexport",
     "name": "rentaloo-ai",
     "full_name": "anexport/rentaloo-ai"
   },
-  "created_at": "2025-10-28T14:02:51.949Z"
+  "created_at": "2025-11-18T00:01:56.241Z"
 }

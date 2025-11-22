@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     const { data: br, error: brErr } = await supabase
       .from("booking_requests")
       .select(
-        "id, renter_id, total_amount, status, start_date, end_date, equipment:equipment(id, owner_id)"
+        "id, renter_id, total_amount, status, start_date, end_date, insurance_type, insurance_cost, damage_deposit_amount, equipment:equipment(id, owner_id, daily_rate, damage_deposit_amount, damage_deposit_percentage)"
       )
       .eq("id", bookingRequestId)
       .single();
@@ -203,10 +203,36 @@ Deno.serve(async (req) => {
     }
 
     // Calculate payment breakdown (mirror src/lib/payment.ts)
-    const subtotal = Number(br.total_amount);
-    const service_fee = Number((subtotal * 0.05).toFixed(2));
+    const rentalSubtotal = Number(br.total_amount);
+    const service_fee = Number((rentalSubtotal * 0.05).toFixed(2));
     const tax = 0;
-    const total = Number((subtotal + service_fee + tax).toFixed(2));
+
+    // Calculate deposit based on equipment configuration
+    const equipment = br.equipment as {
+      id: string;
+      owner_id: string;
+      daily_rate: number;
+      damage_deposit_amount?: number | null;
+      damage_deposit_percentage?: number | null;
+    };
+
+    let depositAmount = 0;
+    if (br.damage_deposit_amount) {
+      // Use pre-calculated deposit from booking_request (if set during booking)
+      depositAmount = Number(br.damage_deposit_amount);
+    } else if (equipment.damage_deposit_amount) {
+      // Use fixed deposit amount from equipment
+      depositAmount = Number(equipment.damage_deposit_amount);
+    } else if (equipment.damage_deposit_percentage) {
+      // Calculate percentage-based deposit
+      depositAmount = Number((equipment.daily_rate * equipment.damage_deposit_percentage / 100).toFixed(2));
+    }
+
+    // Get insurance cost (should already be calculated in booking_request)
+    const insuranceAmount = Number(br.insurance_cost || 0);
+
+    // Total includes rental, fees, insurance, and deposit
+    const total = Number((rentalSubtotal + service_fee + tax + insuranceAmount + depositAmount).toFixed(2));
 
     // Create PaymentIntent
     const pi = await stripe.paymentIntents.create({
@@ -216,6 +242,10 @@ Deno.serve(async (req) => {
         booking_request_id: br.id,
         renter_id: br.renter_id,
         owner_id: ownerId,
+        rental_amount: rentalSubtotal.toString(),
+        deposit_amount: depositAmount.toString(),
+        insurance_amount: insuranceAmount.toString(),
+        insurance_type: br.insurance_type || 'none',
       },
     });
 
@@ -234,12 +264,16 @@ Deno.serve(async (req) => {
         .from("payments")
         .update({
           stripe_payment_intent_id: pi.id,
-          subtotal,
+          subtotal: rentalSubtotal,
+          rental_amount: rentalSubtotal,
           service_fee,
           tax,
+          insurance_amount: insuranceAmount,
+          deposit_amount: depositAmount,
           total_amount: total,
           escrow_amount: total,
-          owner_payout_amount: subtotal,
+          owner_payout_amount: rentalSubtotal,
+          deposit_status: depositAmount > 0 ? 'held' : null,
         })
         .eq("id", existingPayment.id);
 
@@ -264,15 +298,19 @@ Deno.serve(async (req) => {
           booking_request_id: br.id,
           renter_id: br.renter_id,
           owner_id: ownerId,
-          subtotal,
+          subtotal: rentalSubtotal,
+          rental_amount: rentalSubtotal,
           service_fee,
           tax,
+          insurance_amount: insuranceAmount,
+          deposit_amount: depositAmount,
           total_amount: total,
           escrow_amount: total,
-          owner_payout_amount: subtotal,
+          owner_payout_amount: rentalSubtotal,
           currency: "usd",
           payment_status: "pending",
           escrow_status: "held",
+          deposit_status: depositAmount > 0 ? 'held' : null,
           stripe_payment_intent_id: pi.id,
         });
 

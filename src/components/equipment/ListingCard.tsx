@@ -8,18 +8,21 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MapPin, ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { MapPin, ChevronLeft, ChevronRight, Heart, Package } from "lucide-react";
 import StarRating from "@/components/reviews/StarRating";
 import type { Listing } from "@/components/equipment/services/listings";
+import { cn } from "@/lib/utils";
 
 type Props = {
   listing: Listing;
   onOpen?: (listing: Listing) => void;
+  className?: string;
 };
 
-const ListingCard = ({ listing, onOpen }: Props) => {
+const ListingCard = ({ listing, onOpen, className }: Props) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const avgRating = (() => {
     if (!listing.reviews || listing.reviews.length === 0) return 0;
     const validRatings = listing.reviews.filter(
@@ -42,7 +45,14 @@ const ListingCard = ({ listing, onOpen }: Props) => {
     } else {
       setCurrentImageIndex(0);
     }
-  }, [listing.photos]);
+    // Reset image error when listing changes
+    setImageError(false);
+  }, [listing.photos, listing.id]);
+
+  // Reset image error when navigating between images
+  useEffect(() => {
+    setImageError(false);
+  }, [currentImageIndex]);
 
   const handleOpen = () => {
     if (onOpen) onOpen(listing);
@@ -77,9 +87,9 @@ const ListingCard = ({ listing, onOpen }: Props) => {
 
   return (
     <TooltipProvider>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <Card className={cn("overflow-hidden hover:shadow-lg transition-shadow flex flex-col", className)}>
         <div
-          className="aspect-video bg-muted relative overflow-hidden cursor-pointer group"
+          className="aspect-video bg-muted relative overflow-hidden cursor-pointer group flex-shrink-0"
           onClick={handleOpen}
           role="button"
           tabIndex={0}
@@ -91,12 +101,15 @@ const ListingCard = ({ listing, onOpen }: Props) => {
             }
           }}
         >
-          {listing.photos && listing.photos.length > 0 ? (
+          {listing.photos && listing.photos.length > 0 && !imageError ? (
             <>
               <img
                 src={listing.photos[currentImageIndex]?.photo_url || ""}
                 alt={listing.title}
                 className="w-full h-full object-cover transition-opacity duration-300"
+                loading="lazy"
+                decoding="async"
+                onError={() => setImageError(true)}
               />
 
               {hasMultipleImages && (
@@ -104,25 +117,29 @@ const ListingCard = ({ listing, onOpen }: Props) => {
                   {/* Navigation arrows */}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
+                      <Button
                         onClick={handlePrevImage}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        size="icon-sm"
+                        variant="ghost"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white shadow-md max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground"
                         aria-label="Previous image"
                       >
                         <ChevronLeft className="h-5 w-5" />
-                      </button>
+                      </Button>
                     </TooltipTrigger>
                     <TooltipContent>Previous photo</TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
+                      <Button
                         onClick={handleNextImage}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        size="icon-sm"
+                        variant="ghost"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white shadow-md max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground"
                         aria-label="Next image"
                       >
                         <ChevronRight className="h-5 w-5" />
-                      </button>
+                      </Button>
                     </TooltipTrigger>
                     <TooltipContent>Next photo</TooltipContent>
                   </Tooltip>
@@ -149,8 +166,11 @@ const ListingCard = ({ listing, onOpen }: Props) => {
               )}
             </>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-              <span className="text-sm">No image</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-muted">
+              <Package className="h-12 w-12 mb-2 opacity-50" />
+              <span className="text-sm">
+                {imageError ? "Image unavailable" : "No image"}
+              </span>
             </div>
           )}
 
@@ -185,7 +205,7 @@ const ListingCard = ({ listing, onOpen }: Props) => {
             </Badge>
           </div>
         </div>
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col flex-1">
           <div className="flex justify-between items-start mb-2">
             <h3 className="font-semibold text-lg line-clamp-1">
               {listing.title}
@@ -197,33 +217,35 @@ const ListingCard = ({ listing, onOpen }: Props) => {
               <div className="text-sm text-muted-foreground">per day</div>
             </div>
           </div>
-          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-            {listing.description}
-          </p>
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center space-x-1">
-                  <MapPin className="h-4 w-4" />
-                  <span className="truncate max-w-[120px]">
-                    {listing.location}
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>{listing.location}</TooltipContent>
-            </Tooltip>
-            <div className="flex items-center space-x-2">
-              {avgRating > 0 ? (
-                <>
-                  <StarRating rating={avgRating} size="sm" />
-                  <span className="text-xs">{avgRating.toFixed(1)}</span>
-                </>
-              ) : (
-                <span className="text-xs">No reviews</span>
-              )}
+          <div className="flex-1">
+            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+              {listing.description}
+            </p>
+            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-1">
+                    <MapPin className="h-4 w-4" />
+                    <span className="truncate max-w-[120px]">
+                      {listing.location}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>{listing.location}</TooltipContent>
+              </Tooltip>
+              <div className="flex items-center space-x-2">
+                {avgRating > 0 ? (
+                  <>
+                    <StarRating rating={avgRating} size="sm" />
+                    <span className="text-xs">{avgRating.toFixed(1)}</span>
+                  </>
+                ) : (
+                  <span className="text-xs">No reviews</span>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-auto">
             <Button
               variant="outline"
               className="flex-1"

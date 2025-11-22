@@ -1,27 +1,33 @@
 import type { PaymentSummary } from "../types/payment";
 
 /**
- * Calculate payment breakdown including service fees and taxes
+ * Calculate payment breakdown including service fees, taxes, insurance, and deposit
  */
 export const calculatePaymentSummary = (
   subtotal: number,
   serviceFeePercentage: number = 0.05, // 5% service fee
-  taxPercentage: number = 0.0 // No tax for MVP
+  taxPercentage: number = 0.0, // No tax for MVP
+  insuranceAmount: number = 0,
+  depositAmount: number = 0
 ): PaymentSummary => {
   const service_fee = parseFloat((subtotal * serviceFeePercentage).toFixed(2));
   const tax = parseFloat((subtotal * taxPercentage).toFixed(2));
-  const total = parseFloat((subtotal + service_fee + tax).toFixed(2));
+  const insurance = parseFloat(insuranceAmount.toFixed(2));
+  const deposit = parseFloat(depositAmount.toFixed(2));
+  const total = parseFloat((subtotal + service_fee + tax + insurance + deposit).toFixed(2));
 
   // Escrow holds the full total amount
   const escrow_amount = total;
 
-  // Owner receives subtotal (total minus platform fees)
+  // Owner receives subtotal (total minus platform fees, insurance, and deposit)
   const owner_payout = subtotal;
 
   return {
     subtotal,
     service_fee,
     tax,
+    insurance,
+    deposit,
     total,
     escrow_amount,
     owner_payout,

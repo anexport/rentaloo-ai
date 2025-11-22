@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import EmailVerification from "@/pages/auth/EmailVerification";
 import RenterDashboard from "@/pages/renter/RenterDashboard";
 import OwnerDashboard from "@/pages/owner/OwnerDashboard";
+import HomePage from "@/pages/HomePage";
 import ExplorePage from "@/pages/ExplorePage";
 import EquipmentDetailPage from "@/pages/equipment/EquipmentDetailPage";
 import MessagingPage from "@/pages/MessagingPage";
@@ -16,6 +17,10 @@ import PaymentConfirmation from "@/pages/payment/PaymentConfirmation";
 import PaymentsPage from "@/pages/renter/PaymentsPage";
 import VerifyIdentity from "@/pages/verification/VerifyIdentity";
 import ProfileSettings from "@/pages/ProfileSettings";
+import EquipmentInspectionPage from "@/pages/inspection/EquipmentInspectionPage";
+import InspectionView from "@/components/inspection/InspectionView";
+import FileClaimPage from "@/pages/claims/FileClaimPage";
+import ReviewClaimPage from "@/pages/claims/ReviewClaimPage";
 import { Analytics } from "@vercel/analytics/react";
 
 function App() {
@@ -31,12 +36,12 @@ function App() {
 
   return (
     <>
-      <Analytics />
       <Router>
         <div className="min-h-screen bg-background">
           <Routes>
             {/* Public routes */}
-            <Route path="/" element={<ExplorePage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/explore" element={<ExplorePage />} />
             <Route
               path="/register/renter"
               element={<Navigate to="/?signup=true&role=renter" replace />}
@@ -50,7 +55,10 @@ function App() {
               element={<Navigate to="/?login=true" replace />}
             />
             <Route path="/verify" element={<EmailVerification />} />
-            <Route path="/equipment" element={<Navigate to="/" replace />} />
+            <Route
+              path="/equipment"
+              element={<Navigate to="/explore" replace />}
+            />
             <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
 
             {/* Protected routes */}
@@ -68,12 +76,29 @@ function App() {
                 />
                 <Route path="/verification" element={<VerifyIdentity />} />
                 <Route path="/settings" element={<ProfileSettings />} />
+                <Route
+                  path="/inspection/:bookingId/:type"
+                  element={<EquipmentInspectionPage />}
+                />
+                <Route
+                  path="/inspection/:bookingId/view/:inspectionType"
+                  element={<InspectionView />}
+                />
+                <Route
+                  path="/claims/file/:bookingId"
+                  element={<FileClaimPage />}
+                />
+                <Route
+                  path="/claims/review/:claimId"
+                  element={<ReviewClaimPage />}
+                />
               </>
             )}
           </Routes>
           <Toaster />
         </div>
       </Router>
+      <Analytics />
     </>
   );
 }

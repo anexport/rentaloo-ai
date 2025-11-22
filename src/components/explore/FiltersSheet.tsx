@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Filter } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { createMinWidthQuery } from "@/config/breakpoints";
+import { DEFAULT_PRICE_MIN, DEFAULT_PRICE_MAX } from "@/config/pagination";
 
 export type FilterValues = {
   priceRange: [number, number];
@@ -68,6 +69,7 @@ const FiltersSheet = ({
   activeFilterCount,
 }: Props) => {
   const [localValue, setLocalValue] = useState<FilterValues>(value);
+  const [isOpen, setIsOpen] = useState(false);
   const isDesktop = useMediaQuery(createMinWidthQuery("md"));
   const prevValueRef = useRef<FilterValues>(value);
 
@@ -90,12 +92,13 @@ const FiltersSheet = ({
   }, [value]);
 
   const handleApply = () => {
+    setIsOpen(false);
     onChange(localValue);
   };
 
   const handleClear = () => {
     const cleared: FilterValues = {
-      priceRange: [0, 500],
+      priceRange: [DEFAULT_PRICE_MIN, DEFAULT_PRICE_MAX],
       conditions: [],
       equipmentTypes: [],
       verified: false,
@@ -140,14 +143,19 @@ const FiltersSheet = ({
               </div>
               <Slider
                 value={localValue.priceRange}
-                onValueChange={(val) =>
+                onValueChange={(val) => {
+                  // Ensure priceMin <= priceMax
+                  const [min, max] = val as [number, number];
                   setLocalValue({
                     ...localValue,
-                    priceRange: val as [number, number],
-                  })
-                }
-                min={0}
-                max={500}
+                    priceRange: [
+                      Math.min(min, max),
+                      Math.max(min, max),
+                    ] as [number, number],
+                  });
+                }}
+                min={DEFAULT_PRICE_MIN}
+                max={DEFAULT_PRICE_MAX}
                 step={10}
                 className="w-full"
               />
@@ -248,7 +256,12 @@ const FiltersSheet = ({
   );
 
   const TriggerButton = () => (
-    <Button variant="outline" size="sm" className="relative">
+    <Button
+      variant="outline"
+      size="sm"
+      className="relative"
+      onClick={() => setIsOpen(true)}
+    >
       <Filter className="h-4 w-4 mr-2" />
       Filters
       {activeFilterCount > 0 && (
@@ -264,46 +277,49 @@ const FiltersSheet = ({
 
   if (isDesktop) {
     return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <TriggerButton />
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Filters</DialogTitle>
-            <DialogDescription>
-              Refine your search to find the perfect equipment
-            </DialogDescription>
-          </DialogHeader>
-          <FiltersContent />
-          <DialogFooter>
-            <FiltersFooter />
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <>
+        <TriggerButton />
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Filters</DialogTitle>
+              <DialogDescription>
+                Refine your search to find the perfect equipment
+              </DialogDescription>
+            </DialogHeader>
+            <FiltersContent />
+            <DialogFooter>
+              <FiltersFooter />
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <TriggerButton />
-      </SheetTrigger>
-      <SheetContent side="bottom" className="h-[85vh]">
-        <SheetHeader>
-          <SheetTitle>Filters</SheetTitle>
-          <SheetDescription>
-            Refine your search to find the perfect equipment
-          </SheetDescription>
-        </SheetHeader>
-        <div className="overflow-y-auto h-[calc(100%-120px)] py-4">
-          <FiltersContent />
-        </div>
-        <SheetFooter>
-          <FiltersFooter />
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+    <>
+      <TriggerButton />
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent side="bottom" className="h-[85vh]">
+          {/* Drag handle */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-muted-foreground/20 rounded-full" />
+
+          <SheetHeader>
+            <SheetTitle>Filters</SheetTitle>
+            <SheetDescription>
+              Refine your search to find the perfect equipment
+            </SheetDescription>
+          </SheetHeader>
+          <div className="overflow-y-auto h-[calc(100%-120px)] py-4">
+            <FiltersContent />
+          </div>
+          <SheetFooter>
+            <FiltersFooter />
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 

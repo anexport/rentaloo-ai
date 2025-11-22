@@ -48,8 +48,55 @@ const PaymentFormInner = ({
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [bookingData, setBookingData] = useState<{
+    subtotal: number;
+    insurance: number;
+    deposit: number;
+    insuranceType: string;
+  } | null>(null);
 
-  const paymentSummary = calculatePaymentSummary(totalAmount);
+  // Fetch booking request data to get correct breakdown
+  useEffect(() => {
+    const fetchBookingData = async () => {
+      const { data: booking, error } = await supabase
+        .from("booking_requests")
+        .select("total_amount, insurance_cost, damage_deposit_amount, insurance_type, start_date, end_date, equipment:equipment_id(daily_rate)")
+        .eq("id", bookingRequestId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching booking data:", error);
+        return;
+      }
+
+      if (booking && booking.equipment) {
+        // Calculate subtotal by working backwards from total
+        const insuranceCost = booking.insurance_cost || 0;
+        const depositAmount = booking.damage_deposit_amount || 0;
+        const serviceFee = (booking.total_amount - insuranceCost - depositAmount) * 0.05 / 1.05;
+        const subtotal = booking.total_amount - insuranceCost - depositAmount - serviceFee;
+
+        setBookingData({
+          subtotal,
+          insurance: insuranceCost,
+          deposit: depositAmount,
+          insuranceType: booking.insurance_type || "none",
+        });
+      }
+    };
+
+    void fetchBookingData();
+  }, [bookingRequestId]);
+
+  const paymentSummary = bookingData
+    ? calculatePaymentSummary(
+        bookingData.subtotal,
+        0.05, // 5% service fee
+        0, // no tax
+        bookingData.insurance,
+        bookingData.deposit
+      )
+    : calculatePaymentSummary(totalAmount, 0, 0, 0, 0); // Fallback to totalAmount as subtotal if no booking data yet
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,7 +265,10 @@ const PaymentFormInner = ({
 
       {/* Payment Summary */}
       <div>
-        <PaymentSummary summary={paymentSummary} />
+        <PaymentSummary
+          summary={paymentSummary}
+          insuranceType={bookingData?.insuranceType as "none" | "basic" | "premium" | undefined}
+        />
 
         {/* Additional Info */}
         <Card className="mt-4">

@@ -15,13 +15,13 @@ INSERT INTO profiles (id, email, role) VALUES
     ('33333333-3333-3333-3333-333333333333', 'owner2@example.com', 'owner');
 
 -- Insert sample renter profile
-INSERT INTO renter_profiles (profile_id, experience_level, verification_status) VALUES
-    ('11111111-1111-1111-1111-111111111111', 'intermediate', 'verified');
+INSERT INTO renter_profiles (profile_id, experience_level) VALUES
+    ('11111111-1111-1111-1111-111111111111', 'intermediate');
 
 -- Insert sample owner profiles
-INSERT INTO owner_profiles (profile_id, business_info, earnings_total, verification_level) VALUES
-    ('22222222-2222-2222-2222-222222222222', '{"business_name": "Mountain Gear Rentals", "description": "Professional outdoor equipment rental service"}', 2500.00, 'verified'),
-    ('33333333-3333-3333-3333-333333333333', '{"business_name": "Bay Area Adventures", "description": "Local outdoor equipment sharing"}', 1800.00, 'verified');
+INSERT INTO owner_profiles (profile_id, business_info, earnings_total) VALUES
+    ('22222222-2222-2222-2222-222222222222', '{"business_name": "Mountain Gear Rentals", "description": "Professional outdoor equipment rental service"}', 2500.00),
+    ('33333333-3333-3333-3333-333333333333', '{"business_name": "Bay Area Adventures", "description": "Local outdoor equipment sharing"}', 1800.00);
 
 -- Insert sample equipment
 INSERT INTO equipment (id, owner_id, category_id, title, description, daily_rate, condition, location, latitude, longitude) VALUES

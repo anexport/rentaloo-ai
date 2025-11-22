@@ -30,7 +30,10 @@ import {
   Clock,
   CreditCard,
   Shield,
+  ClipboardCheck,
+  AlertTriangle,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import MessagingInterface from "../messaging/MessagingInterface";
 import PaymentForm from "../payment/PaymentForm";
 import RenterScreening from "../verification/RenterScreening";
@@ -49,6 +52,7 @@ const BookingRequestCard = ({
   const { user } = useAuth();
   const { getOrCreateConversation } = useMessaging();
   const { processRefund } = usePayment();
+  const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -56,6 +60,74 @@ const BookingRequestCard = ({
   const [hasPayment, setHasPayment] = useState(false);
   const [showRenterScreening, setShowRenterScreening] = useState(false);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+  const [pickupInspectionId, setPickupInspectionId] = useState<string | null>(null);
+  const [returnInspectionId, setReturnInspectionId] = useState<string | null>(null);
+
+  // Check if inspections exist for this booking
+  useEffect(() => {
+    const checkInspections = async () => {
+      try {
+        // Check for pickup inspection
+        const { data: pickupData, error: pickupError } = await supabase
+          .from("equipment_inspections")
+          .select("id")
+          .eq("booking_id", bookingRequest.id)
+          .eq("inspection_type", "pickup")
+          .maybeSingle();
+
+        if (pickupError) {
+          console.error("Error checking pickup inspection:", pickupError);
+        } else {
+          setPickupInspectionId(pickupData?.id || null);
+        }
+
+        // Check for return inspection
+        const { data: returnData, error: returnError } = await supabase
+          .from("equipment_inspections")
+          .select("id")
+          .eq("booking_id", bookingRequest.id)
+          .eq("inspection_type", "return")
+          .maybeSingle();
+
+        if (returnError) {
+          console.error("Error checking return inspection:", returnError);
+        } else {
+          setReturnInspectionId(returnData?.id || null);
+        }
+      } catch (error) {
+        console.error("Error checking inspection status:", error);
+      }
+    };
+
+    void checkInspections();
+
+    // Subscribe to real-time inspection updates
+    const inspectionChannel = supabase
+      .channel(`inspections-${bookingRequest.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "equipment_inspections",
+          filter: `booking_id=eq.${bookingRequest.id}`,
+        },
+        (payload) => {
+          // Update inspection status when new inspection is added
+          const newInspection = payload.new as { id: string; inspection_type: string };
+          if (newInspection.inspection_type === "pickup") {
+            setPickupInspectionId(newInspection.id);
+          } else if (newInspection.inspection_type === "return") {
+            setReturnInspectionId(newInspection.id);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(inspectionChannel);
+    };
+  }, [bookingRequest.id]);
 
   // Check if payment exists for this booking and subscribe to real-time updates
   useEffect(() => {
@@ -362,6 +434,64 @@ const BookingRequestCard = ({
               Payment received! Booking is confirmed.
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* Inspection Buttons - Show when booking is approved and paid */}
+        {bookingRequest.status === "approved" && hasPayment && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant={pickupInspectionId ? "secondary" : "outline"}
+              onClick={() =>
+                pickupInspectionId
+                  ? navigate(`/inspection/${bookingRequest.id}/view/pickup`)
+                  : navigate(`/inspection/${bookingRequest.id}/pickup`)
+              }
+            >
+              {pickupInspectionId ? (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
+                  View Pickup Inspection
+                </>
+              ) : (
+                <>
+                  <ClipboardCheck className="h-4 w-4 mr-1" />
+                  Pickup Inspection
+                </>
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant={returnInspectionId ? "secondary" : "outline"}
+              onClick={() =>
+                returnInspectionId
+                  ? navigate(`/inspection/${bookingRequest.id}/view/return`)
+                  : navigate(`/inspection/${bookingRequest.id}/return`)
+              }
+            >
+              {returnInspectionId ? (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
+                  View Return Inspection
+                </>
+              ) : (
+                <>
+                  <ClipboardCheck className="h-4 w-4 mr-1" />
+                  Return Inspection
+                </>
+              )}
+            </Button>
+            {isOwner && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => navigate(`/claims/file/${bookingRequest.id}`)}
+              >
+                <AlertTriangle className="h-4 w-4 mr-1" />
+                File Damage Claim
+              </Button>
+            )}
+          </div>
         )}
 
         {bookingRequest.status === "cancelled" && (
