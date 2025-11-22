@@ -18,6 +18,7 @@ import PaymentsPage from "@/pages/renter/PaymentsPage";
 import VerifyIdentity from "@/pages/verification/VerifyIdentity";
 import ProfileSettings from "@/pages/ProfileSettings";
 import EquipmentInspectionPage from "@/pages/inspection/EquipmentInspectionPage";
+import InspectionView from "@/components/inspection/InspectionView";
 import FileClaimPage from "@/pages/claims/FileClaimPage";
 import ReviewClaimPage from "@/pages/claims/ReviewClaimPage";
 import { Analytics } from "@vercel/analytics/react";
@@ -78,6 +79,10 @@ function App() {
                 <Route
                   path="/inspection/:bookingId/:type"
                   element={<EquipmentInspectionPage />}
+                />
+                <Route
+                  path="/inspection/:bookingId/view/:inspectionType"
+                  element={<InspectionView />}
                 />
                 <Route
                   path="/claims/file/:bookingId"
