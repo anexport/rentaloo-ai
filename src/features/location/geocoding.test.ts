@@ -49,7 +49,8 @@ describe("Geocoding", () => {
     it("should return null if API key is missing", async () => {
       vi.unstubAllEnvs();
 
-      const result = await reverseGeocode(37.7749, -122.4194);
+      // Use unique coordinates to avoid cache hits
+      const result = await reverseGeocode(40.7128, -74.0060);
 
       expect(result).toBe(null);
       expect(googleProvider.reverseGeocodeGoogle).not.toHaveBeenCalled();
@@ -66,11 +67,12 @@ describe("Geocoding", () => {
         signal: new AbortController().signal,
       };
 
-      await reverseGeocode(37.7749, -122.4194, options);
+      // Use unique coordinates
+      await reverseGeocode(51.5074, -0.1278, options);
 
       expect(googleProvider.reverseGeocodeGoogle).toHaveBeenCalledWith(
-        37.7749,
-        -122.4194,
+        51.5074,
+        -0.1278,
         expect.objectContaining({
           language: "es",
           signal: options.signal,

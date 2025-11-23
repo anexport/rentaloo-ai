@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { fetchListings, fetchListingById } from "./listings";
-import { mockSupabaseFrom, resetSupabaseMocks } from "@/__tests__/mocks/supabase";
+import {
+  mockSupabaseFrom,
+  resetSupabaseMocks,
+  createMockQueryBuilder,
+} from "@/__tests__/mocks/supabase";
 import {
   mockCamera,
   mockSkis,
@@ -42,16 +46,9 @@ describe("Equipment Listings Service", () => {
         ];
 
         mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-          })
+          .mockReturnValueOnce(createMockQueryBuilder({ data: mockData, error: null }))
           // Mock reviews fetch
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: mockReviews, error: null }),
-          });
+          .mockReturnValueOnce(createMockQueryBuilder({ data: mockReviews, error: null }));
 
         const listings = await fetchListings();
 
@@ -64,59 +61,29 @@ describe("Equipment Listings Service", () => {
       });
 
       it("should only fetch available equipment", async () => {
-        let capturedIsAvailable: boolean | undefined;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn((field, value) => {
-              if (field === "is_available") capturedIsAvailable = value;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings();
 
-        expect(capturedIsAvailable).toBe(true);
+        // Check that eq was called with is_available = true
+        expect(builder.eq).toHaveBeenCalledWith("is_available", true);
       });
 
       it("should order by created_at descending", async () => {
-        let capturedOrderField: string | undefined;
-        let capturedOrderDirection: { ascending: boolean } | undefined;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            order: vi.fn((field, direction) => {
-              capturedOrderField = field;
-              capturedOrderDirection = direction;
-              return Promise.resolve({ data: [], error: null });
-            }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings();
 
-        expect(capturedOrderField).toBe("created_at");
-        expect(capturedOrderDirection).toEqual({ ascending: false });
+        // Check that order was called with created_at descending
+        expect(builder.order).toHaveBeenCalledWith("created_at", { ascending: false });
       });
 
       it("should handle empty results", async () => {
-        mockSupabaseFrom.mockReturnValueOnce({
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
-        });
+        mockSupabaseFrom.mockReturnValueOnce(
+          createMockQueryBuilder({ data: [], error: null })
+        );
 
         const listings = await fetchListings();
 
@@ -126,11 +93,9 @@ describe("Equipment Listings Service", () => {
       it("should throw error on query failure", async () => {
         const mockError = new Error("Database connection failed");
 
-        mockSupabaseFrom.mockReturnValueOnce({
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          order: vi.fn().mockResolvedValue({ data: null, error: mockError }),
-        });
+        mockSupabaseFrom.mockReturnValueOnce(
+          createMockQueryBuilder({ data: null, error: mockError })
+        );
 
         await expect(fetchListings()).rejects.toThrow("Database connection failed");
       });
@@ -138,307 +103,121 @@ describe("Equipment Listings Service", () => {
 
     describe("Filtering", () => {
       it("should filter by category", async () => {
-        let capturedCategoryId: string | undefined;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn((field, value) => {
-              if (field === "category_id") capturedCategoryId = value;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ categoryId: "cat-cameras" });
 
-        expect(capturedCategoryId).toBe("cat-cameras");
+        // Check that eq was called with the category filter
+        expect(builder.eq).toHaveBeenCalledWith("category_id", "cat-cameras");
       });
 
       it("should not filter when category is 'all'", async () => {
-        let categoryFilterCalled = false;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn((field) => {
-              if (field === "category_id") categoryFilterCalled = true;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ categoryId: "all" });
 
-        expect(categoryFilterCalled).toBe(false);
+        // Should NOT call eq with category_id when category is 'all'
+        const eqCalls = builder.eq.mock.calls;
+        const categoryCall = eqCalls.find((call: any) => call[0] === "category_id");
+        expect(categoryCall).toBeUndefined();
       });
 
       it("should filter by minimum price", async () => {
-        let capturedPriceMin: number | undefined;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            gte: vi.fn((field, value) => {
-              if (field === "daily_rate") capturedPriceMin = value;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ priceMin: 100 });
 
-        expect(capturedPriceMin).toBe(100);
+        expect(builder.gte).toHaveBeenCalledWith("daily_rate", 100);
       });
 
       it("should filter by maximum price", async () => {
-        let capturedPriceMax: number | undefined;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            lte: vi.fn((field, value) => {
-              if (field === "daily_rate") capturedPriceMax = value;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ priceMax: 200 });
 
-        expect(capturedPriceMax).toBe(200);
+        expect(builder.lte).toHaveBeenCalledWith("daily_rate", 200);
       });
 
       it("should filter by price range", async () => {
         const filters = { priceMin: 50, priceMax: 150 };
-        let capturedMin: number | undefined;
-        let capturedMax: number | undefined;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            gte: vi.fn((field, value) => {
-              if (field === "daily_rate") capturedMin = value;
-              return {
-                lte: vi.fn((field, value) => {
-                  if (field === "daily_rate") capturedMax = value;
-                  return {
-                    order: vi.fn().mockResolvedValue({ data: [], error: null }),
-                  };
-                }),
-              };
-            }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings(filters);
 
-        expect(capturedMin).toBe(50);
-        expect(capturedMax).toBe(150);
+        expect(builder.gte).toHaveBeenCalledWith("daily_rate", 50);
+        expect(builder.lte).toHaveBeenCalledWith("daily_rate", 150);
       });
 
       it("should filter by condition", async () => {
-        let capturedCondition: string | undefined;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn((field, value) => {
-              if (field === "condition") capturedCondition = value;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ condition: "excellent" });
 
-        expect(capturedCondition).toBe("excellent");
+        expect(builder.eq).toHaveBeenCalledWith("condition", "excellent");
       });
 
       it("should not filter when condition is 'all'", async () => {
-        let conditionFilterCalled = false;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn((field) => {
-              if (field === "condition") conditionFilterCalled = true;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ condition: "all" });
 
-        expect(conditionFilterCalled).toBe(false);
+        // Should NOT call eq with condition when it's 'all'
+        const eqCalls = builder.eq.mock.calls;
+        const conditionCall = eqCalls.find((call: any) => call[0] === "condition");
+        expect(conditionCall).toBeUndefined();
       });
 
       it("should filter by location using case-insensitive partial match", async () => {
-        let capturedLocation: string | undefined;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            ilike: vi.fn((field, pattern) => {
-              if (field === "location") capturedLocation = pattern;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ location: "Los Angeles" });
 
-        expect(capturedLocation).toBe("%Los Angeles%");
+        expect(builder.ilike).toHaveBeenCalledWith("location", "%Los Angeles%");
       });
 
       it("should ignore empty location string", async () => {
-        let locationFilterCalled = false;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            ilike: vi.fn((field) => {
-              if (field === "location") locationFilterCalled = true;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ location: "   " });
 
-        expect(locationFilterCalled).toBe(false);
+        expect(builder.ilike).not.toHaveBeenCalled();
       });
 
       it("should filter by search term in title and description", async () => {
-        let capturedSearchPattern: string | undefined;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            or: vi.fn((pattern) => {
-              capturedSearchPattern = pattern;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ search: "camera" });
 
-        expect(capturedSearchPattern).toBe("title.ilike.%camera%,description.ilike.%camera%");
+        expect(builder.or).toHaveBeenCalledWith("title.ilike.%camera%,description.ilike.%camera%");
       });
 
       it("should sanitize search term to prevent injection", async () => {
-        let capturedSearchPattern: string | undefined;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            or: vi.fn((pattern) => {
-              capturedSearchPattern = pattern;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ search: "test(),()" });
 
         // Parentheses and commas should be removed
-        expect(capturedSearchPattern).toBe("title.ilike.%test%,description.ilike.%test%");
+        expect(builder.or).toHaveBeenCalledWith("title.ilike.%test%,description.ilike.%test%");
       });
 
       it("should ignore empty search string", async () => {
-        let searchFilterCalled = false;
-
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            or: vi.fn(() => {
-              searchFilterCalled = true;
-              return {
-                order: vi.fn().mockResolvedValue({ data: [], error: null }),
-              };
-            }),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         await fetchListings({ search: "  " });
 
-        expect(searchFilterCalled).toBe(false);
+        expect(builder.or).not.toHaveBeenCalled();
       });
 
       it("should combine multiple filters", async () => {
@@ -451,24 +230,19 @@ describe("Equipment Listings Service", () => {
           search: "camera",
         };
 
-        mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            gte: vi.fn().mockReturnThis(),
-            lte: vi.fn().mockReturnThis(),
-            ilike: vi.fn().mockReturnThis(),
-            or: vi.fn().mockReturnThis(),
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
-          });
+        const builder = createMockQueryBuilder({ data: [], error: null });
+        mockSupabaseFrom.mockReturnValueOnce(builder);
 
         const listings = await fetchListings(filters);
 
         expect(listings).toEqual([]);
+        // Verify all filters were applied
+        expect(builder.eq).toHaveBeenCalledWith("category_id", "cat-cameras");
+        expect(builder.gte).toHaveBeenCalledWith("daily_rate", 100);
+        expect(builder.lte).toHaveBeenCalledWith("daily_rate", 200);
+        expect(builder.eq).toHaveBeenCalledWith("condition", "excellent");
+        expect(builder.ilike).toHaveBeenCalledWith("location", "%Los Angeles%");
+        expect(builder.or).toHaveBeenCalled();
       });
     });
 
@@ -495,26 +269,17 @@ describe("Equipment Listings Service", () => {
           },
         ];
 
-        let reviewsQueryOwnerIds: string[] = [];
+        const equipmentBuilder = createMockQueryBuilder({ data: mockData, error: null });
+        const reviewsBuilder = createMockQueryBuilder({ data: mockReviews, error: null });
 
         mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn((field, ids) => {
-              if (field === "reviewee_id") reviewsQueryOwnerIds = ids;
-              return Promise.resolve({ data: mockReviews, error: null });
-            }),
-          });
+          .mockReturnValueOnce(equipmentBuilder)
+          .mockReturnValueOnce(reviewsBuilder);
 
         await fetchListings();
 
         // Should only query reviews once with all unique owner IDs
-        expect(reviewsQueryOwnerIds).toEqual(["owner-1", "owner-2"]);
+        expect(reviewsBuilder.in).toHaveBeenCalledWith("reviewee_id", ["owner-1", "owner-2"]);
         expect(mockSupabaseFrom).toHaveBeenCalledTimes(2); // Equipment + Reviews
       });
 
@@ -534,26 +299,17 @@ describe("Equipment Listings Service", () => {
           },
         ];
 
-        let reviewsQueryOwnerIds: string[] = [];
+        const equipmentBuilder = createMockQueryBuilder({ data: mockData, error: null });
+        const reviewsBuilder = createMockQueryBuilder({ data: mockReviews, error: null });
 
         mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn((field, ids) => {
-              if (field === "reviewee_id") reviewsQueryOwnerIds = ids;
-              return Promise.resolve({ data: mockReviews, error: null });
-            }),
-          });
+          .mockReturnValueOnce(equipmentBuilder)
+          .mockReturnValueOnce(reviewsBuilder);
 
         await fetchListings();
 
         // Should only have unique owner IDs
-        expect(reviewsQueryOwnerIds).toEqual(["owner-1"]);
+        expect(reviewsBuilder.in).toHaveBeenCalledWith("reviewee_id", ["owner-1"]);
       });
 
       it("should not fetch reviews when no owners present", async () => {
@@ -566,11 +322,9 @@ describe("Equipment Listings Service", () => {
           },
         ];
 
-        mockSupabaseFrom.mockReturnValueOnce({
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          order: vi.fn().mockResolvedValue({ data: mockDataNoOwner, error: null }),
-        });
+        mockSupabaseFrom.mockReturnValueOnce(
+          createMockQueryBuilder({ data: mockDataNoOwner, error: null })
+        );
 
         const listings = await fetchListings();
 
@@ -596,15 +350,8 @@ describe("Equipment Listings Service", () => {
         ];
 
         mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: mockReviews, error: null }),
-          });
+          .mockReturnValueOnce(createMockQueryBuilder({ data: mockData, error: null }))
+          .mockReturnValueOnce(createMockQueryBuilder({ data: mockReviews, error: null }));
 
         const listings = await fetchListings();
 
@@ -637,15 +384,8 @@ describe("Equipment Listings Service", () => {
         ];
 
         mockSupabaseFrom
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            order: vi.fn().mockResolvedValue({ data: mixedData, error: null }),
-          })
-          .mockReturnValueOnce({
-            select: vi.fn().mockReturnThis(),
-            in: vi.fn().mockResolvedValue({ data: mockReviews, error: null }),
-          });
+          .mockReturnValueOnce(createMockQueryBuilder({ data: mixedData, error: null }))
+          .mockReturnValueOnce(createMockQueryBuilder({ data: mockReviews, error: null }));
 
         const listings = await fetchListings();
 
@@ -659,18 +399,8 @@ describe("Equipment Listings Service", () => {
   describe("fetchListingById", () => {
     it("should fetch single listing by ID with relations", async () => {
       mockSupabaseFrom
-        .mockReturnValueOnce({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn().mockResolvedValue({ data: mockQueryResult, error: null }),
-            })),
-          })),
-        })
-        .mockReturnValueOnce({
-          select: vi.fn(() => ({
-            eq: vi.fn().mockResolvedValue({ data: mockReviews.slice(0, 3), error: null }),
-          })),
-        });
+        .mockReturnValueOnce(createMockQueryBuilder({ data: mockQueryResult, error: null }))
+        .mockReturnValueOnce(createMockQueryBuilder({ data: mockReviews.slice(0, 3), error: null }));
 
       const listing = await fetchListingById("eq-camera-1");
 
@@ -683,13 +413,9 @@ describe("Equipment Listings Service", () => {
     });
 
     it("should return null when listing not found", async () => {
-      mockSupabaseFrom.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-        })),
-      });
+      mockSupabaseFrom.mockReturnValueOnce(
+        createMockQueryBuilder({ data: null, error: null })
+      );
 
       const listing = await fetchListingById("non-existent-id");
 
@@ -699,28 +425,20 @@ describe("Equipment Listings Service", () => {
     it("should throw error on query failure", async () => {
       const mockError = new Error("Not found");
 
-      mockSupabaseFrom.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({ data: null, error: mockError }),
-          })),
-        })),
-      });
+      mockSupabaseFrom.mockReturnValueOnce(
+        createMockQueryBuilder({ data: null, error: mockError })
+      );
 
       await expect(fetchListingById("eq-camera-1")).rejects.toThrow("Not found");
     });
 
     it("should throw error for invalid listing data", async () => {
-      mockSupabaseFrom.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({
-              data: mockInvalidQueryResults.missingTitle,
-              error: null,
-            }),
-          })),
-        })),
-      });
+      mockSupabaseFrom.mockReturnValueOnce(
+        createMockQueryBuilder({
+          data: mockInvalidQueryResults.missingTitle,
+          error: null,
+        })
+      );
 
       await expect(fetchListingById("eq-camera-1")).rejects.toThrow(
         "Invalid listing data received from database"
@@ -733,13 +451,9 @@ describe("Equipment Listings Service", () => {
         owner: null,
       };
 
-      mockSupabaseFrom.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({ data: dataWithoutOwner, error: null }),
-          })),
-        })),
-      });
+      mockSupabaseFrom.mockReturnValueOnce(
+        createMockQueryBuilder({ data: dataWithoutOwner, error: null })
+      );
 
       const listing = await fetchListingById("eq-camera-1");
 
@@ -749,44 +463,23 @@ describe("Equipment Listings Service", () => {
     });
 
     it("should fetch reviews for the listing owner", async () => {
-      let capturedRevieweeId: string | undefined;
+      const listingBuilder = createMockQueryBuilder({ data: mockQueryResult, error: null });
+      const reviewsBuilder = createMockQueryBuilder({ data: mockReviews, error: null });
 
       mockSupabaseFrom
-        .mockReturnValueOnce({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn().mockResolvedValue({ data: mockQueryResult, error: null }),
-            })),
-          })),
-        })
-        .mockReturnValueOnce({
-          select: vi.fn(() => ({
-            eq: vi.fn((field, value) => {
-              if (field === "reviewee_id") capturedRevieweeId = value;
-              return Promise.resolve({ data: mockReviews, error: null });
-            }),
-          })),
-        });
+        .mockReturnValueOnce(listingBuilder)
+        .mockReturnValueOnce(reviewsBuilder);
 
       await fetchListingById("eq-camera-1");
 
-      expect(capturedRevieweeId).toBe("owner-1");
+      // Check that reviews were fetched for the owner
+      expect(reviewsBuilder.eq).toHaveBeenCalledWith("reviewee_id", "owner-1");
     });
 
     it("should handle missing reviews gracefully", async () => {
       mockSupabaseFrom
-        .mockReturnValueOnce({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn().mockResolvedValue({ data: mockQueryResult, error: null }),
-            })),
-          })),
-        })
-        .mockReturnValueOnce({
-          select: vi.fn(() => ({
-            eq: vi.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-        });
+        .mockReturnValueOnce(createMockQueryBuilder({ data: mockQueryResult, error: null }))
+        .mockReturnValueOnce(createMockQueryBuilder({ data: null, error: null }));
 
       const listing = await fetchListingById("eq-camera-1");
 

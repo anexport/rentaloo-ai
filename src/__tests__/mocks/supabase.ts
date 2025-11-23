@@ -63,8 +63,10 @@ export const mockSupabaseRealtime = {
   })),
 };
 
-// Create a chainable query builder mock
-const createQueryBuilder = (): any => {
+// Create a chainable query builder mock that is also awaitable (thenable)
+const createQueryBuilder = (finalResult?: { data: any; error: any }): any => {
+  const defaultResult = finalResult || { data: null, error: null };
+
   const builder: any = {
     select: vi.fn(),
     insert: vi.fn(),
@@ -77,22 +79,26 @@ const createQueryBuilder = (): any => {
     ilike: vi.fn(),
     or: vi.fn(),
     order: vi.fn(),
-    single: vi.fn(() =>
-      Promise.resolve({
-        data: null,
-        error: null,
-      })
-    ),
+    single: vi.fn(),
+    // Make the builder awaitable by adding then() method
+    then: vi.fn((resolve) => {
+      return Promise.resolve(defaultResult).then(resolve);
+    }),
   };
 
-  // Make all methods (except single) return the builder for chaining
+  // Make all methods return the builder for chaining
   Object.keys(builder).forEach((key) => {
-    if (key !== 'single' && typeof builder[key] === 'function') {
+    if (key !== 'then' && typeof builder[key] === 'function') {
       builder[key].mockReturnValue(builder);
     }
   });
 
   return builder;
+};
+
+// Helper to create a query builder with custom final result
+export const createMockQueryBuilder = (finalResult: { data: any; error: any }) => {
+  return createQueryBuilder(finalResult);
 };
 
 // Mock Supabase from/select methods
