@@ -54,14 +54,29 @@ export const mockSupabaseAuth = {
   ),
 };
 
-// Mock Supabase realtime
-export const mockSupabaseRealtime = {
-  setAuth: vi.fn(),
-  channel: vi.fn(() => ({
+// Mock Supabase channel for Realtime
+export const createMockChannel = (topic?: string) => {
+  const channel = {
+    topic: topic || "",
     on: vi.fn().mockReturnThis(),
-    subscribe: vi.fn(),
-  })),
+    subscribe: vi.fn((callback) => {
+      if (callback) callback("SUBSCRIBED");
+      return channel;
+    }),
+    unsubscribe: vi.fn().mockResolvedValue({ status: "ok", error: null }),
+    send: vi.fn().mockResolvedValue({ status: "ok", error: null }),
+  };
+  return channel;
 };
+
+export const mockSupabaseChannel = vi.fn((topic: string) => createMockChannel(topic));
+export const mockSupabaseRemoveChannel = vi.fn().mockResolvedValue({
+  status: "ok",
+  error: null,
+});
+export const mockSupabaseRpc = vi.fn(() =>
+  Promise.resolve({ data: null, error: null })
+);
 
 // Create a chainable query builder mock that is also awaitable (thenable)
 const createQueryBuilder = (finalResult?: { data: any; error: any }): any => {
@@ -104,11 +119,20 @@ export const createMockQueryBuilder = (finalResult: { data: any; error: any }) =
 // Mock Supabase from/select methods
 export const mockSupabaseFrom = vi.fn(() => createQueryBuilder());
 
+// Mock Supabase realtime (for backwards compatibility with AuthContext tests)
+export const mockSupabaseRealtime = {
+  setAuth: vi.fn(),
+};
+
 // Complete Supabase client mock
 export const mockSupabase = {
   auth: mockSupabaseAuth,
-  realtime: mockSupabaseRealtime,
   from: mockSupabaseFrom,
+  channel: mockSupabaseChannel,
+  removeChannel: mockSupabaseRemoveChannel,
+  rpc: mockSupabaseRpc,
+  realtime: mockSupabaseRealtime,
+  getChannels: vi.fn(() => []),
 };
 
 // Helper to trigger auth state change
