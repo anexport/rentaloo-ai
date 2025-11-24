@@ -31,10 +31,13 @@ import { Filter } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { createMinWidthQuery } from "@/config/breakpoints";
 import { DEFAULT_PRICE_MIN, DEFAULT_PRICE_MAX } from "@/config/pagination";
+import type { Database } from "@/lib/database.types";
+
+type EquipmentCondition = Database["public"]["Enums"]["equipment_condition"];
 
 export type FilterValues = {
   priceRange: [number, number];
-  conditions: string[];
+  conditions: EquipmentCondition[];
   verified: boolean;
 };
 
@@ -45,7 +48,7 @@ type Props = {
   activeFilterCount: number;
 };
 
-const CONDITIONS = [
+const CONDITIONS: Array<{ value: EquipmentCondition; label: string }> = [
   { value: "new", label: "New" },
   { value: "excellent", label: "Excellent" },
   { value: "good", label: "Good" },
@@ -94,7 +97,7 @@ const FiltersSheet = ({
     onChange(cleared);
   };
 
-  const handleConditionToggle = (condition: string) => {
+  const handleConditionToggle = (condition: EquipmentCondition) => {
     const next = localValue.conditions.includes(condition)
       ? localValue.conditions.filter((c) => c !== condition)
       : [...localValue.conditions, condition];

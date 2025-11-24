@@ -65,6 +65,7 @@ export type ListingsFilters = {
   priceMin?: number;
   priceMax?: number;
   location?: string;
+  conditions?: Database["public"]["Enums"]["equipment_condition"][];
   condition?: Database["public"]["Enums"]["equipment_condition"] | "all";
   limit?: number;
   verified?: boolean;
@@ -101,7 +102,14 @@ export const fetchListings = async (
     query = query.lte("daily_rate", filters.priceMax);
   }
 
-  if (filters.condition && filters.condition !== "all") {
+  const selectedConditions =
+    filters.conditions && filters.conditions.length > 0
+      ? Array.from(new Set(filters.conditions))
+      : [];
+
+  if (selectedConditions.length > 0) {
+    query = query.in("condition", selectedConditions);
+  } else if (filters.condition && filters.condition !== "all") {
     query = query.eq("condition", filters.condition);
   }
 

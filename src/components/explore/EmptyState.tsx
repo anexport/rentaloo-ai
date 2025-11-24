@@ -14,8 +14,11 @@ const EmptyState = ({ filters, onClearFilters }: Props) => {
     filters.search ||
     filters.location ||
     (filters.categoryId && filters.categoryId !== "all") ||
-    (typeof filters.priceMin === "number" && filters.priceMin > DEFAULT_PRICE_MIN) ||
-    (typeof filters.priceMax === "number" && filters.priceMax < DEFAULT_PRICE_MAX) ||
+    (typeof filters.priceMin === "number" &&
+      filters.priceMin > DEFAULT_PRICE_MIN) ||
+    (typeof filters.priceMax === "number" &&
+      filters.priceMax < DEFAULT_PRICE_MAX) ||
+    (filters.conditions && filters.conditions.length > 0) ||
     (filters.condition && filters.condition !== "all");
 
   return (
@@ -61,19 +64,33 @@ const EmptyState = ({ filters, onClearFilters }: Props) => {
                   Category
                 </Badge>
               )}
-              {((typeof filters.priceMin === "number" && filters.priceMin > DEFAULT_PRICE_MIN) ||
-                (typeof filters.priceMax === "number" && filters.priceMax < DEFAULT_PRICE_MAX)) && (
+              {((typeof filters.priceMin === "number" &&
+                filters.priceMin > DEFAULT_PRICE_MIN) ||
+                (typeof filters.priceMax === "number" &&
+                  filters.priceMax < DEFAULT_PRICE_MAX)) && (
                 <Badge variant="secondary" className="px-3 py-1">
                   <Filter className="h-3 w-3 mr-1" />
                   Price: ${filters.priceMin ?? DEFAULT_PRICE_MIN} - ${filters.priceMax ?? DEFAULT_PRICE_MAX}
                 </Badge>
               )}
-              {filters.condition && filters.condition !== "all" && (
-                <Badge variant="secondary" className="px-3 py-1">
+              {filters.conditions?.map((condition) => (
+                <Badge
+                  key={`condition-${condition}`}
+                  variant="secondary"
+                  className="px-3 py-1"
+                >
                   <Filter className="h-3 w-3 mr-1" />
-                  {filters.condition}
+                  {condition}
                 </Badge>
-              )}
+              ))}
+              {!filters.conditions?.length &&
+                filters.condition &&
+                filters.condition !== "all" && (
+                  <Badge variant="secondary" className="px-3 py-1">
+                    <Filter className="h-3 w-3 mr-1" />
+                    {filters.condition}
+                  </Badge>
+                )}
             </div>
             <Button onClick={onClearFilters} variant="outline">
               Clear all filters

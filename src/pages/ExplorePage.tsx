@@ -173,8 +173,20 @@ const ExplorePage = () => {
       filters.location = debouncedFilters.location.trim();
     }
 
+    const mergedConditions = new Set<Listing["condition"]>();
+
+    if (filterValues.conditions.length > 0) {
+      filterValues.conditions.forEach((condition) =>
+        mergedConditions.add(condition)
+      );
+    }
+
     if (searchFilters.condition && searchFilters.condition !== "all") {
-      filters.condition = searchFilters.condition;
+      mergedConditions.add(searchFilters.condition);
+    }
+
+    if (mergedConditions.size > 0) {
+      filters.conditions = Array.from(mergedConditions).sort();
     }
 
     if (categoryId !== "all") {
@@ -198,6 +210,7 @@ const ExplorePage = () => {
     debouncedFilters,
     searchFilters.condition,
     categoryId,
+    filterValues.conditions,
     filterValues.priceRange,
     filterValues.verified,
   ]);
