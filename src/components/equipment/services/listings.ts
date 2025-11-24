@@ -114,7 +114,14 @@ export const fetchListings = async (
   }
 
   if (filters.location && filters.location.trim().length > 0) {
-    query = query.ilike("location", `%${filters.location}%`);
+    // Extract city name (part before first comma) for more flexible matching
+    // This allows "Denver, CO" to match "Denver, Colorado" and vice versa
+    // Also helps match "Pescara, PE" with "Pescara, Italy" by just matching "Pescara"
+    const locationQuery = filters.location.trim();
+    const cityName = locationQuery.split(',')[0].trim();
+
+    // Use city name for search to be more flexible with state/region variations
+    query = query.ilike("location", `%${cityName}%`);
   }
 
   if (filters.search && filters.search.trim().length > 0) {

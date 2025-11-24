@@ -263,27 +263,59 @@ export async function searchGooglePlaces(
         // This ensures place detail requests are tied to the autocomplete session
         // and correctly billed as outcomes rather than separate requests
         const place = placePrediction.toPlace();
-        
-        // Fetch place details - request location field with session token
+
+        // Fetch place details - request location and addressComponents fields with session token
         // Pass sessionToken to maintain the session context for billing
-        await place.fetchFields({ 
-          fields: ['location'],
-          sessionToken 
+        await place.fetchFields({
+          fields: ['location', 'addressComponents'],
+          sessionToken
         });
 
         if (place.location) {
           // Place API has location directly on the Place object, not under geometry
           // location can be either LatLng object or LatLngLiteral { lat, lng }
-          const lat = place.location instanceof google.maps.LatLng 
-            ? place.location.lat() 
+          const lat = place.location instanceof google.maps.LatLng
+            ? place.location.lat()
             : place.location.lat;
-          const lng = place.location instanceof google.maps.LatLng 
-            ? place.location.lng() 
+          const lng = place.location instanceof google.maps.LatLng
+            ? place.location.lng()
             : place.location.lng;
-          
+
+          // Normalize location label to "City, State" format for database compatibility
+          // This ensures user searches match equipment locations in the database
+          let normalizedLabel = text; // fallback to full text
+
+          if (place.addressComponents && place.addressComponents.length > 0) {
+            let locality = '';
+            let adminArea = '';
+
+            for (const component of place.addressComponents) {
+              const types = component.types || [];
+
+              // Extract city/locality
+              if (types.includes('locality')) {
+                locality = component.longText || component.shortText || '';
+              }
+              // Extract state/region (prefer short name for US states, e.g., "CA")
+              else if (types.includes('administrative_area_level_1')) {
+                adminArea = component.shortText || component.longText || '';
+              }
+            }
+
+            // Build normalized label: "City, State" (matching database format)
+            if (locality && adminArea) {
+              normalizedLabel = `${locality}, ${adminArea}`;
+            } else if (locality) {
+              normalizedLabel = locality;
+            } else if (adminArea) {
+              normalizedLabel = adminArea;
+            }
+            // else: keep the original text as fallback
+          }
+
           return {
             id: placeId,
-            label: text,
+            label: normalizedLabel,
             lat,
             lon: lng,
           };
