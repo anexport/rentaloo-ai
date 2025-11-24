@@ -156,12 +156,11 @@ export async function reverseGeocodeGoogle(
 // ============================================================================
 
 /**
- * Searches for places matching a query using new AutocompleteSuggestion API
- * Returns results with coordinates for each suggestion
- * 
- * @param query - User's search query
- * @param opts - Options including API key, limit, language, location bias
- * @returns Array of suggestions with coordinates
+ * Fetches place suggestions for a query and returns each suggestion with geographic coordinates.
+ *
+ * @param query - The user's search string; leading/trailing whitespace is ignored.
+ * @param opts - Options for the request. Must include `apiKey`. May include an AbortSignal via `signal`, `language`, `limit`, and `locationBias` (comma- or pipe-separated region codes).
+ * @returns An array of suggestion objects each containing `id` (place ID), `label` (display label, normalized to "City, State" when available), `lat` (latitude), and `lon` (longitude).
  */
 export async function searchGooglePlaces(
   query: string,
@@ -346,4 +345,3 @@ export async function searchGooglePlaces(
     throw error;
   }
 }
-
