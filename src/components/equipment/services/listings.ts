@@ -171,18 +171,24 @@ export const fetchListings = async (
     "reviews"
   >[];
 
+  if (validatedListings.length === 0) {
+    return [];
+  }
+
   let filteredListings = validatedListings;
 
   // Apply date availability filter if provided
   if (filters.dateFrom) {
     const from = filters.dateFrom;
     const to = filters.dateTo ?? filters.dateFrom;
+    const equipmentIds = validatedListings.map((item) => item.id);
     const availabilityQuery = supabase
       .from("availability_calendar")
       .select("equipment_id")
       .gte("date", from)
       .lte("date", to)
-      .eq("is_available", false);
+      .eq("is_available", false)
+      .in("equipment_id", equipmentIds);
 
     const availabilityRequest = signal
       ? availabilityQuery.abortSignal(signal)

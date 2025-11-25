@@ -188,8 +188,8 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
               description: "Please try again shortly.",
               variant: "destructive",
             });
+            setCategories([]);
           }
-          setCategories([]);
           return;
         }
 
@@ -735,23 +735,27 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                   </div>
                   {value.equipmentType && (
                     <div className="flex items-center gap-2">
-                      <Badge
-                        variant="secondary"
-                        className="rounded-full px-3 py-1 text-xs"
-                      >
-                        {value.equipmentType}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          onChange({ ...value, equipmentType: undefined })
-                        }
-                        className="h-7 text-xs"
-                      >
-                        Clear
-                      </Button>
-                    </div>
+                  <Badge
+                    variant="secondary"
+                    className="rounded-full px-3 py-1 text-xs"
+                  >
+                    {value.equipmentType}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      onChange({
+                        ...value,
+                        equipmentType: undefined,
+                        equipmentCategoryId: undefined,
+                      })
+                    }
+                    className="h-7 text-xs"
+                  >
+                    Clear
+                  </Button>
+                </div>
                   )}
                 </div>
               )}
@@ -940,7 +944,11 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                   variant="ghost"
                   size="sm"
                   onClick={() =>
-                    onChange({ ...value, equipmentType: undefined })
+                    onChange({
+                      ...value,
+                      equipmentType: undefined,
+                      equipmentCategoryId: undefined,
+                    })
                   }
                 >
                   Clear
