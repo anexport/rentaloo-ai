@@ -924,7 +924,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                         variant={
                           value.equipmentType === type.name ? "default" : "outline"
                         }
-                        className="cursor-pointer justify-center py-2 hover:bg-primary/10"
+                        className="cursor-pointer justify-center items-center py-2 px-3 whitespace-nowrap text-center hover:bg-primary/10"
                         onClick={() => handleEquipmentSelect(type)}
                         role="button"
                         tabIndex={0}
