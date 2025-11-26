@@ -1,0 +1,48 @@
+{
+  "rating": {
+    "title": "Bewertungen und Ratings",
+    "average_rating": "Durchschnittliche Bewertung",
+    "total_reviews": "{{count}} Bewertung",
+    "total_reviews_plural": "{{count}} Bewertungen",
+    "no_reviews": "Noch keine Bewertungen",
+    "be_first": "Seien Sie der Erste, der eine Bewertung hinterlässt"
+  },
+  "form": {
+    "leave_review": "Bewertung hinterlassen",
+    "rate_equipment": "Equipment bewerten",
+    "rate_owner": "Eigentümer bewerten",
+    "rate_renter": "Mieter bewerten",
+    "rating_label": "Bewertung",
+    "comment_label": "Ihre Bewertung",
+    "comment_placeholder": "Teilen Sie Ihre Erfahrung mit...",
+    "submit_review": "Bewertung absenden",
+    "submitting": "Wird abgesendet...",
+    "edit_review": "Bewertung bearbeiten",
+    "delete_review": "Bewertung löschen"
+  },
+  "display": {
+    "verified_rental": "Verifizierte Miete",
+    "helpful": "Hilfreich",
+    "report": "Melden",
+    "owner_response": "Antwort des Eigentümers",
+    "show_more": "Mehr anzeigen",
+    "show_less": "Weniger anzeigen"
+  },
+  "filters": {
+    "all_reviews": "Alle Bewertungen",
+    "5_stars": "5 Sterne",
+    "4_stars": "4 Sterne",
+    "3_stars": "3 Sterne",
+    "2_stars": "2 Sterne",
+    "1_star": "1 Stern",
+    "most_recent": "Aktuellste",
+    "highest_rated": "Höchste Bewertung",
+    "lowest_rated": "Niedrigste Bewertung"
+  },
+  "messages": {
+    "review_submitted": "Bewertung erfolgreich abgesendet",
+    "review_updated": "Bewertung erfolgreich aktualisiert",
+    "review_deleted": "Bewertung erfolgreich gelöscht",
+    "already_reviewed": "Sie haben diese Buchung bereits bewertet"
+  }
+}

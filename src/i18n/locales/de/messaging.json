@@ -1,0 +1,39 @@
+{
+  "conversation_list": {
+    "title": "Nachrichten",
+    "no_conversations": "Noch keine Nachrichten",
+    "start_conversation": "Starten Sie eine Konversation durch die Buchung von Equipment",
+    "unread_count": "{{count}} ungelesen",
+    "search_placeholder": "Konversationen durchsuchen..."
+  },
+  "chat": {
+    "type_message": "Nachricht eingeben...",
+    "send": "Senden",
+    "sending": "Wird gesendet...",
+    "online": "Online",
+    "offline": "Offline",
+    "typing": "{{name}} schreibt gerade...",
+    "last_seen": "Zuletzt gesehen {{time}}",
+    "just_now": "Gerade eben",
+    "minutes_ago": "vor {{count}} Minute",
+    "minutes_ago_plural": "vor {{count}} Minuten",
+    "hours_ago": "vor {{count}} Stunde",
+    "hours_ago_plural": "vor {{count}} Stunden",
+    "days_ago": "vor {{count}} Tag",
+    "days_ago_plural": "vor {{count}} Tagen"
+  },
+  "system_messages": {
+    "booking_created": "Buchungsanfrage erstellt",
+    "booking_approved": "Buchung genehmigt",
+    "booking_declined": "Buchung abgelehnt",
+    "booking_cancelled": "Buchung storniert",
+    "payment_completed": "Zahlung abgeschlossen"
+  },
+  "actions": {
+    "view_booking": "Buchung anzeigen",
+    "view_equipment": "Equipment anzeigen",
+    "delete_conversation": "Konversation löschen",
+    "mark_as_read": "Als gelesen markieren",
+    "mark_as_unread": "Als ungelesen markieren"
+  }
+}

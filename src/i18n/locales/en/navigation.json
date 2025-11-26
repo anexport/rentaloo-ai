@@ -1,0 +1,28 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "browse_equipment": "Browse Equipment",
+    "messages": "Messages",
+    "verification": "Verification",
+    "settings": "Settings",
+    "sign_out": "Sign Out",
+    "explore": "Explore",
+    "my_rentals": "My Rentals",
+    "my_listings": "My Listings",
+    "payments": "Payments"
+  },
+  "user_role": {
+    "loading": "Loading...",
+    "equipment_owner": "Equipment Owner",
+    "renter": "Renter"
+  },
+  "pages": {
+    "home": "Home",
+    "explore": "Explore Equipment",
+    "dashboard": "Dashboard",
+    "messages": "Messages",
+    "settings": "Settings",
+    "verification": "Identity Verification",
+    "payment_confirmation": "Payment Confirmation"
+  }
+}

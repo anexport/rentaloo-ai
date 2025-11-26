@@ -1,0 +1,62 @@
+{
+  "sidebar": {
+    "title": "Réserver ce matériel",
+    "select_dates": "Sélectionnez les dates",
+    "start_date": "Date de début",
+    "end_date": "Date de fin",
+    "pricing": "Détails de tarification",
+    "daily_rate": "Tarif quotidien",
+    "number_of_days": "Nombre de jours",
+    "subtotal": "Sous-total",
+    "service_fee": "Frais de service",
+    "total": "Total",
+    "request_booking": "Demander une réservation",
+    "requesting": "Demande en cours...",
+    "dates_required": "Veuillez sélectionner les dates de début et de fin",
+    "unavailable_dates": "Certaines dates de votre sélection ne sont pas disponibles"
+  },
+  "status": {
+    "pending": "En attente",
+    "approved": "Approuvé",
+    "declined": "Décliné",
+    "cancelled": "Annulé",
+    "completed": "Complété"
+  },
+  "requests": {
+    "my_requests": "Mes demandes de réservation",
+    "incoming_requests": "Demandes entrantes",
+    "no_requests": "Aucune demande de réservation pour le moment",
+    "view_details": "Voir les détails",
+    "approve": "Approuver",
+    "decline": "Décliner",
+    "cancel": "Annuler la réservation",
+    "confirm_cancel": "Êtes-vous sûr de vouloir annuler cette réservation?"
+  },
+  "details": {
+    "booking_details": "Détails de la réservation",
+    "equipment": "Matériel",
+    "renter": "Locataire",
+    "owner": "Propriétaire",
+    "dates": "Dates de location",
+    "duration": "Durée",
+    "total_cost": "Coût total",
+    "booking_status": "Statut",
+    "message_from_renter": "Message du locataire",
+    "pickup_method": "Méthode de récupération",
+    "delivery_address": "Adresse de livraison"
+  },
+  "calendar": {
+    "available": "Disponible",
+    "unavailable": "Indisponible",
+    "booked": "Réservé",
+    "select_range": "Sélectionnez vos dates de location",
+    "minimum_rental": "Location minimale de {{count}} jour",
+    "minimum_rental_plural": "Location minimale de {{count}} jours"
+  },
+  "messages": {
+    "request_sent": "Demande de réservation envoyée avec succès",
+    "request_approved": "Demande de réservation approuvée",
+    "request_declined": "Demande de réservation déclinée",
+    "booking_cancelled": "Réservation annulée avec succès"
+  }
+}

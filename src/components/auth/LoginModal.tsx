@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import { Mountain, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,7 @@ type LoginModalProps = {
 };
 
 const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
+  const { t } = useTranslation("auth");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
@@ -69,9 +71,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
         setError(error.message);
       } else if (!returnedUser) {
         // Explicit defensive check: authentication succeeded but user data is missing
-        setError(
-          "Authentication succeeded but user data is missing. Please try again."
-        );
+        setError(t("login.errors.auth_failed"));
       } else {
         // Close modal
         onOpenChange(false);
@@ -118,7 +118,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
       // and then back to the redirectTo URL. The modal will be closed
       // when the user returns and is authenticated.
     } catch {
-      setError("An unexpected error occurred. Please try again.");
+      setError(t("login.errors.unexpected_error"));
     } finally {
       setIsOAuthLoading(false);
     }
@@ -131,9 +131,9 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
           <div className="flex justify-center mb-4">
             <Mountain className="h-12 w-12 text-primary" />
           </div>
-          <DialogTitle className="text-2xl">Welcome Back</DialogTitle>
+          <DialogTitle className="text-2xl">{t("login.title")}</DialogTitle>
           <DialogDescription>
-            Sign in to your RentAloo account
+            {t("login.subtitle")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -152,7 +152,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("login.email_label")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -160,7 +160,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
                 autoCapitalize="off"
                 spellCheck="false"
                 {...register("email")}
-                placeholder="Enter your email"
+                placeholder={t("login.email_placeholder")}
               />
               {errors.email && (
                 <p className="text-sm text-destructive">
@@ -171,14 +171,14 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("login.password_label")}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   {...register("password")}
-                  placeholder="Enter your password"
+                  placeholder={t("login.password_placeholder")}
                   className="pr-12"
                 />
                 <Button
@@ -187,7 +187,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
                   size="icon-sm"
                   className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                   onClick={handleTogglePassword}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("login.hide_password") : t("login.show_password")}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -205,7 +205,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
 
             {/* Submit Button */}
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing In..." : "Sign In"}
+              {isLoading ? t("login.submitting") : t("login.submit_button")}
             </Button>
           </form>
 
@@ -216,7 +216,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                OR
+                {t("login.or_separator")}
               </span>
             </div>
           </div>
@@ -230,7 +230,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
             disabled={isOAuthLoading || isLoading}
           >
             {isOAuthLoading ? (
-              "Connecting..."
+              t("login.connecting")
             ) : (
               <div className="flex items-center justify-center gap-2">
                 <svg
@@ -256,7 +256,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
                     fill="#EA4335"
                   />
                 </svg>
-                <span>Continue with Google</span>
+                <span>{t("login.google_button")}</span>
               </div>
             )}
           </Button>
@@ -264,25 +264,25 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
           {/* Registration Links */}
           <div className="text-center space-y-2">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              {t("login.no_account")}{" "}
               <Button
                 type="button"
                 variant="link"
                 className="h-auto p-0 font-normal"
                 onClick={() => handleShowSignup("renter")}
               >
-                Sign up as a renter
+                {t("login.signup_renter")}
               </Button>
             </p>
             <p className="text-sm text-muted-foreground">
-              Want to list equipment?{" "}
+              {t("login.want_to_list")}{" "}
               <Button
                 type="button"
                 variant="link"
                 className="h-auto p-0 font-normal"
                 onClick={() => handleShowSignup("owner")}
               >
-                Sign up as an owner
+                {t("login.signup_owner")}
               </Button>
             </p>
           </div>

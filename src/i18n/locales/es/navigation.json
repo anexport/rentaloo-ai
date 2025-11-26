@@ -1,0 +1,28 @@
+{
+  "menu": {
+    "dashboard": "Panel de Control",
+    "browse_equipment": "Explorar Equipamiento",
+    "messages": "Mensajes",
+    "verification": "Verificación",
+    "settings": "Configuración",
+    "sign_out": "Cerrar Sesión",
+    "explore": "Explorar",
+    "my_rentals": "Mis Alquileres",
+    "my_listings": "Mis Anuncios",
+    "payments": "Pagos"
+  },
+  "user_role": {
+    "loading": "Cargando...",
+    "equipment_owner": "Propietario de Equipamiento",
+    "renter": "Arrendatario"
+  },
+  "pages": {
+    "home": "Inicio",
+    "explore": "Explorar Equipamiento",
+    "dashboard": "Panel de Control",
+    "messages": "Mensajes",
+    "settings": "Configuración",
+    "verification": "Verificación de Identidad",
+    "payment_confirmation": "Confirmación de Pago"
+  }
+}

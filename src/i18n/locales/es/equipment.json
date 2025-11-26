@@ -1,0 +1,79 @@
+{
+  "listing_card": {
+    "per_day": "por día",
+    "view_details": "Ver Detalles",
+    "no_reviews": "Sin reseñas aún",
+    "reviews_count": "{{count}} reseña",
+    "reviews_count_plural": "{{count}} reseñas",
+    "wishlist_add": "Agregar a deseos",
+    "wishlist_remove": "Eliminar de deseos"
+  },
+  "details": {
+    "title": "Detalles del Equipamiento",
+    "description": "Descripción",
+    "specifications": "Especificaciones",
+    "location": "Ubicación",
+    "availability": "Disponibilidad",
+    "reviews": "Reseñas",
+    "owner_info": "Acerca del Propietario",
+    "condition": "Condición",
+    "daily_rate": "Tarifa Diaria",
+    "book_now": "Reservar Ahora",
+    "contact_owner": "Contactar Propietario"
+  },
+  "condition": {
+    "new": "Nuevo",
+    "excellent": "Excelente",
+    "good": "Bueno",
+    "fair": "Regular"
+  },
+  "filters": {
+    "category": "Categoría",
+    "price_range": "Rango de Precio",
+    "location": "Ubicación",
+    "distance": "Distancia",
+    "availability": "Disponibilidad",
+    "condition": "Condición",
+    "apply_filters": "Aplicar Filtros",
+    "clear_filters": "Limpiar Filtros",
+    "sort_by": "Ordenar Por",
+    "price_low_high": "Precio: Menor a Mayor",
+    "price_high_low": "Precio: Mayor a Menor",
+    "newest_first": "Más Nuevo Primero",
+    "highest_rated": "Mejor Calificado"
+  },
+  "search": {
+    "placeholder": "Buscar equipamiento...",
+    "no_results": "No se encontró equipamiento",
+    "no_results_message": "Intenta ajustar tus filtros o términos de búsqueda",
+    "loading": "Cargando equipamiento..."
+  },
+  "form": {
+    "title_label": "Título del Equipamiento",
+    "title_placeholder": "por ejemplo, Bicicleta de Montaña - Trek X-Caliber",
+    "description_label": "Descripción",
+    "description_placeholder": "Describe tu equipamiento...",
+    "category_label": "Categoría",
+    "category_placeholder": "Selecciona una categoría",
+    "daily_rate_label": "Tarifa de Alquiler Diaria",
+    "daily_rate_placeholder": "Ingresa la tarifa diaria",
+    "condition_label": "Condición",
+    "location_label": "Ubicación",
+    "location_placeholder": "Ingresa la ubicación",
+    "photos_label": "Fotos",
+    "upload_photos": "Subir Fotos",
+    "add_equipment": "Agregar Equipamiento",
+    "update_equipment": "Actualizar Equipamiento",
+    "delete_equipment": "Eliminar Equipamiento",
+    "confirm_delete": "¿Estás seguro de que deseas eliminar este equipamiento?",
+    "save_changes": "Guardar Cambios"
+  },
+  "management": {
+    "my_equipment": "Mi Equipamiento",
+    "add_new": "Agregar Nuevo Equipamiento",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "no_equipment": "Aún no has listado ningún equipamiento",
+    "get_started": "Comienza agregando tu primer anuncio"
+  }
+}

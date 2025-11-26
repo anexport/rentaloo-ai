@@ -1,0 +1,79 @@
+{
+  "listing_card": {
+    "per_day": "per day",
+    "view_details": "View Details",
+    "no_reviews": "No reviews yet",
+    "reviews_count": "{{count}} review",
+    "reviews_count_plural": "{{count}} reviews",
+    "wishlist_add": "Add to wishlist",
+    "wishlist_remove": "Remove from wishlist"
+  },
+  "details": {
+    "title": "Equipment Details",
+    "description": "Description",
+    "specifications": "Specifications",
+    "location": "Location",
+    "availability": "Availability",
+    "reviews": "Reviews",
+    "owner_info": "About the Owner",
+    "condition": "Condition",
+    "daily_rate": "Daily Rate",
+    "book_now": "Book Now",
+    "contact_owner": "Contact Owner"
+  },
+  "condition": {
+    "new": "New",
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair"
+  },
+  "filters": {
+    "category": "Category",
+    "price_range": "Price Range",
+    "location": "Location",
+    "distance": "Distance",
+    "availability": "Availability",
+    "condition": "Condition",
+    "apply_filters": "Apply Filters",
+    "clear_filters": "Clear Filters",
+    "sort_by": "Sort By",
+    "price_low_high": "Price: Low to High",
+    "price_high_low": "Price: High to Low",
+    "newest_first": "Newest First",
+    "highest_rated": "Highest Rated"
+  },
+  "search": {
+    "placeholder": "Search equipment...",
+    "no_results": "No equipment found",
+    "no_results_message": "Try adjusting your filters or search terms",
+    "loading": "Loading equipment..."
+  },
+  "form": {
+    "title_label": "Equipment Title",
+    "title_placeholder": "e.g., Mountain Bike - Trek X-Caliber",
+    "description_label": "Description",
+    "description_placeholder": "Describe your equipment...",
+    "category_label": "Category",
+    "category_placeholder": "Select a category",
+    "daily_rate_label": "Daily Rental Rate",
+    "daily_rate_placeholder": "Enter daily rate",
+    "condition_label": "Condition",
+    "location_label": "Location",
+    "location_placeholder": "Enter location",
+    "photos_label": "Photos",
+    "upload_photos": "Upload Photos",
+    "add_equipment": "Add Equipment",
+    "update_equipment": "Update Equipment",
+    "delete_equipment": "Delete Equipment",
+    "confirm_delete": "Are you sure you want to delete this equipment?",
+    "save_changes": "Save Changes"
+  },
+  "management": {
+    "my_equipment": "My Equipment",
+    "add_new": "Add New Equipment",
+    "edit": "Edit",
+    "delete": "Delete",
+    "no_equipment": "You haven't listed any equipment yet",
+    "get_started": "Get started by adding your first listing"
+  }
+}

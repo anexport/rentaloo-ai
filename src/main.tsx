@@ -5,6 +5,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import "./index.css";
 import App from "./App.tsx";
+import "@/i18n/config";
 
 const queryClient = new QueryClient({
   defaultOptions: {

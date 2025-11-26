@@ -1,0 +1,79 @@
+{
+  "listing_card": {
+    "per_day": "par jour",
+    "view_details": "Voir les détails",
+    "no_reviews": "Aucun avis pour le moment",
+    "reviews_count": "{{count}} avis",
+    "reviews_count_plural": "{{count}} avis",
+    "wishlist_add": "Ajouter à la liste de souhaits",
+    "wishlist_remove": "Retirer de la liste de souhaits"
+  },
+  "details": {
+    "title": "Détails du matériel",
+    "description": "Description",
+    "specifications": "Spécifications",
+    "location": "Localisation",
+    "availability": "Disponibilité",
+    "reviews": "Avis",
+    "owner_info": "À propos du propriétaire",
+    "condition": "État",
+    "daily_rate": "Tarif quotidien",
+    "book_now": "Réserver maintenant",
+    "contact_owner": "Contacter le propriétaire"
+  },
+  "condition": {
+    "new": "Neuf",
+    "excellent": "Excellent",
+    "good": "Bon",
+    "fair": "Acceptable"
+  },
+  "filters": {
+    "category": "Catégorie",
+    "price_range": "Plage de prix",
+    "location": "Localisation",
+    "distance": "Distance",
+    "availability": "Disponibilité",
+    "condition": "État",
+    "apply_filters": "Appliquer les filtres",
+    "clear_filters": "Réinitialiser les filtres",
+    "sort_by": "Trier par",
+    "price_low_high": "Prix: du moins au plus cher",
+    "price_high_low": "Prix: du plus au moins cher",
+    "newest_first": "Plus récent en premier",
+    "highest_rated": "Mieux noté"
+  },
+  "search": {
+    "placeholder": "Rechercher du matériel...",
+    "no_results": "Aucun matériel trouvé",
+    "no_results_message": "Essayez d'ajuster vos filtres ou vos termes de recherche",
+    "loading": "Chargement du matériel..."
+  },
+  "form": {
+    "title_label": "Titre du matériel",
+    "title_placeholder": "ex. : Vélo de montagne - Trek X-Caliber",
+    "description_label": "Description",
+    "description_placeholder": "Décrivez votre matériel...",
+    "category_label": "Catégorie",
+    "category_placeholder": "Sélectionnez une catégorie",
+    "daily_rate_label": "Tarif quotidien de location",
+    "daily_rate_placeholder": "Entrez le tarif quotidien",
+    "condition_label": "État",
+    "location_label": "Localisation",
+    "location_placeholder": "Entrez la localisation",
+    "photos_label": "Photos",
+    "upload_photos": "Télécharger des photos",
+    "add_equipment": "Ajouter du matériel",
+    "update_equipment": "Mettre à jour le matériel",
+    "delete_equipment": "Supprimer le matériel",
+    "confirm_delete": "Êtes-vous sûr de vouloir supprimer ce matériel?",
+    "save_changes": "Enregistrer les modifications"
+  },
+  "management": {
+    "my_equipment": "Mon matériel",
+    "add_new": "Ajouter du nouveau matériel",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "no_equipment": "Vous n'avez pas encore listé de matériel",
+    "get_started": "Commencez par ajouter votre première annonce"
+  }
+}

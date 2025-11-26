@@ -1,0 +1,39 @@
+{
+  "conversation_list": {
+    "title": "Mensajes",
+    "no_conversations": "Sin mensajes aún",
+    "start_conversation": "Comienza una conversación reservando equipamiento",
+    "unread_count": "{{count}} sin leer",
+    "search_placeholder": "Buscar conversaciones..."
+  },
+  "chat": {
+    "type_message": "Escribe un mensaje...",
+    "send": "Enviar",
+    "sending": "Enviando...",
+    "online": "En línea",
+    "offline": "Desconectado",
+    "typing": "{{name}} está escribiendo...",
+    "last_seen": "Último visto {{time}}",
+    "just_now": "Justo ahora",
+    "minutes_ago": "hace {{count}} minuto",
+    "minutes_ago_plural": "hace {{count}} minutos",
+    "hours_ago": "hace {{count}} hora",
+    "hours_ago_plural": "hace {{count}} horas",
+    "days_ago": "hace {{count}} día",
+    "days_ago_plural": "hace {{count}} días"
+  },
+  "system_messages": {
+    "booking_created": "Solicitud de reserva creada",
+    "booking_approved": "Reserva aprobada",
+    "booking_declined": "Reserva rechazada",
+    "booking_cancelled": "Reserva cancelada",
+    "payment_completed": "Pago completado"
+  },
+  "actions": {
+    "view_booking": "Ver Reserva",
+    "view_equipment": "Ver Equipamiento",
+    "delete_conversation": "Eliminar Conversación",
+    "mark_as_read": "Marcar como Leído",
+    "mark_as_unread": "Marcar como No Leído"
+  }
+}

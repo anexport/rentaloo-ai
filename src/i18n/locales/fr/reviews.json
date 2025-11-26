@@ -1,0 +1,48 @@
+{
+  "rating": {
+    "title": "Avis et évaluations",
+    "average_rating": "Évaluation moyenne",
+    "total_reviews": "{{count}} avis",
+    "total_reviews_plural": "{{count}} avis",
+    "no_reviews": "Aucun avis pour le moment",
+    "be_first": "Soyez le premier à laisser un avis"
+  },
+  "form": {
+    "leave_review": "Laisser un avis",
+    "rate_equipment": "Évaluer le matériel",
+    "rate_owner": "Évaluer le propriétaire",
+    "rate_renter": "Évaluer le locataire",
+    "rating_label": "Évaluation",
+    "comment_label": "Votre avis",
+    "comment_placeholder": "Partagez votre expérience...",
+    "submit_review": "Soumettre l'avis",
+    "submitting": "Soumission en cours...",
+    "edit_review": "Modifier l'avis",
+    "delete_review": "Supprimer l'avis"
+  },
+  "display": {
+    "verified_rental": "Location vérifiée",
+    "helpful": "Utile",
+    "report": "Signaler",
+    "owner_response": "Réponse du propriétaire",
+    "show_more": "Afficher plus",
+    "show_less": "Afficher moins"
+  },
+  "filters": {
+    "all_reviews": "Tous les avis",
+    "5_stars": "5 étoiles",
+    "4_stars": "4 étoiles",
+    "3_stars": "3 étoiles",
+    "2_stars": "2 étoiles",
+    "1_star": "1 étoile",
+    "most_recent": "Plus récent",
+    "highest_rated": "Mieux noté",
+    "lowest_rated": "Moins bien noté"
+  },
+  "messages": {
+    "review_submitted": "Avis soumis avec succès",
+    "review_updated": "Avis mis à jour avec succès",
+    "review_deleted": "Avis supprimé avec succès",
+    "already_reviewed": "Vous avez déjà évalué cette réservation"
+  }
+}

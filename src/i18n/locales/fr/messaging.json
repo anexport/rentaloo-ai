@@ -1,0 +1,39 @@
+{
+  "conversation_list": {
+    "title": "Messages",
+    "no_conversations": "Aucun message pour le moment",
+    "start_conversation": "Commencez une conversation en réservant du matériel",
+    "unread_count": "{{count}} non lu",
+    "search_placeholder": "Rechercher dans les conversations..."
+  },
+  "chat": {
+    "type_message": "Tapez un message...",
+    "send": "Envoyer",
+    "sending": "Envoi...",
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "typing": "{{name}} est en train d'écrire...",
+    "last_seen": "Dernière activité {{time}}",
+    "just_now": "À l'instant",
+    "minutes_ago": "Il y a {{count}} minute",
+    "minutes_ago_plural": "Il y a {{count}} minutes",
+    "hours_ago": "Il y a {{count}} heure",
+    "hours_ago_plural": "Il y a {{count}} heures",
+    "days_ago": "Il y a {{count}} jour",
+    "days_ago_plural": "Il y a {{count}} jours"
+  },
+  "system_messages": {
+    "booking_created": "Demande de réservation créée",
+    "booking_approved": "Réservation approuvée",
+    "booking_declined": "Réservation déclinée",
+    "booking_cancelled": "Réservation annulée",
+    "payment_completed": "Paiement complété"
+  },
+  "actions": {
+    "view_booking": "Voir la réservation",
+    "view_equipment": "Voir le matériel",
+    "delete_conversation": "Supprimer la conversation",
+    "mark_as_read": "Marquer comme lu",
+    "mark_as_unread": "Marquer comme non lu"
+  }
+}

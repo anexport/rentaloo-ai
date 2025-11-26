@@ -1,0 +1,28 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "browse_equipment": "Equipment durchsuchen",
+    "messages": "Nachrichten",
+    "verification": "Verifizierung",
+    "settings": "Einstellungen",
+    "sign_out": "Abmelden",
+    "explore": "Erkunden",
+    "my_rentals": "Meine Vermietungen",
+    "my_listings": "Meine Angebote",
+    "payments": "Zahlungen"
+  },
+  "user_role": {
+    "loading": "Wird geladen...",
+    "equipment_owner": "Equipment-Eigentümer",
+    "renter": "Mieter"
+  },
+  "pages": {
+    "home": "Startseite",
+    "explore": "Equipment erkunden",
+    "dashboard": "Dashboard",
+    "messages": "Nachrichten",
+    "settings": "Einstellungen",
+    "verification": "Identitätsverifizierung",
+    "payment_confirmation": "Zahlungsbestätigung"
+  }
+}

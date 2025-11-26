@@ -1,0 +1,79 @@
+{
+  "listing_card": {
+    "per_day": "pro Tag",
+    "view_details": "Details anzeigen",
+    "no_reviews": "Noch keine Bewertungen",
+    "reviews_count": "{{count}} Bewertung",
+    "reviews_count_plural": "{{count}} Bewertungen",
+    "wishlist_add": "Zur Wunschliste hinzufügen",
+    "wishlist_remove": "Von der Wunschliste entfernen"
+  },
+  "details": {
+    "title": "Equipment-Details",
+    "description": "Beschreibung",
+    "specifications": "Spezifikationen",
+    "location": "Standort",
+    "availability": "Verfügbarkeit",
+    "reviews": "Bewertungen",
+    "owner_info": "Über den Eigentümer",
+    "condition": "Zustand",
+    "daily_rate": "Tägliches Mietentgelt",
+    "book_now": "Jetzt buchen",
+    "contact_owner": "Eigentümer kontaktieren"
+  },
+  "condition": {
+    "new": "Neu",
+    "excellent": "Ausgezeichnet",
+    "good": "Gut",
+    "fair": "Befriedigend"
+  },
+  "filters": {
+    "category": "Kategorie",
+    "price_range": "Preisbereich",
+    "location": "Standort",
+    "distance": "Entfernung",
+    "availability": "Verfügbarkeit",
+    "condition": "Zustand",
+    "apply_filters": "Filter anwenden",
+    "clear_filters": "Filter löschen",
+    "sort_by": "Sortieren nach",
+    "price_low_high": "Preis: niedrig bis hoch",
+    "price_high_low": "Preis: hoch bis niedrig",
+    "newest_first": "Neueste zuerst",
+    "highest_rated": "Höchste Bewertungen"
+  },
+  "search": {
+    "placeholder": "Equipment suchen...",
+    "no_results": "Kein Equipment gefunden",
+    "no_results_message": "Versuchen Sie, Ihre Filter oder Suchbegriffe anzupassen",
+    "loading": "Equipment wird geladen..."
+  },
+  "form": {
+    "title_label": "Equipment-Titel",
+    "title_placeholder": "z. B. Mountain Bike - Trek X-Caliber",
+    "description_label": "Beschreibung",
+    "description_placeholder": "Beschreiben Sie Ihr Equipment...",
+    "category_label": "Kategorie",
+    "category_placeholder": "Wählen Sie eine Kategorie",
+    "daily_rate_label": "Tägliches Mietentgelt",
+    "daily_rate_placeholder": "Geben Sie das Tagesgebot ein",
+    "condition_label": "Zustand",
+    "location_label": "Standort",
+    "location_placeholder": "Geben Sie den Standort ein",
+    "photos_label": "Fotos",
+    "upload_photos": "Fotos hochladen",
+    "add_equipment": "Equipment hinzufügen",
+    "update_equipment": "Equipment aktualisieren",
+    "delete_equipment": "Equipment löschen",
+    "confirm_delete": "Möchten Sie dieses Equipment wirklich löschen?",
+    "save_changes": "Änderungen speichern"
+  },
+  "management": {
+    "my_equipment": "Mein Equipment",
+    "add_new": "Neues Equipment hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "no_equipment": "Sie haben noch kein Equipment eingestellt",
+    "get_started": "Beginnen Sie mit Ihrem ersten Angebot"
+  }
+}

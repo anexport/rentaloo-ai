@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -19,8 +20,10 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSelector from "@/components/LanguageSelector";
 
 const UserMenu = () => {
+  const { t } = useTranslation("navigation");
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -41,7 +44,7 @@ const UserMenu = () => {
       console.error("Sign out error:", error);
       toast({
         variant: "destructive",
-        title: "Sign out failed",
+        title: t("menu.sign_out"),
         description:
           error instanceof Error
             ? error.message
@@ -108,10 +111,10 @@ const UserMenu = () => {
           </p>
           <p className="text-xs text-gray-500 truncate mt-0.5">
             {userRole == null
-              ? "Loading..."
+              ? t("user_role.loading")
               : userRole === "owner"
-                ? "Equipment Owner"
-                : "Renter"}
+                ? t("user_role.equipment_owner")
+                : t("user_role.renter")}
           </p>
         </div>
 
@@ -120,33 +123,37 @@ const UserMenu = () => {
           onClick={() => handleNavigation(getDashboardPath())}
         >
           <LayoutDashboard className="h-4 w-4 text-gray-500" />
-          <span>Dashboard</span>
+          <span>{t("menu.dashboard")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => handleNavigation("/equipment")}>
           <Search className="h-4 w-4 text-gray-500" />
-          <span>Browse Equipment</span>
+          <span>{t("menu.browse_equipment")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => handleNavigation("/messages")}>
           <MessageSquare className="h-4 w-4 text-gray-500" />
-          <span>Messages</span>
+          <span>{t("menu.messages")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => handleNavigation("/verification")}>
           <Shield className="h-4 w-4 text-gray-500" />
-          <span>Verification</span>
+          <span>{t("menu.verification")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
         <DropdownMenuItem onClick={() => handleNavigation("/settings")}>
           <Settings className="h-4 w-4 text-gray-500" />
-          <span>Settings</span>
+          <span>{t("menu.settings")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem>
           <ThemeToggle variant="menu-item" />
+        </DropdownMenuItem>
+
+        <DropdownMenuItem>
+          <LanguageSelector variant="menu-item" />
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
@@ -158,7 +165,7 @@ const UserMenu = () => {
           className="text-red-600 hover:bg-red-50"
         >
           <LogOut className="h-4 w-4" />
-          <span>Sign Out</span>
+          <span>{t("menu.sign_out")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

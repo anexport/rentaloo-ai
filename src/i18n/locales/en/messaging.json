@@ -1,0 +1,39 @@
+{
+  "conversation_list": {
+    "title": "Messages",
+    "no_conversations": "No messages yet",
+    "start_conversation": "Start a conversation by booking equipment",
+    "unread_count": "{{count}} unread",
+    "search_placeholder": "Search conversations..."
+  },
+  "chat": {
+    "type_message": "Type a message...",
+    "send": "Send",
+    "sending": "Sending...",
+    "online": "Online",
+    "offline": "Offline",
+    "typing": "{{name}} is typing...",
+    "last_seen": "Last seen {{time}}",
+    "just_now": "Just now",
+    "minutes_ago": "{{count}} minute ago",
+    "minutes_ago_plural": "{{count}} minutes ago",
+    "hours_ago": "{{count}} hour ago",
+    "hours_ago_plural": "{{count}} hours ago",
+    "days_ago": "{{count}} day ago",
+    "days_ago_plural": "{{count}} days ago"
+  },
+  "system_messages": {
+    "booking_created": "Booking request created",
+    "booking_approved": "Booking approved",
+    "booking_declined": "Booking declined",
+    "booking_cancelled": "Booking cancelled",
+    "payment_completed": "Payment completed"
+  },
+  "actions": {
+    "view_booking": "View Booking",
+    "view_equipment": "View Equipment",
+    "delete_conversation": "Delete Conversation",
+    "mark_as_read": "Mark as Read",
+    "mark_as_unread": "Mark as Unread"
+  }
+}

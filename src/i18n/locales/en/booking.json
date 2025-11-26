@@ -1,0 +1,62 @@
+{
+  "sidebar": {
+    "title": "Book This Equipment",
+    "select_dates": "Select Dates",
+    "start_date": "Start Date",
+    "end_date": "End Date",
+    "pricing": "Pricing Details",
+    "daily_rate": "Daily Rate",
+    "number_of_days": "Number of Days",
+    "subtotal": "Subtotal",
+    "service_fee": "Service Fee",
+    "total": "Total",
+    "request_booking": "Request to Book",
+    "requesting": "Requesting...",
+    "dates_required": "Please select start and end dates",
+    "unavailable_dates": "Some dates in your selection are unavailable"
+  },
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "declined": "Declined",
+    "cancelled": "Cancelled",
+    "completed": "Completed"
+  },
+  "requests": {
+    "my_requests": "My Booking Requests",
+    "incoming_requests": "Incoming Requests",
+    "no_requests": "No booking requests yet",
+    "view_details": "View Details",
+    "approve": "Approve",
+    "decline": "Decline",
+    "cancel": "Cancel Booking",
+    "confirm_cancel": "Are you sure you want to cancel this booking?"
+  },
+  "details": {
+    "booking_details": "Booking Details",
+    "equipment": "Equipment",
+    "renter": "Renter",
+    "owner": "Owner",
+    "dates": "Rental Dates",
+    "duration": "Duration",
+    "total_cost": "Total Cost",
+    "booking_status": "Status",
+    "message_from_renter": "Message from Renter",
+    "pickup_method": "Pickup Method",
+    "delivery_address": "Delivery Address"
+  },
+  "calendar": {
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "booked": "Booked",
+    "select_range": "Select your rental dates",
+    "minimum_rental": "Minimum {{count}} day rental",
+    "minimum_rental_plural": "Minimum {{count}} days rental"
+  },
+  "messages": {
+    "request_sent": "Booking request sent successfully",
+    "request_approved": "Booking request approved",
+    "request_declined": "Booking request declined",
+    "booking_cancelled": "Booking cancelled successfully"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "title": "Identitätsverifizierung",
+  "subtitle": "Überprüfen Sie Ihre Identität, um Vertrauen in der Gemeinschaft aufzubauen",
+  "steps": {
+    "email": "E-Mail-Verifizierung",
+    "phone": "Telefon-Verifizierung",
+    "identity": "Identitätsdokument",
+    "address": "Adressverifizierung"
+  },
+  "status": {
+    "verified": "Verifiziert",
+    "pending": "Ausstehend",
+    "unverified": "Nicht verifiziert",
+    "failed": "Verifizierung fehlgeschlagen"
+  },
+  "email": {
+    "title": "Verifizieren Sie Ihre E-Mail",
+    "description": "Bestätigen Sie Ihre E-Mail-Adresse, um fortzufahren",
+    "send_code": "Bestätigungscode senden",
+    "resend_code": "Code erneut senden",
+    "enter_code": "Geben Sie den an {{email}} gesendeten Code ein",
+    "verified_message": "Ihre E-Mail wurde verifiziert"
+  },
+  "phone": {
+    "title": "Verifizieren Sie Ihre Telefonnummer",
+    "description": "Fügen Sie Ihre Telefonnummer für die Kontosicherheit hinzu",
+    "enter_phone": "Geben Sie Ihre Telefonnummer ein",
+    "send_code": "Code senden",
+    "enter_code": "Geben Sie den Bestätigungscode ein",
+    "verified_message": "Ihre Telefonnummer wurde verifiziert"
+  },
+  "identity": {
+    "title": "Identitätsdokument hochladen",
+    "description": "Laden Sie einen von der Regierung ausgestellten Ausweis hoch",
+    "document_types": "Akzeptiert: Reisepass, Führerschein, Personalausweis",
+    "upload_front": "Vorderseite hochladen",
+    "upload_back": "Rückseite hochladen (falls zutreffend)",
+    "uploading": "Wird hochgeladen...",
+    "submitted_message": "Ihr Dokument wurde zur Überprüfung eingereicht",
+    "verified_message": "Ihre Identität wurde verifiziert"
+  },
+  "address": {
+    "title": "Überprüfen Sie Ihre Adresse",
+    "description": "Erbringen Sie einen Adressnachweis",
+    "document_types": "Akzeptiert: Stromrechnung, Kontoauszug",
+    "upload_document": "Dokument hochladen",
+    "submitted_message": "Ihr Adressnachweis wurde eingereicht",
+    "verified_message": "Ihre Adresse wurde verifiziert"
+  },
+  "trust_score": {
+    "title": "Vertrauensscore",
+    "description": "Vervollständigen Sie Verifizierungen, um Ihren Vertrauensscore zu erhöhen",
+    "score": "{{score}}/100",
+    "benefits": "Höhere Vertrauenswerte führen zu mehr Buchungen"
+  },
+  "badges": {
+    "email_verified": "E-Mail verifiziert",
+    "phone_verified": "Telefon verifiziert",
+    "identity_verified": "Identität verifiziert",
+    "address_verified": "Adresse verifiziert",
+    "trusted_member": "Vertrauenswürdiges Mitglied"
+  }
+}

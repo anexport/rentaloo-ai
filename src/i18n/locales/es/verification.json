@@ -1,0 +1,63 @@
+{
+  "title": "Verificación de Identidad",
+  "subtitle": "Verifica tu identidad para construir confianza en la comunidad",
+  "steps": {
+    "email": "Verificación de Correo",
+    "phone": "Verificación de Teléfono",
+    "identity": "Documento de Identidad",
+    "address": "Verificación de Dirección"
+  },
+  "status": {
+    "verified": "Verificado",
+    "pending": "Pendiente",
+    "unverified": "No Verificado",
+    "failed": "Verificación Fallida"
+  },
+  "email": {
+    "title": "Verifica tu Correo",
+    "description": "Confirma tu dirección de correo para continuar",
+    "send_code": "Enviar Código de Verificación",
+    "resend_code": "Reenviar Código",
+    "enter_code": "Ingresa el código enviado a {{email}}",
+    "verified_message": "Tu correo electrónico ha sido verificado"
+  },
+  "phone": {
+    "title": "Verifica tu Número de Teléfono",
+    "description": "Agrega tu número de teléfono para la seguridad de tu cuenta",
+    "enter_phone": "Ingresa Número de Teléfono",
+    "send_code": "Enviar Código",
+    "enter_code": "Ingresa Código de Verificación",
+    "verified_message": "Tu número de teléfono ha sido verificado"
+  },
+  "identity": {
+    "title": "Subir Documento de Identidad",
+    "description": "Sube una identificación emitida por el gobierno",
+    "document_types": "Aceptados: Pasaporte, Licencia de Conducir, Cédula de Identidad",
+    "upload_front": "Subir Frente",
+    "upload_back": "Subir Reverso (si aplica)",
+    "uploading": "Subiendo...",
+    "submitted_message": "Tu documento ha sido enviado para revisión",
+    "verified_message": "Tu identidad ha sido verificada"
+  },
+  "address": {
+    "title": "Verifica tu Dirección",
+    "description": "Proporciona una prueba de dirección",
+    "document_types": "Aceptados: Factura de Servicios, Estado de Cuenta Bancario",
+    "upload_document": "Subir Documento",
+    "submitted_message": "Tu prueba de dirección ha sido enviada",
+    "verified_message": "Tu dirección ha sido verificada"
+  },
+  "trust_score": {
+    "title": "Puntuación de Confianza",
+    "description": "Completa verificaciones para aumentar tu puntuación de confianza",
+    "score": "{{score}}/100",
+    "benefits": "Las puntuaciones de confianza más altas conducen a más reservas"
+  },
+  "badges": {
+    "email_verified": "Correo Verificado",
+    "phone_verified": "Teléfono Verificado",
+    "identity_verified": "Identidad Verificada",
+    "address_verified": "Dirección Verificada",
+    "trusted_member": "Miembro de Confianza"
+  }
+}

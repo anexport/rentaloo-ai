@@ -1,0 +1,48 @@
+{
+  "rating": {
+    "title": "Reviews & Ratings",
+    "average_rating": "Average Rating",
+    "total_reviews": "{{count}} review",
+    "total_reviews_plural": "{{count}} reviews",
+    "no_reviews": "No reviews yet",
+    "be_first": "Be the first to leave a review"
+  },
+  "form": {
+    "leave_review": "Leave a Review",
+    "rate_equipment": "Rate the Equipment",
+    "rate_owner": "Rate the Owner",
+    "rate_renter": "Rate the Renter",
+    "rating_label": "Rating",
+    "comment_label": "Your Review",
+    "comment_placeholder": "Share your experience...",
+    "submit_review": "Submit Review",
+    "submitting": "Submitting...",
+    "edit_review": "Edit Review",
+    "delete_review": "Delete Review"
+  },
+  "display": {
+    "verified_rental": "Verified Rental",
+    "helpful": "Helpful",
+    "report": "Report",
+    "owner_response": "Owner's Response",
+    "show_more": "Show More",
+    "show_less": "Show Less"
+  },
+  "filters": {
+    "all_reviews": "All Reviews",
+    "5_stars": "5 Stars",
+    "4_stars": "4 Stars",
+    "3_stars": "3 Stars",
+    "2_stars": "2 Stars",
+    "1_star": "1 Star",
+    "most_recent": "Most Recent",
+    "highest_rated": "Highest Rated",
+    "lowest_rated": "Lowest Rated"
+  },
+  "messages": {
+    "review_submitted": "Review submitted successfully",
+    "review_updated": "Review updated successfully",
+    "review_deleted": "Review deleted successfully",
+    "already_reviewed": "You have already reviewed this booking"
+  }
+}
