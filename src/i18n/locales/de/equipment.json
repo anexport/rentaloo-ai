@@ -32,6 +32,34 @@
     "book_now": "Jetzt buchen",
     "contact_owner": "Eigentümer kontaktieren"
   },
+  "details_dialog": {
+    "tab_overview": "Übersicht",
+    "tab_details": "Details",
+    "tab_reviews": "Bewertungen",
+    "tab_book": "Buchen",
+    "aria_overview": "Übersicht - Beschreibung und Details",
+    "aria_details": "Details - Verfügbarkeit und Standort",
+    "aria_reviews": "Bewertungen - Bewertungen und Rückmeldungen des Eigentümers",
+    "aria_book": "Buchen",
+    "view_details_description": "Equipment-Details, Verfügbarkeit und Buchungsinformationen anzeigen",
+    "no_reviews_title": "Noch Keine Bewertungen",
+    "no_reviews_message": "Dieser Eigentümer hat noch keine Bewertungen erhalten. Seien Sie der Erste, der mietet und Ihre Erfahrung teilt!",
+    "category_missing_title": "Kategorieinformationen Fehlen",
+    "category_missing_message": "Bei diesem Equipment fehlen die Kategorieinformationen. Bitte kontaktieren Sie den Eigentümer oder versuchen Sie es später erneut."
+  },
+  "toasts": {
+    "cannot_book_own_title": "Eigenes Equipment Kann Nicht Gebucht Werden",
+    "cannot_book_own_message": "Sie können Ihr eigenes Equipment nicht buchen.",
+    "missing_category_title": "Kategorieinformationen Fehlen",
+    "missing_category_message": "Die Kategorieinformationen des Equipments fehlen.",
+    "booking_failed_title": "Buchung Fehlgeschlagen",
+    "booking_failed_message": "Buchungsanfrage konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "login_required_title": "Anmeldung Erforderlich",
+    "login_required_message": "Bitte melden Sie sich an, um dieses Equipment zu buchen.",
+    "payment_success_title": "Zahlung Erfolgreich",
+    "payment_success_message": "Ihre Buchung wurde bestätigt! Der Eigentümer wurde benachrichtigt.",
+    "availability_error": "Verfügbarkeit konnte nicht überprüft werden — bitte versuchen Sie es erneut"
+  },
   "condition": {
     "new": "Neu",
     "excellent": "Ausgezeichnet",

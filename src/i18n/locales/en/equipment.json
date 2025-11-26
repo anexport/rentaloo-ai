@@ -32,6 +32,34 @@
     "book_now": "Book Now",
     "contact_owner": "Contact Owner"
   },
+  "details_dialog": {
+    "tab_overview": "Overview",
+    "tab_details": "Details",
+    "tab_reviews": "Reviews",
+    "tab_book": "Book",
+    "aria_overview": "Overview - Description and details",
+    "aria_details": "Details - Availability and location",
+    "aria_reviews": "Reviews - Owner ratings and feedback",
+    "aria_book": "Book",
+    "view_details_description": "View equipment details, availability, and booking information",
+    "no_reviews_title": "No Reviews Yet",
+    "no_reviews_message": "This owner hasn't received any reviews yet. Be the first to rent and share your experience!",
+    "category_missing_title": "Category Information Missing",
+    "category_missing_message": "This equipment is missing category information. Please contact the owner or try again later."
+  },
+  "toasts": {
+    "cannot_book_own_title": "Cannot Book Own Equipment",
+    "cannot_book_own_message": "You cannot book your own equipment.",
+    "missing_category_title": "Missing Category Information",
+    "missing_category_message": "Equipment category information is missing.",
+    "booking_failed_title": "Booking Failed",
+    "booking_failed_message": "Failed to create booking request. Please try again.",
+    "login_required_title": "Login Required",
+    "login_required_message": "Please log in to book this equipment.",
+    "payment_success_title": "Payment Successful",
+    "payment_success_message": "Your booking has been confirmed! The owner has been notified.",
+    "availability_error": "Could not verify availability — please try again"
+  },
   "condition": {
     "new": "New",
     "excellent": "Excellent",

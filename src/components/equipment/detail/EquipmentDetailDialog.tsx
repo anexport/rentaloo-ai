@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -76,6 +77,7 @@ const EquipmentDetailDialog = ({
   onOpenChange,
   listingId,
 }: EquipmentDetailDialogProps) => {
+  const { t } = useTranslation("equipment");
   const isMobile = useMediaQuery(createMaxWidthQuery("md"));
   const { user } = useAuth();
   const { toast } = useToast();
@@ -197,7 +199,7 @@ const EquipmentDetailDialog = ({
             setConflicts([
               {
                 type: "unavailable",
-                message: "Could not verify availability — please try again",
+                message: t("toasts.availability_error"),
               },
             ]);
           }
@@ -337,8 +339,8 @@ const EquipmentDetailDialog = ({
     if (data.owner?.id === user.id) {
       toast({
         variant: "destructive",
-        title: "Cannot Book Own Equipment",
-        description: "You cannot book your own equipment.",
+        title: t("toasts.cannot_book_own_title"),
+        description: t("toasts.cannot_book_own_message"),
       });
       return;
     }
@@ -346,8 +348,8 @@ const EquipmentDetailDialog = ({
     if (!data.category) {
       toast({
         variant: "destructive",
-        title: "Missing Category Information",
-        description: "Equipment category information is missing.",
+        title: t("toasts.missing_category_title"),
+        description: t("toasts.missing_category_message"),
       });
       return;
     }
@@ -395,8 +397,8 @@ const EquipmentDetailDialog = ({
       console.error("Error creating booking request:", error);
       toast({
         variant: "destructive",
-        title: "Booking Failed",
-        description: "Failed to create booking request. Please try again.",
+        title: t("toasts.booking_failed_title"),
+        description: t("toasts.booking_failed_message"),
       });
     } finally {
       setIsCreatingBooking(false);
@@ -419,8 +421,8 @@ const EquipmentDetailDialog = ({
     if (!user) {
       toast({
         variant: "destructive",
-        title: "Login Required",
-        description: "Please log in to book this equipment.",
+        title: t("toasts.login_required_title"),
+        description: t("toasts.login_required_message"),
       });
       return;
     }
@@ -555,26 +557,26 @@ const EquipmentDetailDialog = ({
                 <TabsTrigger
                   value="overview"
                   className="flex items-center gap-2"
-                  aria-label="Overview - Description and details"
+                  aria-label={t("details_dialog.aria_overview")}
                 >
                   <Info className="h-4 w-4" />
-                  <span>Overview</span>
+                  <span>{t("details_dialog.tab_overview")}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="details"
                   className="flex items-center gap-2"
-                  aria-label="Details - Availability and location"
+                  aria-label={t("details_dialog.aria_details")}
                 >
                   <Package className="h-4 w-4" />
-                  <span>Details</span>
+                  <span>{t("details_dialog.tab_details")}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="reviews"
                   className="flex items-center gap-2"
-                  aria-label="Reviews - Owner ratings and feedback"
+                  aria-label={t("details_dialog.aria_reviews")}
                 >
                   <Star className="h-4 w-4" />
-                  <span>Reviews</span>
+                  <span>{t("details_dialog.tab_reviews")}</span>
                   {data.reviews && data.reviews.length > 0 && (
                     <Badge variant="secondary" className="ml-1 text-xs">
                       {data.reviews.length}
@@ -584,10 +586,10 @@ const EquipmentDetailDialog = ({
                 <TabsTrigger
                   value="book"
                   className="flex items-center gap-2"
-                  aria-label="Book"
+                  aria-label={t("details_dialog.aria_book")}
                 >
                   <CreditCard className="h-4 w-4" />
-                  <span>Book</span>
+                  <span>{t("details_dialog.tab_book")}</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -645,10 +647,10 @@ const EquipmentDetailDialog = ({
                       <div className="flex flex-col items-center justify-center py-12 text-center">
                         <Star className="h-12 w-12 text-muted-foreground mb-4" />
                         <h3 className="text-lg font-semibold mb-2">
-                          No Reviews Yet
+                          {t("details_dialog.no_reviews_title")}
                         </h3>
                         <p className="text-muted-foreground max-w-md">
-                          This owner hasn't received any reviews yet. Be the first to rent and share your experience!
+                          {t("details_dialog.no_reviews_message")}
                         </p>
                       </div>
                     </CardContent>
@@ -663,11 +665,10 @@ const EquipmentDetailDialog = ({
                       <div className="flex flex-col items-center justify-center py-8 text-center">
                         <Package className="h-12 w-12 text-muted-foreground mb-4" />
                         <h3 className="text-lg font-semibold mb-2">
-                          Category Information Missing
+                          {t("details_dialog.category_missing_title")}
                         </h3>
                         <p className="text-muted-foreground max-w-md">
-                          This equipment is missing category information. Please
-                          contact the owner or try again later.
+                          {t("details_dialog.category_missing_message")}
                         </p>
                       </div>
                     </CardContent>
@@ -680,9 +681,8 @@ const EquipmentDetailDialog = ({
                     onSuccess={(paymentId) => {
                       setActiveTab("overview");
                       toast({
-                        title: "Payment Successful",
-                        description:
-                          "Your booking has been confirmed! The owner has been notified.",
+                        title: t("toasts.payment_success_title"),
+                        description: t("toasts.payment_success_message"),
                       });
                       setBookingRequestId(null);
                     }}
@@ -816,12 +816,12 @@ const EquipmentDetailDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogTitle className="sr-only">
-          {data?.title || "Equipment Details"}
+          {data?.title || t("details.title")}
         </DialogTitle>
         <DialogDescription className="sr-only">
-          {data?.description 
+          {data?.description
             ? `Details for ${data.title || "this equipment"}. ${data.description.substring(0, 150)}...`
-            : "View equipment details, availability, and booking information"}
+            : t("details_dialog.view_details_description")}
         </DialogDescription>
         {renderContent()}
       </DialogContent>

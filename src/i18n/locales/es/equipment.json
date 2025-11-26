@@ -32,6 +32,34 @@
     "book_now": "Reservar Ahora",
     "contact_owner": "Contactar Propietario"
   },
+  "details_dialog": {
+    "tab_overview": "Vista General",
+    "tab_details": "Detalles",
+    "tab_reviews": "Reseñas",
+    "tab_book": "Reservar",
+    "aria_overview": "Vista General - Descripción y detalles",
+    "aria_details": "Detalles - Disponibilidad y ubicación",
+    "aria_reviews": "Reseñas - Calificaciones y comentarios del propietario",
+    "aria_book": "Reservar",
+    "view_details_description": "Ver detalles del equipamiento, disponibilidad e información de reserva",
+    "no_reviews_title": "Sin Reseñas Aún",
+    "no_reviews_message": "Este propietario aún no ha recibido reseñas. ¡Sé el primero en alquilar y compartir tu experiencia!",
+    "category_missing_title": "Información de Categoría Faltante",
+    "category_missing_message": "Este equipamiento no tiene información de categoría. Por favor, contacta al propietario o intenta de nuevo más tarde."
+  },
+  "toasts": {
+    "cannot_book_own_title": "No Puedes Reservar Tu Propio Equipamiento",
+    "cannot_book_own_message": "No puedes reservar tu propio equipamiento.",
+    "missing_category_title": "Información de Categoría Faltante",
+    "missing_category_message": "Falta la información de categoría del equipamiento.",
+    "booking_failed_title": "Reserva Fallida",
+    "booking_failed_message": "No se pudo crear la solicitud de reserva. Por favor, intenta de nuevo.",
+    "login_required_title": "Inicio de Sesión Requerido",
+    "login_required_message": "Por favor, inicia sesión para reservar este equipamiento.",
+    "payment_success_title": "Pago Exitoso",
+    "payment_success_message": "¡Tu reserva ha sido confirmada! El propietario ha sido notificado.",
+    "availability_error": "No se pudo verificar la disponibilidad — por favor, intenta de nuevo"
+  },
   "condition": {
     "new": "Nuevo",
     "excellent": "Excelente",

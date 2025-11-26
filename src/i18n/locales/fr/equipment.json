@@ -32,6 +32,34 @@
     "book_now": "Réserver maintenant",
     "contact_owner": "Contacter le propriétaire"
   },
+  "details_dialog": {
+    "tab_overview": "Aperçu",
+    "tab_details": "Détails",
+    "tab_reviews": "Avis",
+    "tab_book": "Réserver",
+    "aria_overview": "Aperçu - Description et détails",
+    "aria_details": "Détails - Disponibilité et localisation",
+    "aria_reviews": "Avis - Notes et commentaires du propriétaire",
+    "aria_book": "Réserver",
+    "view_details_description": "Voir les détails du matériel, la disponibilité et les informations de réservation",
+    "no_reviews_title": "Aucun Avis pour le Moment",
+    "no_reviews_message": "Ce propriétaire n'a pas encore reçu d'avis. Soyez le premier à louer et à partager votre expérience !",
+    "category_missing_title": "Informations de Catégorie Manquantes",
+    "category_missing_message": "Ce matériel n'a pas d'informations de catégorie. Veuillez contacter le propriétaire ou réessayer plus tard."
+  },
+  "toasts": {
+    "cannot_book_own_title": "Impossible de Réserver Son Propre Matériel",
+    "cannot_book_own_message": "Vous ne pouvez pas réserver votre propre matériel.",
+    "missing_category_title": "Informations de Catégorie Manquantes",
+    "missing_category_message": "Les informations de catégorie du matériel sont manquantes.",
+    "booking_failed_title": "Réservation Échouée",
+    "booking_failed_message": "Échec de la création de la demande de réservation. Veuillez réessayer.",
+    "login_required_title": "Connexion Requise",
+    "login_required_message": "Veuillez vous connecter pour réserver ce matériel.",
+    "payment_success_title": "Paiement Réussi",
+    "payment_success_message": "Votre réservation a été confirmée ! Le propriétaire a été informé.",
+    "availability_error": "Impossible de vérifier la disponibilité — veuillez réessayer"
+  },
   "condition": {
     "new": "Neuf",
     "excellent": "Excellent",
