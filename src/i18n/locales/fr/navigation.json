@@ -24,5 +24,9 @@
     "settings": "Paramètres",
     "verification": "Vérification d'identité",
     "payment_confirmation": "Confirmation de paiement"
+  },
+  "auth": {
+    "sign_in": "Se connecter",
+    "get_started": "Commencer"
   }
 }

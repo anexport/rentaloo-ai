@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -27,6 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSelector from "@/components/LanguageSelector";
 import { toast } from "@/hooks/useToast";
 
 type Props = {
@@ -40,6 +42,7 @@ const ExploreHeader = ({
   onLoginClick,
   onSignupClick,
 }: Props) => {
+  const { t } = useTranslation("navigation");
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -107,6 +110,7 @@ const ExploreHeader = ({
             {user ? (
               <>
                 <ThemeToggle variant="icon" />
+                <LanguageSelector variant="default" />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -129,7 +133,7 @@ const ExploreHeader = ({
                         className="flex items-center cursor-pointer"
                       >
                         <Home className="mr-2 h-4 w-4" />
-                        Dashboard
+                        {t("menu.dashboard")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -138,7 +142,7 @@ const ExploreHeader = ({
                         className="flex items-center cursor-pointer"
                       >
                         <Package className="mr-2 h-4 w-4" />
-                        My Equipment
+                        {t("menu.my_listings")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -147,7 +151,7 @@ const ExploreHeader = ({
                         className="flex items-center cursor-pointer"
                       >
                         <Settings className="mr-2 h-4 w-4" />
-                        Settings
+                        {t("menu.settings")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -158,7 +162,7 @@ const ExploreHeader = ({
                       className="cursor-pointer"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
-                      Sign out
+                      {t("menu.sign_out")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -166,10 +170,11 @@ const ExploreHeader = ({
             ) : (
               <>
                 <ThemeToggle variant="icon" />
+                <LanguageSelector variant="default" />
                 <Button variant="ghost" onClick={() => onLoginClick?.()}>
-                  Sign In
+                  {t("auth.sign_in")}
                 </Button>
-                <Button onClick={() => onSignupClick?.()}>Get Started</Button>
+                <Button onClick={() => onSignupClick?.()}>{t("auth.get_started")}</Button>
               </>
             )}
           </div>
@@ -177,6 +182,7 @@ const ExploreHeader = ({
           {/* Mobile Navigation */}
           <div className="flex md:hidden items-center space-x-2">
             <ThemeToggle variant="icon" />
+            <LanguageSelector variant="default" />
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Open menu">
@@ -185,7 +191,7 @@ const ExploreHeader = ({
               </SheetTrigger>
               <SheetContent side="right">
                 <SheetHeader>
-                  <SheetTitle>Menu</SheetTitle>
+                  <SheetTitle>{t("common:navigation.menu")}</SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-col space-y-4 mt-6">
                   {user ? (
@@ -205,19 +211,19 @@ const ExploreHeader = ({
                       <Button variant="ghost" className="justify-start" asChild>
                         <Link to="/renter/dashboard">
                           <User className="mr-2 h-4 w-4" />
-                          Dashboard
+                          {t("menu.dashboard")}
                         </Link>
                       </Button>
                       <Button variant="ghost" className="justify-start" asChild>
                         <Link to="/owner/dashboard">
                           <Package className="mr-2 h-4 w-4" />
-                          My Equipment
+                          {t("menu.my_listings")}
                         </Link>
                       </Button>
                       <Button variant="ghost" className="justify-start" asChild>
                         <Link to="/settings">
                           <Settings className="mr-2 h-4 w-4" />
-                          Settings
+                          {t("menu.settings")}
                         </Link>
                       </Button>
                       <Button
@@ -228,7 +234,7 @@ const ExploreHeader = ({
                         }}
                       >
                         <LogOut className="mr-2 h-4 w-4" />
-                        Sign out
+                        {t("menu.sign_out")}
                       </Button>
                     </>
                   ) : (
@@ -238,13 +244,13 @@ const ExploreHeader = ({
                         className="justify-start"
                         onClick={() => onLoginClick?.()}
                       >
-                        Sign In
+                        {t("auth.sign_in")}
                       </Button>
                       <Button
                         className="justify-start"
                         onClick={() => onSignupClick?.()}
                       >
-                        Get Started
+                        {t("auth.get_started")}
                       </Button>
                     </>
                   )}

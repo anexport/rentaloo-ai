@@ -24,5 +24,9 @@
     "settings": "Einstellungen",
     "verification": "Identitätsverifizierung",
     "payment_confirmation": "Zahlungsbestätigung"
+  },
+  "auth": {
+    "sign_in": "Anmelden",
+    "get_started": "Erste Schritte"
   }
 }

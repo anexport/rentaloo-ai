@@ -101,5 +101,8 @@
     "spanish": "Spanish",
     "french": "French",
     "german": "German"
+  },
+  "navigation": {
+    "menu": "Menu"
   }
 }

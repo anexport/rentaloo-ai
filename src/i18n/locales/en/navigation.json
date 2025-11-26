@@ -11,6 +11,10 @@
     "my_listings": "My Listings",
     "payments": "Payments"
   },
+  "auth": {
+    "sign_in": "Sign In",
+    "get_started": "Get Started"
+  },
   "user_role": {
     "loading": "Loading...",
     "equipment_owner": "Equipment Owner",
