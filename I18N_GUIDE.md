@@ -253,20 +253,33 @@ const languages: Language[] = [
 4. Create credentials → API Key
 5. Copy the API key
 
-### 2. Add to Environment
-Create/edit `/home/user/rentaloo-ai/.env`:
-```env
-VITE_GOOGLE_TRANSLATE_API_KEY=your_api_key_here
-```
+### 2. Add to Supabase Secrets
+**IMPORTANT:** Never add the API key to `.env` or client-side code. This would expose it to all users and allow unauthorized usage.
 
-### 3. Apply Migration
+Instead, add it as a Supabase secret:
 ```bash
-# Run migration to create content_translations table
-# This is handled automatically by Supabase
-# Or manually run the migration in Supabase Studio
+# Using Supabase CLI
+supabase secrets set GOOGLE_TRANSLATE_API_KEY=your_api_key_here
+
+# Or via Supabase Dashboard:
+# Settings → Edge Functions → Secrets → Add Secret
 ```
 
-### 4. Use in Components
+### 3. Deploy Edge Function
+Deploy the secure translation edge function:
+```bash
+supabase functions deploy translate-content
+```
+
+### 4. Apply Migrations
+Apply both migrations to create the translation cache table and secure RLS policies:
+```bash
+# Via Supabase Dashboard: Database → Migrations → Run migrations
+# Or via CLI:
+supabase db push
+```
+
+### 5. Use in Components
 
 ```typescript
 import { translateEquipmentContent } from "@/lib/translation";
@@ -324,10 +337,11 @@ useEffect(() => {
 
 ### Issue: Google Translate not working
 **Solution:**
-- Verify `VITE_GOOGLE_TRANSLATE_API_KEY` is set
+- Verify `GOOGLE_TRANSLATE_API_KEY` is set in Supabase secrets
+- Check that the `translate-content` edge function is deployed
 - Check API key permissions in Google Cloud Console
 - Ensure Cloud Translation API is enabled
-- Check browser console for API errors
+- Check Supabase edge function logs for errors
 
 ---
 
@@ -355,12 +369,17 @@ src/
 ├── components/
 │   └── LanguageSelector.tsx      # Language dropdown
 ├── lib/
-│   └── translation.ts             # Google Translate integration
+│   └── translation.ts             # Client-side translation wrapper
 └── contexts/
     └── AuthContext.tsx            # Language sync on login
 
-supabase/migrations/
-└── 999_add_content_translations_table.sql  # Translation cache table
+supabase/
+├── functions/
+│   └── translate-content/         # Secure translation edge function
+│       └── index.ts
+└── migrations/
+    ├── 999_add_content_translations_table.sql  # Translation cache table
+    └── 1000_fix_content_translations_rls.sql   # Secure RLS policies
 ```
 
 ---
