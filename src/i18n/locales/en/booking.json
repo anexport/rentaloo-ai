@@ -13,7 +13,13 @@
     "request_booking": "Request to Book",
     "requesting": "Requesting...",
     "dates_required": "Please select start and end dates",
-    "unavailable_dates": "Some dates in your selection are unavailable"
+    "unavailable_dates": "Some dates in your selection are unavailable",
+    "aria_booking_info": "Booking information",
+    "aria_pricing": "Pricing",
+    "aria_location_contact": "Location and Contact",
+    "aria_dates": "Dates",
+    "aria_pricing_breakdown": "Pricing Breakdown",
+    "aria_insurance": "Insurance Options"
   },
   "status": {
     "pending": "Pending",

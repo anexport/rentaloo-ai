@@ -13,7 +13,13 @@
     "request_booking": "Buchungsanfrage einreichen",
     "requesting": "Wird angefordert...",
     "dates_required": "Bitte wählen Sie Start- und Enddatum",
-    "unavailable_dates": "Einige Termine in Ihrer Auswahl sind nicht verfügbar"
+    "unavailable_dates": "Einige Termine in Ihrer Auswahl sind nicht verfügbar",
+    "aria_booking_info": "Buchungsinformationen",
+    "aria_pricing": "Preise",
+    "aria_location_contact": "Standort und Kontakt",
+    "aria_dates": "Termine",
+    "aria_pricing_breakdown": "Preisaufschlüsselung",
+    "aria_insurance": "Versicherungsoptionen"
   },
   "status": {
     "pending": "Ausstehend",

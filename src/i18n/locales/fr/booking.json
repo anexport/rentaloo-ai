@@ -13,7 +13,13 @@
     "request_booking": "Demander une réservation",
     "requesting": "Demande en cours...",
     "dates_required": "Veuillez sélectionner les dates de début et de fin",
-    "unavailable_dates": "Certaines dates de votre sélection ne sont pas disponibles"
+    "unavailable_dates": "Certaines dates de votre sélection ne sont pas disponibles",
+    "aria_booking_info": "Informations de réservation",
+    "aria_pricing": "Tarification",
+    "aria_location_contact": "Emplacement et contact",
+    "aria_dates": "Dates",
+    "aria_pricing_breakdown": "Détail des prix",
+    "aria_insurance": "Options d'assurance"
   },
   "status": {
     "pending": "En attente",
