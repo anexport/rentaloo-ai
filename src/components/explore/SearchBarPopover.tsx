@@ -45,6 +45,8 @@ import {
 } from "@/features/location/useGeolocation";
 import { ToastAction } from "@/components/ui/toast";
 import { useAddressAutocomplete } from "@/features/location/useAddressAutocomplete";
+import { useEquipmentAutocomplete } from "@/hooks/useEquipmentAutocomplete";
+import type { EquipmentSuggestion } from "@/components/equipment/services/autocomplete";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 
@@ -96,13 +98,29 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
   const [isSelectingDates, setIsSelectingDates] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const { toast } = useToast();
   const addressAutocomplete = useAddressAutocomplete({
     limit: 10,
     minLength: 2,
     debounceMs: 100,
   });
+
+  const equipmentAutocomplete = useEquipmentAutocomplete({
+    minLength: 1,
+    debounceMs: 300,
+    categoryLimit: 5,
+    equipmentLimit: 10,
+  });
+
+  const categorySuggestions = useMemo(
+    () => equipmentAutocomplete.suggestions.filter((s) => s.type === "category"),
+    [equipmentAutocomplete.suggestions]
+  );
+
+  const equipmentSuggestions = useMemo(
+    () => equipmentAutocomplete.suggestions.filter((s) => s.type === "equipment"),
+    [equipmentAutocomplete.suggestions]
+  );
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -199,10 +217,6 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
       } catch (err) {
         if (!controller.signal.aborted) {
           console.error("Unexpected error loading categories", err);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setCategoriesLoading(false);
         }
       }
     };
@@ -325,14 +339,27 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     setActiveSection("what");
   };
 
-  const handleEquipmentSelect = (option: { id: string; name: string }) => {
-    onChange({
-      ...value,
-      equipmentType: option.name,
-      equipmentCategoryId: option.id.startsWith("fallback-")
-        ? undefined
-        : option.id,
-    });
+  const handleEquipmentSuggestionSelect = (suggestion: EquipmentSuggestion) => {
+    if (suggestion.type === "category") {
+      // Category selection: broad filter
+      onChange({
+        ...value,
+        equipmentType: suggestion.label,
+        equipmentCategoryId: suggestion.id,
+        search: "", // Clear search
+      });
+    } else {
+      // Equipment item selection: precise search via text search only
+      onChange({
+        ...value,
+        equipmentType: suggestion.label,     // Display name
+        equipmentCategoryId: undefined,      // Don't filter by category
+        search: suggestion.label,            // Search by exact title
+      });
+    }
+
+    // Clear input and close popover/sheet
+    equipmentAutocomplete.setQuery("");
     setEquipmentOpen(false);
     setSheetOpen(false);
     setActiveSection("where");
@@ -351,7 +378,9 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
       dateRange: undefined,
       equipmentType: undefined,
       equipmentCategoryId: undefined,
+      search: "",
     });
+    equipmentAutocomplete.setQuery("");
     setActiveSection("where");
     setIsSelectingDates(false);
   };
@@ -361,6 +390,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     if (!nextOpen) {
       setActiveSection("where");
       setIsSelectingDates(false);
+      equipmentAutocomplete.setQuery("");
     } else {
       addressAutocomplete.setQuery("");
     }
@@ -707,55 +737,90 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                       What are you planning?
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      Choose the gear category that fits your trip.
+                      Search for equipment or browse categories.
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {categoriesLoading
-                      ? Array.from({ length: FALLBACK_EQUIPMENT_TYPES.length }).map((_, idx) => (
-                          <div
-                            key={`skeleton-${idx}`}
-                            className="h-20 rounded-2xl border bg-muted animate-pulse"
-                          />
-                        ))
-                      : equipmentOptions.map((type) => (
-                          <Button
-                            key={type.id}
-                            variant={
-                              value.equipmentType === type.name ? "default" : "outline"
-                            }
-                            className="h-20 flex flex-col items-start justify-between rounded-2xl border"
-                            onClick={() => handleEquipmentSelect(type)}
-                            aria-label={`Select ${type.name}`}
-                          >
-                            <Package className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-semibold">{type.name}</span>
-                          </Button>
-                        ))}
-                  </div>
+                  <Command shouldFilter={false} className="rounded-2xl border">
+                    <CommandInput
+                      placeholder="Search equipment or categories..."
+                      value={equipmentAutocomplete.query}
+                      onValueChange={equipmentAutocomplete.setQuery}
+                    />
+                    <CommandList className="max-h-[400px]" aria-busy={equipmentAutocomplete.loading}>
+                      <CommandEmpty>
+                        {equipmentAutocomplete.loading
+                          ? "Searching..."
+                          : equipmentAutocomplete.query.trim().length === 0
+                          ? "Start typing to search."
+                          : equipmentAutocomplete.error
+                          ? `Error: ${equipmentAutocomplete.error}`
+                          : "No results found."}
+                      </CommandEmpty>
+
+                      {/* Categories Group */}
+                      {categorySuggestions.length > 0 && (
+                        <CommandGroup heading="Categories">
+                          {categorySuggestions.map((s) => (
+                            <CommandItem
+                              key={s.id}
+                              onSelect={() => handleEquipmentSuggestionSelect(s)}
+                              className="cursor-pointer py-3"
+                            >
+                              <Package className="mr-2 h-4 w-4" />
+                              {s.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
+
+                      {/* Equipment Items Group */}
+                      {equipmentSuggestions.length > 0 && (
+                        <CommandGroup heading="Equipment">
+                          {equipmentSuggestions.map((s) => (
+                            <CommandItem
+                              key={s.id}
+                              onSelect={() => handleEquipmentSuggestionSelect(s)}
+                              className="cursor-pointer py-3"
+                            >
+                              <Search className="mr-2 h-4 w-4" />
+                              <div className="flex flex-col min-w-0">
+                                <span className="truncate">{s.label}</span>
+                                {s.categoryName && (
+                                  <span className="text-xs text-muted-foreground truncate">
+                                    in {s.categoryName}
+                                  </span>
+                                )}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
+                    </CommandList>
+                  </Command>
                   {value.equipmentType && (
                     <div className="flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className="rounded-full px-3 py-1 text-xs"
-                  >
-                    {value.equipmentType}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      onChange({
-                        ...value,
-                        equipmentType: undefined,
-                        equipmentCategoryId: undefined,
-                      })
-                    }
-                    className="h-7 text-xs"
-                  >
-                    Clear
-                  </Button>
-                </div>
+                      <Badge
+                        variant="secondary"
+                        className="rounded-full px-3 py-1 text-xs"
+                      >
+                        {value.equipmentType}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          onChange({
+                            ...value,
+                            equipmentType: undefined,
+                            equipmentCategoryId: undefined,
+                            search: "",
+                          })
+                        }
+                        className="h-7 text-xs"
+                      >
+                        Clear
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}
@@ -888,7 +953,13 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         </Popover>
 
         {/* Equipment Type Popover */}
-        <Popover open={equipmentOpen} onOpenChange={setEquipmentOpen}>
+        <Popover
+          open={equipmentOpen}
+          onOpenChange={(open) => {
+            setEquipmentOpen(open);
+            if (!open) equipmentAutocomplete.setQuery("");
+          }}
+        >
           <PopoverTrigger asChild>
             <button
               className="relative px-6 py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
@@ -901,60 +972,70 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                     What
                   </div>
                   <div className="text-sm text-muted-foreground truncate">
-                    {value.equipmentType || "Any equipment"}
+                    {value.equipmentType || "Search equipment..."}
                   </div>
                 </div>
               </div>
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-72 p-4" align="start">
-            <div className="space-y-2">
-              <div className="text-sm font-semibold mb-3">Equipment type</div>
-              <div className="grid grid-cols-2 gap-2">
-                {categoriesLoading
-                  ? Array.from({ length: 6 }).map((_, idx) => (
-                      <div
-                        key={`badge-skel-${idx}`}
-                        className="h-10 rounded-full bg-muted border animate-pulse"
-                      />
-                    ))
-                  : equipmentOptions.map((type) => (
-                      <Badge
-                        key={type.id}
-                        variant={
-                          value.equipmentType === type.name ? "default" : "outline"
-                        }
-                        className="cursor-pointer justify-center items-center py-2 px-3 whitespace-nowrap text-center hover:bg-primary/10"
-                        onClick={() => handleEquipmentSelect(type)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            handleEquipmentSelect(type);
-                          }
-                        }}
-                        aria-label={`Select ${type.name}`}
+          <PopoverContent className="w-80 p-0" align="start">
+            <Command shouldFilter={false}>
+              <CommandInput
+                placeholder="Search equipment or categories..."
+                value={equipmentAutocomplete.query}
+                onValueChange={equipmentAutocomplete.setQuery}
+              />
+              <CommandList aria-busy={equipmentAutocomplete.loading}>
+                <CommandEmpty>
+                  {equipmentAutocomplete.loading
+                    ? "Searching..."
+                    : equipmentAutocomplete.query.trim().length === 0
+                    ? "Start typing to search."
+                    : equipmentAutocomplete.error
+                    ? `Error: ${equipmentAutocomplete.error}`
+                    : "No results found."}
+                </CommandEmpty>
+
+                {/* Categories Group */}
+                {categorySuggestions.length > 0 && (
+                  <CommandGroup heading="Categories">
+                    {categorySuggestions.map((s) => (
+                      <CommandItem
+                        key={s.id}
+                        onSelect={() => handleEquipmentSuggestionSelect(s)}
+                        className="cursor-pointer"
                       >
-                        {type.name}
-                      </Badge>
+                        <Package className="mr-2 h-4 w-4" />
+                        {s.label}
+                      </CommandItem>
                     ))}
-              </div>
-              <div className="mt-4 flex justify-end gap-2 border-t pt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    onChange({
-                      ...value,
-                      equipmentType: undefined,
-                      equipmentCategoryId: undefined,
-                    })
-                  }
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
+                  </CommandGroup>
+                )}
+
+                {/* Equipment Items Group */}
+                {equipmentSuggestions.length > 0 && (
+                  <CommandGroup heading="Equipment">
+                    {equipmentSuggestions.map((s) => (
+                      <CommandItem
+                        key={s.id}
+                        onSelect={() => handleEquipmentSuggestionSelect(s)}
+                        className="cursor-pointer"
+                      >
+                        <Search className="mr-2 h-4 w-4" />
+                        <div className="flex flex-col min-w-0">
+                          <span className="truncate">{s.label}</span>
+                          {s.categoryName && (
+                            <span className="text-xs text-muted-foreground truncate">
+                              in {s.categoryName}
+                            </span>
+                          )}
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </Command>
           </PopoverContent>
         </Popover>
 
