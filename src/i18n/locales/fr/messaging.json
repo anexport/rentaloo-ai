@@ -4,7 +4,9 @@
     "no_conversations": "Aucun message pour le moment",
     "start_conversation": "Commencez une conversation en réservant du matériel",
     "unread_count": "{{count}} non lu",
-    "search_placeholder": "Rechercher dans les conversations..."
+    "search_placeholder": "Rechercher dans les conversations...",
+    "filter_placeholder": "Filtrer",
+    "unknown_user": "Utilisateur Inconnu"
   },
   "chat": {
     "type_message": "Tapez un message...",
@@ -35,5 +37,19 @@
     "delete_conversation": "Supprimer la conversation",
     "mark_as_read": "Marquer comme lu",
     "mark_as_unread": "Marquer comme non lu"
+  },
+  "aria_labels": {
+    "close_panel": "Fermer le panneau de messagerie",
+    "filter_conversations": "Filtrer les conversations",
+    "search_conversations": "Rechercher dans les conversations",
+    "open_conversations": "Ouvrir la liste des conversations",
+    "search_messages": "Rechercher dans les messages",
+    "close_messaging": "Fermer la messagerie"
+  },
+  "errors": {
+    "load_failed_title": "Échec du chargement des messages",
+    "load_failed_message": "Nous n'avons pas pu charger les messages de cette conversation. Veuillez réessayer.",
+    "conversation_failed_title": "Échec du chargement de la conversation",
+    "conversation_failed_message": "Nous n'avons pas pu charger les messages de cette conversation. Veuillez réessayer."
   }
 }

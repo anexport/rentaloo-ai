@@ -4,7 +4,9 @@
     "no_conversations": "No messages yet",
     "start_conversation": "Start a conversation by booking equipment",
     "unread_count": "{{count}} unread",
-    "search_placeholder": "Search conversations..."
+    "search_placeholder": "Search conversations...",
+    "filter_placeholder": "Filter",
+    "unknown_user": "Unknown User"
   },
   "chat": {
     "type_message": "Type a message...",
@@ -35,5 +37,19 @@
     "delete_conversation": "Delete Conversation",
     "mark_as_read": "Mark as Read",
     "mark_as_unread": "Mark as Unread"
+  },
+  "aria_labels": {
+    "close_panel": "Close messaging panel",
+    "filter_conversations": "Filter conversations",
+    "search_conversations": "Search conversations",
+    "open_conversations": "Open conversations list",
+    "search_messages": "Search messages",
+    "close_messaging": "Close messaging"
+  },
+  "errors": {
+    "load_failed_title": "Failed to load messages",
+    "load_failed_message": "We couldn't load the messages for this conversation. Please try again.",
+    "conversation_failed_title": "Failed to load conversation",
+    "conversation_failed_message": "We couldn't load the messages for this conversation. Please try again."
   }
 }

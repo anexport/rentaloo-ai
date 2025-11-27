@@ -4,7 +4,9 @@
     "no_conversations": "Noch keine Nachrichten",
     "start_conversation": "Starten Sie eine Konversation durch die Buchung von Equipment",
     "unread_count": "{{count}} ungelesen",
-    "search_placeholder": "Konversationen durchsuchen..."
+    "search_placeholder": "Konversationen durchsuchen...",
+    "filter_placeholder": "Filtern",
+    "unknown_user": "Unbekannter Benutzer"
   },
   "chat": {
     "type_message": "Nachricht eingeben...",
@@ -35,5 +37,19 @@
     "delete_conversation": "Konversation löschen",
     "mark_as_read": "Als gelesen markieren",
     "mark_as_unread": "Als ungelesen markieren"
+  },
+  "aria_labels": {
+    "close_panel": "Nachrichten-Panel schließen",
+    "filter_conversations": "Konversationen filtern",
+    "search_conversations": "Konversationen durchsuchen",
+    "open_conversations": "Konversationsliste öffnen",
+    "search_messages": "Nachrichten durchsuchen",
+    "close_messaging": "Nachrichten schließen"
+  },
+  "errors": {
+    "load_failed_title": "Fehler beim Laden der Nachrichten",
+    "load_failed_message": "Wir konnten die Nachrichten für diese Konversation nicht laden. Bitte versuchen Sie es erneut.",
+    "conversation_failed_title": "Fehler beim Laden der Konversation",
+    "conversation_failed_message": "Wir konnten die Nachrichten für diese Konversation nicht laden. Bitte versuchen Sie es erneut."
   }
 }

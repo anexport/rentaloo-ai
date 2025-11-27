@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useMessaging } from "../../hooks/useMessaging";
 import { useAuth } from "../../hooks/useAuth";
 import { usePresence } from "../../hooks/usePresence";
@@ -44,6 +45,7 @@ const MessagingInterface = ({
   initialConversationId,
   onClose,
 }: MessagingInterfaceProps) => {
+  const { t } = useTranslation("messaging");
   const { user } = useAuth();
   const { isOnline } = usePresence();
   const { conversations, messages, loading, fetchMessages, sendMessage } =
@@ -119,9 +121,8 @@ const MessagingInterface = ({
           } catch (error) {
             console.error("Failed to fetch messages:", error);
             toast({
-              title: "Failed to load messages",
-              description:
-                "We couldn't load the messages for this conversation. Please try again.",
+              title: t("errors.load_failed_title"),
+              description: t("errors.load_failed_message"),
               variant: "destructive",
             });
           }
@@ -319,7 +320,7 @@ const MessagingInterface = ({
               size="icon"
               onClick={onClose}
               className="hidden md:inline-flex"
-              aria-label="Close messaging panel"
+              aria-label={t("aria_labels.close_panel")}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -333,9 +334,9 @@ const MessagingInterface = ({
             >
               <SelectTrigger
                 className="h-9 flex-1"
-                aria-label="Filter conversations"
+                aria-label={t("aria_labels.filter_conversations")}
               >
-                <SelectValue placeholder="Filter" />
+                <SelectValue placeholder={t("conversation_list.filter_placeholder")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All conversations</SelectItem>
@@ -349,7 +350,7 @@ const MessagingInterface = ({
               className="shrink-0"
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              aria-label="Search conversations"
+              aria-label={t("aria_labels.search_conversations")}
               aria-expanded={isSearchOpen}
             >
               <Search className="h-4 w-4" />
@@ -368,9 +369,8 @@ const MessagingInterface = ({
               } catch (error) {
                 console.error("Failed to select conversation:", error);
                 toast({
-                  title: "Failed to load conversation",
-                  description:
-                    "We couldn't load the messages for this conversation. Please try again.",
+                  title: t("errors.conversation_failed_title"),
+                  description: t("errors.conversation_failed_message"),
                   variant: "destructive",
                 });
               }
@@ -411,7 +411,7 @@ const MessagingInterface = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsMobileSidebarOpen(true)}
-                aria-label="Open conversations list"
+                aria-label={t("aria_labels.open_conversations")}
               >
                 <Menu className="h-4 w-4" />
               </Button>
@@ -435,7 +435,7 @@ const MessagingInterface = ({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h3 className="truncate text-base font-semibold">
-                  {otherParticipant?.email || "Unknown User"}
+                  {otherParticipant?.email || t("conversation_list.unknown_user")}
                 </h3>
                 {selectedConversation.booking_request && (
                   <Badge variant="outline" className="text-xs font-normal">
@@ -466,7 +466,7 @@ const MessagingInterface = ({
               size="icon"
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              aria-label="Search messages"
+              aria-label={t("aria_labels.search_messages")}
               aria-expanded={isSearchOpen}
             >
               <Search className="h-4 w-4" />
@@ -477,7 +477,7 @@ const MessagingInterface = ({
                 size="icon"
                 className="md:hidden"
                 onClick={onClose}
-                aria-label="Close messaging"
+                aria-label={t("aria_labels.close_messaging")}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -584,9 +584,8 @@ const MessagingInterface = ({
             } catch (error) {
               console.error("Failed to select conversation:", error);
               toast({
-                title: "Failed to load conversation",
-                description:
-                  "We couldn't load the messages for this conversation. Please try again.",
+                title: t("errors.conversation_failed_title"),
+                description: t("errors.conversation_failed_message"),
                 variant: "destructive",
               });
             }

@@ -4,7 +4,9 @@
     "no_conversations": "Sin mensajes aún",
     "start_conversation": "Comienza una conversación reservando equipamiento",
     "unread_count": "{{count}} sin leer",
-    "search_placeholder": "Buscar conversaciones..."
+    "search_placeholder": "Buscar conversaciones...",
+    "filter_placeholder": "Filtrar",
+    "unknown_user": "Usuario Desconocido"
   },
   "chat": {
     "type_message": "Escribe un mensaje...",
@@ -35,5 +37,19 @@
     "delete_conversation": "Eliminar Conversación",
     "mark_as_read": "Marcar como Leído",
     "mark_as_unread": "Marcar como No Leído"
+  },
+  "aria_labels": {
+    "close_panel": "Cerrar panel de mensajería",
+    "filter_conversations": "Filtrar conversaciones",
+    "search_conversations": "Buscar conversaciones",
+    "open_conversations": "Abrir lista de conversaciones",
+    "search_messages": "Buscar mensajes",
+    "close_messaging": "Cerrar mensajería"
+  },
+  "errors": {
+    "load_failed_title": "Error al cargar mensajes",
+    "load_failed_message": "No pudimos cargar los mensajes de esta conversación. Por favor, inténtalo de nuevo.",
+    "conversation_failed_title": "Error al cargar conversación",
+    "conversation_failed_message": "No pudimos cargar los mensajes de esta conversación. Por favor, inténtalo de nuevo."
   }
 }
