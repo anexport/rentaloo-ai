@@ -1,12 +1,25 @@
 {
   "conversation_list": {
     "title": "Messages",
+    "subtitle": "Stay in sync with your renters",
     "no_conversations": "No messages yet",
     "start_conversation": "Start a conversation by booking equipment",
     "unread_count": "{{count}} unread",
     "search_placeholder": "Search conversations...",
     "filter_placeholder": "Filter",
-    "unknown_user": "Unknown User"
+    "unknown_user": "Unknown User",
+    "all_conversations": "All conversations",
+    "unread": "Unread",
+    "bookings": "Bookings",
+    "conversations": "Conversations"
+  },
+  "empty_states": {
+    "select_conversation_title": "Select a conversation",
+    "select_conversation_message": "Choose a conversation from the list to view messages.",
+    "no_conversations_yet": "Conversations will appear here once you connect with renters.",
+    "no_messages_title": "No messages yet",
+    "no_messages_message": "Start the conversation to plan the rental details.",
+    "regarding": "Regarding"
   },
   "chat": {
     "type_message": "Type a message...",

@@ -1,12 +1,25 @@
 {
   "conversation_list": {
     "title": "Messages",
+    "subtitle": "Restez en contact avec vos locataires",
+    "all_conversations": "Toutes les conversations",
+    "unread": "Non lus",
+    "bookings": "Réservations",
+    "conversations": "Conversations",
     "no_conversations": "Aucun message pour le moment",
     "start_conversation": "Commencez une conversation en réservant du matériel",
     "unread_count": "{{count}} non lu",
     "search_placeholder": "Rechercher dans les conversations...",
     "filter_placeholder": "Filtrer",
     "unknown_user": "Utilisateur Inconnu"
+  },
+  "empty_states": {
+    "select_conversation_title": "Sélectionnez une conversation",
+    "select_conversation_message": "Choisissez une conversation dans la liste pour voir les messages.",
+    "no_conversations_yet": "Les conversations apparaîtront ici une fois que vous serez en contact avec des locataires.",
+    "no_messages_title": "Pas encore de messages",
+    "no_messages_message": "Démarrez la conversation pour planifier les détails de la location.",
+    "regarding": "Concernant"
   },
   "chat": {
     "type_message": "Tapez un message...",

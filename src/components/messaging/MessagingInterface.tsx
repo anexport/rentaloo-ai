@@ -308,9 +308,9 @@ const MessagingInterface = ({
               <MessageSquare className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold leading-tight">Messages</h2>
+              <h2 className="text-lg font-semibold leading-tight">{t("conversation_list.title")}</h2>
               <p className="text-muted-foreground text-xs">
-                Stay in sync with your renters
+                {t("conversation_list.subtitle")}
               </p>
             </div>
           </div>
@@ -339,9 +339,9 @@ const MessagingInterface = ({
                 <SelectValue placeholder={t("conversation_list.filter_placeholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All conversations</SelectItem>
-                <SelectItem value="unread">Unread</SelectItem>
-                <SelectItem value="bookings">Bookings</SelectItem>
+                <SelectItem value="all">{t("conversation_list.all_conversations")}</SelectItem>
+                <SelectItem value="unread">{t("conversation_list.unread")}</SelectItem>
+                <SelectItem value="bookings">{t("conversation_list.bookings")}</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -388,13 +388,13 @@ const MessagingInterface = ({
         <div className="flex flex-1 flex-col items-center justify-center bg-background px-6">
           <div className="flex flex-col items-center text-center">
             <MessageSquare className="mb-4 h-12 w-12 text-muted-foreground/70" />
-            <h3 className="text-lg font-semibold">Select a conversation</h3>
+            <h3 className="text-lg font-semibold">{t("empty_states.select_conversation_title")}</h3>
             <p className="text-muted-foreground text-sm">
-              Choose a conversation from the list to view messages.
+              {t("empty_states.select_conversation_message")}
             </p>
             {conversations.length === 0 && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Conversations will appear here once you connect with renters.
+                {t("empty_states.no_conversations_yet")}
               </p>
             )}
           </div>
@@ -452,7 +452,7 @@ const MessagingInterface = ({
               )}
               {selectedConversation.booking_request && (
                 <p className="text-xs text-muted-foreground">
-                  Regarding{" "}
+                  {t("empty_states.regarding")}{" "}
                   <span className="font-medium">
                     {selectedConversation.booking_request.equipment.title}
                   </span>
@@ -490,9 +490,9 @@ const MessagingInterface = ({
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-card/40 py-10 text-center text-sm text-muted-foreground">
                 <MessageSquare className="mb-3 h-9 w-9 text-muted-foreground/60" />
-                <p>No messages yet</p>
+                <p>{t("empty_states.no_messages_title")}</p>
                 <p className="mt-1 text-xs">
-                  Start the conversation to plan the rental details.
+                  {t("empty_states.no_messages_message")}
                 </p>
               </div>
             ) : (
@@ -543,7 +543,7 @@ const MessagingInterface = ({
           <SheetHeader className="border-b border-border px-4 py-4">
             <SheetTitle className="flex items-center gap-2 text-base">
               <Filter className="h-4 w-4" />
-              Conversations
+              {t("conversation_list.conversations")}
             </SheetTitle>
           </SheetHeader>
           {conversationSidebar}

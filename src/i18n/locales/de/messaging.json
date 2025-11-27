@@ -1,12 +1,25 @@
 {
   "conversation_list": {
     "title": "Nachrichten",
+    "subtitle": "Bleiben Sie mit Ihren Mietern in Kontakt",
+    "all_conversations": "Alle Konversationen",
+    "unread": "Ungelesen",
+    "bookings": "Buchungen",
+    "conversations": "Unterhaltungen",
     "no_conversations": "Noch keine Nachrichten",
     "start_conversation": "Starten Sie eine Konversation durch die Buchung von Equipment",
     "unread_count": "{{count}} ungelesen",
     "search_placeholder": "Konversationen durchsuchen...",
     "filter_placeholder": "Filtern",
     "unknown_user": "Unbekannter Benutzer"
+  },
+  "empty_states": {
+    "select_conversation_title": "Wählen Sie eine Konversation",
+    "select_conversation_message": "Wählen Sie eine Konversation aus der Liste, um Nachrichten anzuzeigen.",
+    "no_conversations_yet": "Konversationen werden hier angezeigt, sobald Sie sich mit Mietern verbinden.",
+    "no_messages_title": "Noch keine Nachrichten",
+    "no_messages_message": "Starten Sie die Konversation, um die Mietdetails zu planen.",
+    "regarding": "Bezüglich"
   },
   "chat": {
     "type_message": "Nachricht eingeben...",
