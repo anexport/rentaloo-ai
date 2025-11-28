@@ -11,7 +11,9 @@
     "unread_count": "{{count}} ungelesen",
     "search_placeholder": "Konversationen durchsuchen...",
     "filter_placeholder": "Filtern",
-    "unknown_user": "Unbekannter Benutzer"
+    "unknown_user": "Unbekannter Benutzer",
+    "empty_title": "Noch keine Konversationen",
+    "empty_description": "Hier werden Buchungsnachrichten und Mieter-Chats angezeigt, sobald sie beginnen."
   },
   "empty_states": {
     "select_conversation_title": "Wählen Sie eine Konversation",
@@ -49,7 +51,8 @@
     "view_equipment": "Equipment anzeigen",
     "delete_conversation": "Konversation löschen",
     "mark_as_read": "Als gelesen markieren",
-    "mark_as_unread": "Als ungelesen markieren"
+    "mark_as_unread": "Als ungelesen markieren",
+    "retry": "Erneut versuchen"
   },
   "aria_labels": {
     "close_panel": "Nachrichten-Panel schließen",
@@ -64,5 +67,18 @@
     "load_failed_message": "Wir konnten die Nachrichten für diese Konversation nicht laden. Bitte versuchen Sie es erneut.",
     "conversation_failed_title": "Fehler beim Laden der Konversation",
     "conversation_failed_message": "Wir konnten die Nachrichten für diese Konversation nicht laden. Bitte versuchen Sie es erneut."
+  },
+  "input": {
+    "placeholder": "Schreiben Sie eine Nachricht...",
+    "send": "Nachricht senden",
+    "attach_file": "Datei anhängen",
+    "insert_emoji": "Emoji einfügen",
+    "quick_replies": "Schnellantworten",
+    "send_error": "Wir konnten Ihre Nachricht nicht senden. Versuchen Sie es in einem Moment erneut.",
+    "templates": {
+      "availability": "Vielen Dank, dass Sie sich gemeldet haben! Ich kann die Verfügbarkeit für diese Daten bestätigen.",
+      "help": "Gerne helfe ich dir weiter. Könntest du mir mehr darüber erzählen, wie du die Ausrüstung nutzen möchtest?",
+      "pickup": "Lassen Sie uns die Abhollogistik koordinieren. Bevorzugen Sie morgens oder nachmittags?"
+    }
   }
 }

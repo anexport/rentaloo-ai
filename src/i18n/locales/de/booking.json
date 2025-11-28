@@ -64,5 +64,54 @@
     "request_approved": "Buchungsanfrage genehmigt",
     "request_declined": "Buchungsanfrage abgelehnt",
     "booking_cancelled": "Buchung erfolgreich storniert"
+  },
+  "card": {
+    "status": {
+      "awaiting_payment": "Zahlung Ausstehend",
+      "booking_confirmed": "Buchung Bestätigt"
+    },
+    "labels": {
+      "renter": "Mieter",
+      "owner": "Eigentümer",
+      "message": "Nachricht:",
+      "per_day": "/Tag"
+    },
+    "buttons": {
+      "view_renter_info": "Mietinformationen Anzeigen",
+      "hide_renter_info": "Mietinformationen Verbergen",
+      "pickup_inspection": "Abholinspection",
+      "view_pickup_inspection": "Abholinspection Anzeigen",
+      "return_inspection": "Rückgabeinspection",
+      "view_return_inspection": "Rückgabeinspection Anzeigen",
+      "file_damage_claim": "Schadensersatzanspruch Einreichen",
+      "cancel_booking": "Buchung Stornieren",
+      "cancelling": "Wird Storniert...",
+      "message": "Nachricht",
+      "loading": "Wird Geladen..."
+    },
+    "alerts": {
+      "awaiting_payment_owner": "Diese Buchungsanfrage wartet auf Zahlungsbestätigung vom Mieter.",
+      "awaiting_payment_renter": "Ihre Buchungsanfrage wartet auf Zahlungsbestätigung. Vervollständigen Sie die Zahlung, um Ihre Buchung zu bestätigen.",
+      "payment_confirmed": "Zahlung erhalten! Buchung ist bestätigt.",
+      "cancelled_renter": "Sie haben diese Buchungsanfrage storniert.",
+      "cancelled_owner": "Diese Buchungsanfrage wurde vom Mieter storniert."
+    },
+    "modals": {
+      "complete_payment": "Zahlung Abschließen",
+      "renter_verification": "Mieter-Verifizierungsprofil"
+    },
+    "confirmations": {
+      "cancel_owner": "Sind Sie sicher, dass Sie diese Buchung stornieren möchten? Der Mieter erhält eine vollständige Rückerstattung.",
+      "cancel_renter": "Sind Sie sicher, dass Sie diese Buchung stornieren möchten? Sie erhalten eine vollständige Rückerstattung."
+    },
+    "timestamps": {
+      "requested": "Angefordert:",
+      "updated": "Aktualisiert:"
+    },
+    "errors": {
+      "refund_failed": "Rückerstattungsverarbeitung fehlgeschlagen. Bitte kontaktieren Sie den Support, um diese Buchung zu stornieren.",
+      "conversation_failed": "Conversation konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",
+      "cancel_failed": "Buchung konnte nicht storniert werden. Bitte versuchen Sie es erneut."
+    }
   }
 }

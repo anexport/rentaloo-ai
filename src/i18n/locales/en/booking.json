@@ -64,5 +64,54 @@
     "request_approved": "Booking request approved",
     "request_declined": "Booking request declined",
     "booking_cancelled": "Booking cancelled successfully"
+  },
+  "card": {
+    "status": {
+      "awaiting_payment": "Awaiting Payment",
+      "booking_confirmed": "Booking Confirmed"
+    },
+    "labels": {
+      "renter": "Renter",
+      "owner": "Owner",
+      "message": "Message:",
+      "per_day": "/day"
+    },
+    "buttons": {
+      "view_renter_info": "View Renter Info",
+      "hide_renter_info": "Hide Renter Info",
+      "pickup_inspection": "Pickup Inspection",
+      "view_pickup_inspection": "View Pickup Inspection",
+      "return_inspection": "Return Inspection",
+      "view_return_inspection": "View Return Inspection",
+      "file_damage_claim": "File Damage Claim",
+      "cancel_booking": "Cancel Booking",
+      "cancelling": "Cancelling...",
+      "message": "Message",
+      "loading": "Loading..."
+    },
+    "alerts": {
+      "awaiting_payment_owner": "This booking request is awaiting payment from the renter.",
+      "awaiting_payment_renter": "Your booking request is awaiting payment. Complete payment to confirm your booking.",
+      "payment_confirmed": "Payment received! Booking is confirmed.",
+      "cancelled_renter": "You have cancelled this booking request.",
+      "cancelled_owner": "This booking request has been cancelled by the renter."
+    },
+    "modals": {
+      "complete_payment": "Complete Payment",
+      "renter_verification": "Renter Verification Profile"
+    },
+    "confirmations": {
+      "cancel_owner": "Are you sure you want to cancel this booking? The renter will receive a full refund.",
+      "cancel_renter": "Are you sure you want to cancel this booking? You will receive a full refund."
+    },
+    "timestamps": {
+      "requested": "Requested:",
+      "updated": "Updated:"
+    },
+    "errors": {
+      "refund_failed": "Refund processing failed. Please contact support to cancel this booking.",
+      "conversation_failed": "Failed to start conversation. Please try again.",
+      "cancel_failed": "Failed to cancel booking. Please try again."
+    }
   }
 }

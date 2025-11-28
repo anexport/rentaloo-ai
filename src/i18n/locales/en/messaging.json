@@ -11,7 +11,9 @@
     "all_conversations": "All conversations",
     "unread": "Unread",
     "bookings": "Bookings",
-    "conversations": "Conversations"
+    "conversations": "Conversations",
+    "empty_title": "No conversations yet",
+    "empty_description": "You'll see booking messages and renter chats here once they start."
   },
   "empty_states": {
     "select_conversation_title": "Select a conversation",
@@ -49,7 +51,8 @@
     "view_equipment": "View Equipment",
     "delete_conversation": "Delete Conversation",
     "mark_as_read": "Mark as Read",
-    "mark_as_unread": "Mark as Unread"
+    "mark_as_unread": "Mark as Unread",
+    "retry": "Retry"
   },
   "aria_labels": {
     "close_panel": "Close messaging panel",
@@ -64,5 +67,18 @@
     "load_failed_message": "We couldn't load the messages for this conversation. Please try again.",
     "conversation_failed_title": "Failed to load conversation",
     "conversation_failed_message": "We couldn't load the messages for this conversation. Please try again."
+  },
+  "input": {
+    "placeholder": "Type a message...",
+    "send": "Send message",
+    "attach_file": "Attach file",
+    "insert_emoji": "Insert emoji",
+    "quick_replies": "Quick replies",
+    "send_error": "We couldn't send your message. Try again in a moment.",
+    "templates": {
+      "availability": "Thanks for reaching out! I can confirm availability for those dates.",
+      "help": "I'm happy to help. Could you share a bit more about how you plan to use the gear?",
+      "pickup": "Let's coordinate pickup logistics. Do you prefer morning or afternoon?"
+    }
   }
 }

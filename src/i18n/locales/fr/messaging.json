@@ -11,7 +11,9 @@
     "unread_count": "{{count}} non lu",
     "search_placeholder": "Rechercher dans les conversations...",
     "filter_placeholder": "Filtrer",
-    "unknown_user": "Utilisateur Inconnu"
+    "unknown_user": "Utilisateur Inconnu",
+    "empty_title": "Aucune conversation pour le moment",
+    "empty_description": "Vous verrez les messages de réservation et les chats avec les locataires ici une fois qu'ils commenceront."
   },
   "empty_states": {
     "select_conversation_title": "Sélectionnez une conversation",
@@ -49,7 +51,8 @@
     "view_equipment": "Voir le matériel",
     "delete_conversation": "Supprimer la conversation",
     "mark_as_read": "Marquer comme lu",
-    "mark_as_unread": "Marquer comme non lu"
+    "mark_as_unread": "Marquer comme non lu",
+    "retry": "Réessayer"
   },
   "aria_labels": {
     "close_panel": "Fermer le panneau de messagerie",
@@ -64,5 +67,18 @@
     "load_failed_message": "Nous n'avons pas pu charger les messages de cette conversation. Veuillez réessayer.",
     "conversation_failed_title": "Échec du chargement de la conversation",
     "conversation_failed_message": "Nous n'avons pas pu charger les messages de cette conversation. Veuillez réessayer."
+  },
+  "input": {
+    "placeholder": "Tapez un message...",
+    "send": "Envoyer le message",
+    "attach_file": "Joindre un fichier",
+    "insert_emoji": "Insérer un emoji",
+    "quick_replies": "Réponses rapides",
+    "send_error": "Nous n'avons pas pu envoyer votre message. Réessayez dans un instant.",
+    "templates": {
+      "availability": "Merci d'avoir pris contact ! Je peux confirmer la disponibilité pour ces dates.",
+      "help": "Je serais heureux de vous aider. Pourriez-vous m'en dire plus sur la façon dont vous prévoyez d'utiliser l'équipement ?",
+      "pickup": "Coordonnons la logistique de retrait. Préférez-vous le matin ou l'après-midi ?"
+    }
   }
 }

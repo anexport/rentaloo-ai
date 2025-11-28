@@ -64,5 +64,54 @@
     "request_approved": "Demande de réservation approuvée",
     "request_declined": "Demande de réservation déclinée",
     "booking_cancelled": "Réservation annulée avec succès"
+  },
+  "card": {
+    "status": {
+      "awaiting_payment": "En Attente de Paiement",
+      "booking_confirmed": "Réservation Confirmée"
+    },
+    "labels": {
+      "renter": "Locataire",
+      "owner": "Propriétaire",
+      "message": "Message :",
+      "per_day": "/jour"
+    },
+    "buttons": {
+      "view_renter_info": "Voir les Informations du Locataire",
+      "hide_renter_info": "Masquer les Informations du Locataire",
+      "pickup_inspection": "Inspection de Récupération",
+      "view_pickup_inspection": "Voir Inspection de Récupération",
+      "return_inspection": "Inspection de Retour",
+      "view_return_inspection": "Voir Inspection de Retour",
+      "file_damage_claim": "Déposer une Réclamation de Dommage",
+      "cancel_booking": "Annuler la Réservation",
+      "cancelling": "Annulation en cours...",
+      "message": "Message",
+      "loading": "Chargement..."
+    },
+    "alerts": {
+      "awaiting_payment_owner": "Cette demande de réservation est en attente de paiement du locataire.",
+      "awaiting_payment_renter": "Votre demande de réservation est en attente de paiement. Complétez le paiement pour confirmer votre réservation.",
+      "payment_confirmed": "Paiement reçu ! La réservation est confirmée.",
+      "cancelled_renter": "Vous avez annulé cette demande de réservation.",
+      "cancelled_owner": "Cette demande de réservation a été annulée par le locataire."
+    },
+    "modals": {
+      "complete_payment": "Compléter le Paiement",
+      "renter_verification": "Profil de Vérification du Locataire"
+    },
+    "confirmations": {
+      "cancel_owner": "Êtes-vous sûr de vouloir annuler cette réservation ? Le locataire recevra un remboursement complet.",
+      "cancel_renter": "Êtes-vous sûr de vouloir annuler cette réservation ? Vous recevrez un remboursement complet."
+    },
+    "timestamps": {
+      "requested": "Demandé :",
+      "updated": "Mis à jour :"
+    },
+    "errors": {
+      "refund_failed": "Le traitement du remboursement a échoué. Veuillez contacter le support pour annuler cette réservation.",
+      "conversation_failed": "Impossible de démarrer la conversation. Veuillez réessayer.",
+      "cancel_failed": "Impossible d'annuler la réservation. Veuillez réessayer."
+    }
   }
 }

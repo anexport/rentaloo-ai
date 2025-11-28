@@ -64,5 +64,54 @@
     "request_approved": "Solicitud de reserva aprobada",
     "request_declined": "Solicitud de reserva rechazada",
     "booking_cancelled": "Reserva cancelada exitosamente"
+  },
+  "card": {
+    "status": {
+      "awaiting_payment": "Esperando Pago",
+      "booking_confirmed": "Reserva Confirmada"
+    },
+    "labels": {
+      "renter": "Arrendatario",
+      "owner": "Propietario",
+      "message": "Mensaje:",
+      "per_day": "/día"
+    },
+    "buttons": {
+      "view_renter_info": "Ver Información del Arrendatario",
+      "hide_renter_info": "Ocultar Información del Arrendatario",
+      "pickup_inspection": "Inspección de Entrega",
+      "view_pickup_inspection": "Ver Inspección de Entrega",
+      "return_inspection": "Inspección de Devolución",
+      "view_return_inspection": "Ver Inspección de Devolución",
+      "file_damage_claim": "Presentar Reclamación de Daño",
+      "cancel_booking": "Cancelar Reserva",
+      "cancelling": "Cancelando...",
+      "message": "Mensaje",
+      "loading": "Cargando..."
+    },
+    "alerts": {
+      "awaiting_payment_owner": "Esta solicitud de reserva está esperando el pago del arrendatario.",
+      "awaiting_payment_renter": "Tu solicitud de reserva está esperando pago. Completa el pago para confirmar tu reserva.",
+      "payment_confirmed": "¡Pago recibido! La reserva está confirmada.",
+      "cancelled_renter": "Has cancelado esta solicitud de reserva.",
+      "cancelled_owner": "El arrendatario ha cancelado esta solicitud de reserva."
+    },
+    "modals": {
+      "complete_payment": "Completar Pago",
+      "renter_verification": "Perfil de Verificación del Arrendatario"
+    },
+    "confirmations": {
+      "cancel_owner": "¿Estás seguro de que deseas cancelar esta reserva? El arrendatario recibirá un reembolso completo.",
+      "cancel_renter": "¿Estás seguro de que deseas cancelar esta reserva? Recibirás un reembolso completo."
+    },
+    "timestamps": {
+      "requested": "Solicitado:",
+      "updated": "Actualizado:"
+    },
+    "errors": {
+      "refund_failed": "El procesamiento del reembolso falló. Por favor, contacta con soporte para cancelar esta reserva.",
+      "conversation_failed": "No se pudo iniciar la conversación. Por favor, intenta de nuevo.",
+      "cancel_failed": "No se pudo cancelar la reserva. Por favor, intenta de nuevo."
+    }
   }
 }

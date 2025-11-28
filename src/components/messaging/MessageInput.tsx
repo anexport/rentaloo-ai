@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Paperclip, Send, Smile, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { MessageFormData } from "../../types/messaging";
 import { Button } from "../ui/button";
@@ -39,17 +40,12 @@ interface MessageInputProps {
   disabled?: boolean;
 }
 
-const quickReplies = [
-  "Thanks for reaching out! I can confirm availability for those dates.",
-  "I’m happy to help. Could you share a bit more about how you plan to use the gear?",
-  "Let’s coordinate pickup logistics. Do you prefer morning or afternoon?",
-];
-
 const MessageInput = ({
   onSendMessage,
   onTyping,
   disabled = false,
 }: MessageInputProps) => {
+  const { t } = useTranslation("messaging");
   const [sendError, setSendError] = useState<string | null>(null);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
@@ -95,7 +91,7 @@ const MessageInput = ({
       onTyping?.("");
     } catch (error) {
       console.error("Error sending message:", error);
-      setSendError("We couldn't send your message. Try again in a moment.");
+      setSendError(t("input.send_error"));
     }
   };
 
@@ -126,7 +122,7 @@ const MessageInput = ({
           void handleSubmit(onSubmit)(e);
         }}
         className="space-y-3 p-3"
-        aria-label="Compose message"
+        aria-label={t("input.placeholder")}
       >
         {sendError && (
           <Alert variant="destructive">
@@ -141,7 +137,7 @@ const MessageInput = ({
                 }}
                 disabled={isSubmitting || disabled}
               >
-                Retry
+                {t("actions.retry")}
               </Button>
             </AlertDescription>
           </Alert>
@@ -157,13 +153,13 @@ const MessageInput = ({
                     variant="ghost"
                     size="icon"
                     className="text-muted-foreground hover:text-foreground"
-                    aria-label="Attach a file"
+                    aria-label={t("input.attach_file")}
                     disabled={disabled}
                   >
                     <Paperclip className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Attach documents or photos</TooltipContent>
+                <TooltipContent>{t("input.attach_file")}</TooltipContent>
               </Tooltip>
 
               <Popover open={isTemplatesOpen} onOpenChange={setIsTemplatesOpen}>
@@ -175,30 +171,35 @@ const MessageInput = ({
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-foreground"
-                        aria-label="Insert quick reply"
+                        aria-label={t("input.quick_replies")}
                         disabled={disabled}
                       >
                         <Sparkles className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Quick replies</TooltipContent>
+                    <TooltipContent>{t("input.quick_replies")}</TooltipContent>
                   </Tooltip>
                 </PopoverTrigger>
                 <PopoverContent className="w-64 space-y-2 p-3" align="start">
                   <p className="text-sm font-medium text-foreground">
-                    Quick replies
+                    {t("input.quick_replies")}
                   </p>
                   <div className="space-y-2">
-                    {quickReplies.map((template) => (
-                      <button
-                        key={template}
-                        type="button"
-                        onClick={() => insertTemplate(template)}
-                        className="w-full rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-left text-sm text-muted-foreground transition hover:bg-accent hover:text-foreground"
-                      >
-                        {template}
-                      </button>
-                    ))}
+                    {["availability", "help", "pickup"].map((key) => {
+                      const templateText = t(
+                        `input.templates.${key as "availability" | "help" | "pickup"}`
+                      );
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => insertTemplate(templateText)}
+                          className="w-full rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-left text-sm text-muted-foreground transition hover:bg-accent hover:text-foreground"
+                        >
+                          {templateText}
+                        </button>
+                      );
+                    })}
                   </div>
                 </PopoverContent>
               </Popover>
@@ -212,13 +213,13 @@ const MessageInput = ({
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-foreground"
-                        aria-label="Insert emoji"
+                        aria-label={t("input.insert_emoji")}
                         disabled={disabled}
                       >
                         <Smile className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Emoji picker</TooltipContent>
+                    <TooltipContent>{t("input.insert_emoji")}</TooltipContent>
                   </Tooltip>
                 </PopoverTrigger>
                 <PopoverContent className="w-56 p-0" align="start">
@@ -253,7 +254,7 @@ const MessageInput = ({
                   formTextareaRef(node);
                   textareaRef.current = node;
                 }}
-                placeholder="Ask about availability, confirm plans, or share updates…"
+                placeholder={t("input.placeholder")}
                 disabled={disabled || isSubmitting}
                 className="max-h-[200px] min-h-[44px] text-sm leading-6"
                 onBlur={(e) => {
@@ -303,7 +304,7 @@ const MessageInput = ({
                     size="sm"
                     className="gap-2 px-4"
                     disabled={disabled || isSubmitting}
-                    aria-label="Send message"
+                    aria-label={t("input.send")}
                     onClick={(e) => {
                       e.preventDefault();
                       syncValueAndSubmit();
@@ -312,12 +313,12 @@ const MessageInput = ({
                     {isSubmitting ? (
                       <>
                         <Spinner className="h-4 w-4 text-primary-foreground" />
-                        Sending…
+                        {t("input.send")}
                       </>
                     ) : (
                       <>
                         <Send className="h-4 w-4" />
-                        Send
+                        {t("input.send")}
                       </>
                     )}
                   </Button>
