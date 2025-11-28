@@ -88,6 +88,18 @@ const POPULAR_CATEGORIES = [
 const RECENT_SEARCHES_KEY = "rentaloo_recent_equipment_searches";
 const MAX_RECENT_SEARCHES = 5;
 
+// Helper function to detect macOS using modern API with fallback
+const isMacOS = (): boolean => {
+  if (typeof navigator === "undefined") return false;
+
+  // Try modern User-Agent Client Hints API first
+  const platform =
+    (navigator as Navigator & { userAgentData?: { platform?: string } })
+      .userAgentData?.platform ?? navigator.platform;
+
+  return platform.toLowerCase().includes("mac");
+};
+
 // Helper functions for recent searches
 const getRecentSearches = (): string[] => {
   try {
@@ -1151,12 +1163,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                 </div>
                 {!value.equipmentType && (
                   <kbd className="hidden xl:inline-flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground opacity-60 shrink-0">
-                    <span className="text-xs">
-                      {typeof navigator !== "undefined" &&
-                      navigator.platform.toLowerCase().includes("mac")
-                        ? "⌘"
-                        : "Ctrl+"}
-                    </span>
+                    <span className="text-xs">{isMacOS() ? "⌘" : "Ctrl+"}</span>
                     K
                   </kbd>
                 )}
