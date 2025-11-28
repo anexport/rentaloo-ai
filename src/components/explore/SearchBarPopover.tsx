@@ -29,6 +29,8 @@ import {
   Search,
   Package,
   Crosshair,
+  X,
+  Wrench,
 } from "lucide-react";
 import { format, startOfDay, addDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
@@ -574,7 +576,11 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
             <div className="px-6 pb-4">
               <div className="flex items-center rounded-full bg-muted p-1">
                 {MOBILE_SECTIONS.map((section) => {
-                  const Icon = section.icon;
+                  // Use dynamic icon for "What" section based on selection type
+                  let Icon = section.icon;
+                  if (section.key === "what" && value.equipmentType && value.search) {
+                    Icon = Wrench;
+                  }
                   const isActive = activeSection === section.key;
                   return (
                     <button
@@ -870,6 +876,16 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                     {value.location || "Search destinations"}
                   </div>
                 </div>
+                {value.location && (
+                  <X
+                    className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange({ ...value, location: "" });
+                    }}
+                    aria-label="Clear location"
+                  />
+                )}
               </div>
             </button>
           </PopoverTrigger>
@@ -924,6 +940,17 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                     )}
                   </div>
                 </div>
+                {value.dateRange?.from && (
+                  <X
+                    className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange({ ...value, dateRange: undefined });
+                      setIsSelectingDates(false);
+                    }}
+                    aria-label="Clear dates"
+                  />
+                )}
               </div>
             </button>
           </PopoverTrigger>
@@ -966,7 +993,11 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
               aria-label="Select equipment type"
             >
               <div className="flex items-center gap-3">
-                <Package className="h-5 w-5 text-muted-foreground shrink-0" />
+                {value.equipmentType && value.search ? (
+                  <Wrench className="h-5 w-5 text-primary shrink-0" />
+                ) : (
+                  <Package className="h-5 w-5 text-muted-foreground shrink-0" />
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-semibold text-foreground">
                     What
@@ -975,6 +1006,22 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                     {value.equipmentType || "Search equipment..."}
                   </div>
                 </div>
+                {value.equipmentType && (
+                  <X
+                    className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange({
+                        ...value,
+                        equipmentType: undefined,
+                        equipmentCategoryId: undefined,
+                        search: "",
+                      });
+                      equipmentAutocomplete.setQuery("");
+                    }}
+                    aria-label="Clear equipment selection"
+                  />
+                )}
               </div>
             </button>
           </PopoverTrigger>
