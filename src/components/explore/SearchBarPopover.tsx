@@ -245,6 +245,23 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     }
   }, [equipmentOptions, onChange, value]);
 
+  // Keyboard shortcut: Cmd+K / Ctrl+K to open equipment search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only on desktop (mobile uses sheet, doesn't need keyboard shortcut)
+      if (!isDesktop) return;
+
+      // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setEquipmentOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isDesktop]);
+
   const renderAutocompleteCommand = (
     placeholder: string,
     options?: {
@@ -998,7 +1015,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
               className="relative px-6 py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
               aria-label="Select equipment type"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full">
                 {value.equipmentType && value.search ? (
                   <Wrench className="h-5 w-5 text-primary shrink-0" />
                 ) : (
@@ -1012,6 +1029,17 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                     {value.equipmentType || "What are you looking for?"}
                   </div>
                 </div>
+                {!value.equipmentType && (
+                  <kbd className="hidden xl:inline-flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground opacity-60 shrink-0">
+                    <span className="text-xs">
+                      {typeof navigator !== "undefined" &&
+                      navigator.platform.toLowerCase().includes("mac")
+                        ? "⌘"
+                        : "Ctrl+"}
+                    </span>
+                    K
+                  </kbd>
+                )}
                 {value.equipmentType && (
                   <X
                     className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-colors"
