@@ -29,6 +29,9 @@ import {
   Search,
   Package,
   Crosshair,
+  X,
+  Wrench,
+  Loader2,
 } from "lucide-react";
 import { format, startOfDay, addDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
@@ -45,6 +48,8 @@ import {
 } from "@/features/location/useGeolocation";
 import { ToastAction } from "@/components/ui/toast";
 import { useAddressAutocomplete } from "@/features/location/useAddressAutocomplete";
+import { useEquipmentAutocomplete } from "@/hooks/useEquipmentAutocomplete";
+import type { EquipmentSuggestion } from "@/components/equipment/services/autocomplete";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 
@@ -72,6 +77,52 @@ const POPULAR_LOCATIONS = [
   "Austin, TX",
 ];
 
+const POPULAR_CATEGORIES = [
+  "Camping",
+  "Hiking",
+  "Cycling",
+  "Water Sports",
+  "Winter Sports",
+];
+
+const RECENT_SEARCHES_KEY = "rentaloo_recent_equipment_searches";
+const MAX_RECENT_SEARCHES = 5;
+
+// Helper function to detect macOS using modern API with fallback
+const isMacOS = (): boolean => {
+  if (typeof navigator === "undefined") return false;
+
+  // Try modern User-Agent Client Hints API first
+  const platform =
+    (navigator as Navigator & { userAgentData?: { platform?: string } })
+      .userAgentData?.platform ?? navigator.platform;
+
+  return platform.toLowerCase().includes("mac");
+};
+
+// Helper functions for recent searches
+const getRecentSearches = (): string[] => {
+  try {
+    const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const addRecentSearch = (search: string) => {
+  try {
+    const recent = getRecentSearches();
+    // Remove if already exists (to move it to front)
+    const filtered = recent.filter((s) => s !== search);
+    // Add to front and limit to MAX
+    const updated = [search, ...filtered].slice(0, MAX_RECENT_SEARCHES);
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+  } catch (error) {
+    console.error("Failed to save recent search:", error);
+  }
+};
+
 type SectionKey = "where" | "when" | "what";
 
 const MOBILE_SECTIONS: Array<{
@@ -96,13 +147,30 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
   const [isSelectingDates, setIsSelectingDates] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const { toast } = useToast();
   const addressAutocomplete = useAddressAutocomplete({
     limit: 10,
     minLength: 2,
     debounceMs: 100,
   });
+
+  const equipmentAutocomplete = useEquipmentAutocomplete({
+    minLength: 1,
+    debounceMs: 300,
+    categoryLimit: 5,
+    equipmentLimit: 10,
+  });
+
+  const categorySuggestions = useMemo(
+    () => equipmentAutocomplete.suggestions.filter((s) => s.type === "category"),
+    [equipmentAutocomplete.suggestions]
+  );
+
+  const equipmentSuggestions = useMemo(
+    () => equipmentAutocomplete.suggestions.filter((s) => s.type === "equipment"),
+    [equipmentAutocomplete.suggestions]
+  );
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -169,6 +237,11 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         }));
   }, [categories]);
 
+  // Load recent searches on mount
+  useEffect(() => {
+    setRecentSearches(getRecentSearches());
+  }, []);
+
   useEffect(() => {
     const controller = new AbortController();
     const loadCategories = async () => {
@@ -200,10 +273,6 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         if (!controller.signal.aborted) {
           console.error("Unexpected error loading categories", err);
         }
-      } finally {
-        if (!controller.signal.aborted) {
-          setCategoriesLoading(false);
-        }
       }
     };
 
@@ -227,6 +296,23 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
       onChange({ ...value, equipmentType: match.name });
     }
   }, [equipmentOptions, onChange, value]);
+
+  // Keyboard shortcut: Cmd+K / Ctrl+K to open equipment search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only on desktop (mobile uses sheet, doesn't need keyboard shortcut)
+      if (!isDesktop) return;
+
+      // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setEquipmentOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isDesktop]);
 
   const renderAutocompleteCommand = (
     placeholder: string,
@@ -325,14 +411,31 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     setActiveSection("what");
   };
 
-  const handleEquipmentSelect = (option: { id: string; name: string }) => {
-    onChange({
-      ...value,
-      equipmentType: option.name,
-      equipmentCategoryId: option.id.startsWith("fallback-")
-        ? undefined
-        : option.id,
-    });
+  const handleEquipmentSuggestionSelect = (suggestion: EquipmentSuggestion) => {
+    if (suggestion.type === "category") {
+      // Category selection: broad filter
+      onChange({
+        ...value,
+        equipmentType: suggestion.label,
+        equipmentCategoryId: suggestion.id,
+        search: "", // Clear search
+      });
+    } else {
+      // Equipment item selection: precise search via text search only
+      onChange({
+        ...value,
+        equipmentType: suggestion.label,     // Display name
+        equipmentCategoryId: undefined,      // Don't filter by category
+        search: suggestion.label,            // Search by exact title
+      });
+    }
+
+    // Save to recent searches
+    addRecentSearch(suggestion.label);
+    setRecentSearches(getRecentSearches());
+
+    // Clear input and close popover/sheet
+    equipmentAutocomplete.setQuery("");
     setEquipmentOpen(false);
     setSheetOpen(false);
     setActiveSection("where");
@@ -351,7 +454,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
       dateRange: undefined,
       equipmentType: undefined,
       equipmentCategoryId: undefined,
+      search: "",
     });
+    equipmentAutocomplete.setQuery("");
+    addressAutocomplete.setQuery("");
     setActiveSection("where");
     setIsSelectingDates(false);
   };
@@ -361,6 +467,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     if (!nextOpen) {
       setActiveSection("where");
       setIsSelectingDates(false);
+      equipmentAutocomplete.setQuery("");
     } else {
       addressAutocomplete.setQuery("");
     }
@@ -544,7 +651,11 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
             <div className="px-6 pb-4">
               <div className="flex items-center rounded-full bg-muted p-1">
                 {MOBILE_SECTIONS.map((section) => {
-                  const Icon = section.icon;
+                  // Use dynamic icon for "What" section based on selection type
+                  let Icon = section.icon;
+                  if (section.key === "what" && value.equipmentType && value.search) {
+                    Icon = Wrench;
+                  }
                   const isActive = activeSection === section.key;
                   return (
                     <button
@@ -707,55 +818,170 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                       What are you planning?
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      Choose the gear category that fits your trip.
+                      Search for equipment or browse categories.
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {categoriesLoading
-                      ? Array.from({ length: FALLBACK_EQUIPMENT_TYPES.length }).map((_, idx) => (
-                          <div
-                            key={`skeleton-${idx}`}
-                            className="h-20 rounded-2xl border bg-muted animate-pulse"
-                          />
-                        ))
-                      : equipmentOptions.map((type) => (
-                          <Button
-                            key={type.id}
-                            variant={
-                              value.equipmentType === type.name ? "default" : "outline"
-                            }
-                            className="h-20 flex flex-col items-start justify-between rounded-2xl border"
-                            onClick={() => handleEquipmentSelect(type)}
-                            aria-label={`Select ${type.name}`}
-                          >
-                            <Package className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-semibold">{type.name}</span>
-                          </Button>
-                        ))}
-                  </div>
+                  <Command shouldFilter={false} className="rounded-2xl border">
+                    <CommandInput
+                      placeholder="What are you looking for?"
+                      value={equipmentAutocomplete.query}
+                      onValueChange={equipmentAutocomplete.setQuery}
+                    />
+                    <CommandList className="max-h-[400px]" aria-busy={equipmentAutocomplete.loading}>
+                      <CommandEmpty>
+                        {equipmentAutocomplete.loading ? (
+                          <div className="flex items-center justify-center gap-2 py-6">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Searching...</span>
+                          </div>
+                        ) : equipmentAutocomplete.query.trim().length === 0 ? (
+                          "Start typing to search."
+                        ) : equipmentAutocomplete.error ? (
+                          `Error: ${equipmentAutocomplete.error}`
+                        ) : (
+                          "No results found."
+                        )}
+                      </CommandEmpty>
+
+                      {/* Recent Searches (shown when no search query) */}
+                      {equipmentAutocomplete.query.trim().length === 0 &&
+                        recentSearches.length > 0 && (
+                          <CommandGroup heading="Recent">
+                            {recentSearches.map((searchTerm, idx) => (
+                              <CommandItem
+                                key={`recent-${idx}`}
+                                onSelect={() => {
+                                  // Find matching category
+                                  const category = categories.find(
+                                    (cat) => cat.name === searchTerm
+                                  );
+                                  if (category) {
+                                    handleEquipmentSuggestionSelect({
+                                      id: category.id,
+                                      label: category.name,
+                                      type: "category",
+                                    });
+                                  } else {
+                                    // Treat as equipment search
+                                    onChange({
+                                      ...value,
+                                      equipmentType: searchTerm,
+                                      equipmentCategoryId: undefined,
+                                      search: searchTerm,
+                                    });
+                                    setSheetOpen(false);
+                                  }
+                                }}
+                                className="cursor-pointer py-3"
+                              >
+                                <Search className="mr-2 h-4 w-4 text-muted-foreground" />
+                                {searchTerm}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        )}
+
+                      {/* Popular Categories (shown when no search query) */}
+                      {equipmentAutocomplete.query.trim().length === 0 && (
+                        <CommandGroup heading="Popular">
+                          {POPULAR_CATEGORIES.map((categoryName) => (
+                            <CommandItem
+                              key={categoryName}
+                              onSelect={() => {
+                                // Find the category ID from loaded categories
+                                const category = categories.find(
+                                  (cat) => cat.name === categoryName
+                                );
+                                if (category) {
+                                  handleEquipmentSuggestionSelect({
+                                    id: category.id,
+                                    label: category.name,
+                                    type: "category",
+                                  });
+                                } else {
+                                  // Fallback: set as equipmentType without category filter
+                                  onChange({
+                                    ...value,
+                                    equipmentType: categoryName,
+                                    equipmentCategoryId: undefined,
+                                    search: "",
+                                  });
+                                  setSheetOpen(false);
+                                }
+                              }}
+                              className="cursor-pointer py-3"
+                            >
+                              <Package className="mr-2 h-4 w-4" />
+                              {categoryName}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
+
+                      {/* Categories Group */}
+                      {categorySuggestions.length > 0 && (
+                        <CommandGroup heading="Categories">
+                          {categorySuggestions.map((s) => (
+                            <CommandItem
+                              key={s.id}
+                              onSelect={() => handleEquipmentSuggestionSelect(s)}
+                              className="cursor-pointer py-3"
+                            >
+                              <Package className="mr-2 h-4 w-4" />
+                              {s.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
+
+                      {/* Equipment Items Group */}
+                      {equipmentSuggestions.length > 0 && (
+                        <CommandGroup heading="Equipment">
+                          {equipmentSuggestions.map((s) => (
+                            <CommandItem
+                              key={s.id}
+                              onSelect={() => handleEquipmentSuggestionSelect(s)}
+                              className="cursor-pointer py-3"
+                            >
+                              <Search className="mr-2 h-4 w-4" />
+                              <div className="flex flex-col min-w-0">
+                                <span className="truncate">{s.label}</span>
+                                {s.categoryName && (
+                                  <span className="text-xs text-muted-foreground truncate">
+                                    in {s.categoryName}
+                                  </span>
+                                )}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
+                    </CommandList>
+                  </Command>
                   {value.equipmentType && (
                     <div className="flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className="rounded-full px-3 py-1 text-xs"
-                  >
-                    {value.equipmentType}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      onChange({
-                        ...value,
-                        equipmentType: undefined,
-                        equipmentCategoryId: undefined,
-                      })
-                    }
-                    className="h-7 text-xs"
-                  >
-                    Clear
-                  </Button>
-                </div>
+                      <Badge
+                        variant="secondary"
+                        className="rounded-full px-3 py-1 text-xs"
+                      >
+                        {value.equipmentType}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          onChange({
+                            ...value,
+                            equipmentType: undefined,
+                            equipmentCategoryId: undefined,
+                            search: "",
+                          })
+                        }
+                        className="h-7 text-xs"
+                      >
+                        Clear
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}
@@ -805,6 +1031,16 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                     {value.location || "Search destinations"}
                   </div>
                 </div>
+                {value.location && (
+                  <X
+                    className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange({ ...value, location: "" });
+                    }}
+                    aria-label="Clear location"
+                  />
+                )}
               </div>
             </button>
           </PopoverTrigger>
@@ -859,6 +1095,17 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                     )}
                   </div>
                 </div>
+                {value.dateRange?.from && (
+                  <X
+                    className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange({ ...value, dateRange: undefined });
+                      setIsSelectingDates(false);
+                    }}
+                    aria-label="Clear dates"
+                  />
+                )}
               </div>
             </button>
           </PopoverTrigger>
@@ -888,73 +1135,195 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         </Popover>
 
         {/* Equipment Type Popover */}
-        <Popover open={equipmentOpen} onOpenChange={setEquipmentOpen}>
+        <Popover
+          open={equipmentOpen}
+          onOpenChange={(open) => {
+            setEquipmentOpen(open);
+            if (!open) equipmentAutocomplete.setQuery("");
+          }}
+        >
           <PopoverTrigger asChild>
             <button
               className="relative px-6 py-4 text-left hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:z-10"
               aria-label="Select equipment type"
             >
-              <div className="flex items-center gap-3">
-                <Package className="h-5 w-5 text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-3 w-full">
+                {value.equipmentType && value.search ? (
+                  <Wrench className="h-5 w-5 text-primary shrink-0" />
+                ) : (
+                  <Package className="h-5 w-5 text-muted-foreground shrink-0" />
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-semibold text-foreground">
                     What
                   </div>
                   <div className="text-sm text-muted-foreground truncate">
-                    {value.equipmentType || "Any equipment"}
+                    {value.equipmentType || "What are you looking for?"}
                   </div>
                 </div>
+                {!value.equipmentType && (
+                  <kbd className="hidden xl:inline-flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground opacity-60 shrink-0">
+                    <span className="text-xs">{isMacOS() ? "⌘" : "Ctrl+"}</span>
+                    K
+                  </kbd>
+                )}
+                {value.equipmentType && (
+                  <X
+                    className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange({
+                        ...value,
+                        equipmentType: undefined,
+                        equipmentCategoryId: undefined,
+                        search: "",
+                      });
+                      equipmentAutocomplete.setQuery("");
+                    }}
+                    aria-label="Clear equipment selection"
+                  />
+                )}
               </div>
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-72 p-4" align="start">
-            <div className="space-y-2">
-              <div className="text-sm font-semibold mb-3">Equipment type</div>
-              <div className="grid grid-cols-2 gap-2">
-                {categoriesLoading
-                  ? Array.from({ length: 6 }).map((_, idx) => (
-                      <div
-                        key={`badge-skel-${idx}`}
-                        className="h-10 rounded-full bg-muted border animate-pulse"
-                      />
-                    ))
-                  : equipmentOptions.map((type) => (
-                      <Badge
-                        key={type.id}
-                        variant={
-                          value.equipmentType === type.name ? "default" : "outline"
-                        }
-                        className="cursor-pointer justify-center items-center py-2 px-3 whitespace-nowrap text-center hover:bg-primary/10"
-                        onClick={() => handleEquipmentSelect(type)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            handleEquipmentSelect(type);
+          <PopoverContent className="w-80 p-0" align="start">
+            <Command shouldFilter={false}>
+              <CommandInput
+                placeholder="What are you looking for?"
+                value={equipmentAutocomplete.query}
+                onValueChange={equipmentAutocomplete.setQuery}
+              />
+              <CommandList aria-busy={equipmentAutocomplete.loading}>
+                <CommandEmpty>
+                  {equipmentAutocomplete.loading ? (
+                    <div className="flex items-center justify-center gap-2 py-6">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Searching...</span>
+                    </div>
+                  ) : equipmentAutocomplete.query.trim().length === 0 ? (
+                    "Start typing to search."
+                  ) : equipmentAutocomplete.error ? (
+                    `Error: ${equipmentAutocomplete.error}`
+                  ) : (
+                    "No results found."
+                  )}
+                </CommandEmpty>
+
+                {/* Recent Searches (shown when no search query) */}
+                {equipmentAutocomplete.query.trim().length === 0 &&
+                  recentSearches.length > 0 && (
+                    <CommandGroup heading="Recent">
+                      {recentSearches.map((searchTerm, idx) => (
+                        <CommandItem
+                          key={`recent-${idx}`}
+                          onSelect={() => {
+                            // Find matching category
+                            const category = categories.find(
+                              (cat) => cat.name === searchTerm
+                            );
+                            if (category) {
+                              handleEquipmentSuggestionSelect({
+                                id: category.id,
+                                label: category.name,
+                                type: "category",
+                              });
+                            } else {
+                              // Treat as equipment search
+                              onChange({
+                                ...value,
+                                equipmentType: searchTerm,
+                                equipmentCategoryId: undefined,
+                                search: searchTerm,
+                              });
+                              setEquipmentOpen(false);
+                            }
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Search className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {searchTerm}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+
+                {/* Popular Categories (shown when no search query) */}
+                {equipmentAutocomplete.query.trim().length === 0 && (
+                  <CommandGroup heading="Popular">
+                    {POPULAR_CATEGORIES.map((categoryName) => (
+                      <CommandItem
+                        key={categoryName}
+                        onSelect={() => {
+                          // Find the category ID from loaded categories
+                          const category = categories.find(
+                            (cat) => cat.name === categoryName
+                          );
+                          if (category) {
+                            handleEquipmentSuggestionSelect({
+                              id: category.id,
+                              label: category.name,
+                              type: "category",
+                            });
+                          } else {
+                            // Fallback: set as equipmentType without category filter
+                            onChange({
+                              ...value,
+                              equipmentType: categoryName,
+                              equipmentCategoryId: undefined,
+                              search: "",
+                            });
+                            setEquipmentOpen(false);
                           }
                         }}
-                        aria-label={`Select ${type.name}`}
+                        className="cursor-pointer"
                       >
-                        {type.name}
-                      </Badge>
+                        <Package className="mr-2 h-4 w-4" />
+                        {categoryName}
+                      </CommandItem>
                     ))}
-              </div>
-              <div className="mt-4 flex justify-end gap-2 border-t pt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    onChange({
-                      ...value,
-                      equipmentType: undefined,
-                      equipmentCategoryId: undefined,
-                    })
-                  }
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
+                  </CommandGroup>
+                )}
+
+                {/* Categories Group */}
+                {categorySuggestions.length > 0 && (
+                  <CommandGroup heading="Categories">
+                    {categorySuggestions.map((s) => (
+                      <CommandItem
+                        key={s.id}
+                        onSelect={() => handleEquipmentSuggestionSelect(s)}
+                        className="cursor-pointer"
+                      >
+                        <Package className="mr-2 h-4 w-4" />
+                        {s.label}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+
+                {/* Equipment Items Group */}
+                {equipmentSuggestions.length > 0 && (
+                  <CommandGroup heading="Equipment">
+                    {equipmentSuggestions.map((s) => (
+                      <CommandItem
+                        key={s.id}
+                        onSelect={() => handleEquipmentSuggestionSelect(s)}
+                        className="cursor-pointer"
+                      >
+                        <Search className="mr-2 h-4 w-4" />
+                        <div className="flex flex-col min-w-0">
+                          <span className="truncate">{s.label}</span>
+                          {s.categoryName && (
+                            <span className="text-xs text-muted-foreground truncate">
+                              in {s.categoryName}
+                            </span>
+                          )}
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </Command>
           </PopoverContent>
         </Popover>
 

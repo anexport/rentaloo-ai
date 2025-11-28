@@ -211,7 +211,8 @@ export const fetchListings = async (
   }
 
   // Apply equipment type filter client-side if only the name was provided (fallback)
-  if (!filters.equipmentCategoryId && filters.equipmentTypeName) {
+  // Skip this if we're doing a text search (search parameter takes precedence)
+  if (!filters.equipmentCategoryId && filters.equipmentTypeName && !filters.search) {
     const target = filters.equipmentTypeName.toLowerCase();
     filteredListings = filteredListings.filter((item) => {
       const categoryName = item.category?.name?.toLowerCase();
