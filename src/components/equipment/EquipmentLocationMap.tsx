@@ -24,6 +24,7 @@ const EquipmentLocationMap = ({
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  const clickListenerRef = useRef<google.maps.MapsEventListener | null>(null);
 
   const [mapState, setMapState] = useState<MapState>("loading");
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(
@@ -118,8 +119,8 @@ const EquipmentLocationMap = ({
 
       infoWindowRef.current = infoWindow;
 
-      // Show info window on marker click
-      marker.addListener("click", () => {
+      // Show info window on marker click - store listener for cleanup
+      clickListenerRef.current = marker.addListener("click", () => {
         infoWindow.open({
           anchor: marker,
           map,
@@ -140,11 +141,34 @@ const EquipmentLocationMap = ({
     }
   }, [coordinates, mapState, initializeMap]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - dispose all Google Maps resources to prevent memory leaks
   useEffect(() => {
     return () => {
+      // 1. Remove click listener from marker
+      if (clickListenerRef.current) {
+        clickListenerRef.current.remove();
+        clickListenerRef.current = null;
+      }
+
+      // 2. Close and dispose info window
       if (infoWindowRef.current) {
         infoWindowRef.current.close();
+        infoWindowRef.current = null;
+      }
+
+      // 3. Remove marker from map and clear its listeners
+      if (markerRef.current) {
+        // Clear any remaining listeners on the marker
+        google.maps.event.clearInstanceListeners(markerRef.current);
+        // Remove marker from map
+        markerRef.current.map = null;
+        markerRef.current = null;
+      }
+
+      // 4. Clear map instance listeners and release reference
+      if (mapInstanceRef.current) {
+        google.maps.event.clearInstanceListeners(mapInstanceRef.current);
+        mapInstanceRef.current = null;
       }
     };
   }, []);

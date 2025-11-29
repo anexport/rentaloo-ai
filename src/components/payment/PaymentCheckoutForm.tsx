@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Elements,
@@ -6,7 +6,12 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { getStripe, createPaymentIntent, type PaymentBookingData } from "@/lib/stripe";
+import {
+  getStripe,
+  createPaymentIntent,
+  paymentBookingDataSchema,
+  type PaymentBookingData,
+} from "@/lib/stripe";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -258,9 +263,16 @@ const PaymentCheckoutForm = ({
   const isInitializingRef = useRef(false);
   const hasInitializedRef = useRef(false);
 
-  // Serialize bookingData to create a stable dependency for useEffect
-  // This prevents unnecessary re-runs when the parent re-renders with same values
-  const bookingDataKey = JSON.stringify(bookingData);
+  // Safely serialize bookingData to create a stable dependency for useEffect
+  // Uses try-catch to handle edge cases (though circular refs are unlikely for this flat object)
+  const bookingDataKey = useMemo(() => {
+    try {
+      return JSON.stringify(bookingData);
+    } catch {
+      // Fallback to individual values if JSON.stringify fails
+      return `${bookingData.equipment_id}-${bookingData.start_date}-${bookingData.end_date}-${bookingData.total_amount}`;
+    }
+  }, [bookingData]);
 
   useEffect(() => {
     if (isInitializingRef.current || hasInitializedRef.current) {
@@ -269,18 +281,29 @@ const PaymentCheckoutForm = ({
 
     const initializePayment = async () => {
       isInitializingRef.current = true;
+      setLoading(true);
+      setError(null);
+
+      // Validate bookingData before proceeding
+      const validationResult = paymentBookingDataSchema.safeParse(bookingData);
+      if (!validationResult.success) {
+        const errorMessage = validationResult.error.errors
+          .map((e) => e.message)
+          .join(", ");
+        setError(`Invalid booking data: ${errorMessage}`);
+        setLoading(false);
+        isInitializingRef.current = false;
+        return;
+      }
 
       try {
-        setLoading(true);
-        setError(null);
-
         const stripe = getStripe();
         setStripePromise(stripe);
 
-        // Create payment intent with booking data
+        // Create payment intent with validated booking data
         // NO booking is created in DB at this point!
         const { clientSecret: secret, paymentIntentId: intentId } =
-          await createPaymentIntent(bookingData);
+          await createPaymentIntent(validationResult.data);
 
         setClientSecret(secret);
         setPaymentIntentId(intentId);

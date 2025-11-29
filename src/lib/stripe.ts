@@ -1,6 +1,6 @@
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
+import { z } from "zod";
 import { supabase } from "./supabase";
-import type { InsuranceType } from "@/types/booking";
 
 // Stripe publishable key - In production, use environment variable
 const STRIPE_PUBLISHABLE_KEY =
@@ -20,19 +20,31 @@ export const getStripe = (): Promise<Stripe | null> => {
 };
 
 /**
+ * Zod schema for PaymentBookingData validation
+ * Validates payment-critical data before creating payment intents
+ */
+export const paymentBookingDataSchema = z.object({
+  equipment_id: z.string().uuid("Invalid equipment ID"),
+  start_date: z.string().refine(
+    (val) => !isNaN(Date.parse(val)),
+    "Invalid start date format"
+  ),
+  end_date: z.string().refine(
+    (val) => !isNaN(Date.parse(val)),
+    "Invalid end date format"
+  ),
+  total_amount: z.number().positive("Total amount must be positive"),
+  insurance_type: z.enum(["none", "basic", "premium"]),
+  insurance_cost: z.number().nonnegative("Insurance cost cannot be negative"),
+  damage_deposit_amount: z.number().nonnegative("Deposit cannot be negative"),
+});
+
+/**
  * Booking data required to create a payment intent
  * This is sent to the Edge Function which stores it in Stripe metadata
  * The booking is only created in the database after payment succeeds
  */
-export type PaymentBookingData = {
-  equipment_id: string;
-  start_date: string;
-  end_date: string;
-  total_amount: number;
-  insurance_type: InsuranceType;
-  insurance_cost: number;
-  damage_deposit_amount: number;
-};
+export type PaymentBookingData = z.infer<typeof paymentBookingDataSchema>;
 
 /**
  * Create a payment intent via Supabase Edge Function
