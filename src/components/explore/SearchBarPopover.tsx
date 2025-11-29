@@ -52,6 +52,7 @@ import { useEquipmentAutocomplete } from "@/hooks/useEquipmentAutocomplete";
 import type { EquipmentSuggestion } from "@/components/equipment/services/autocomplete";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
+import { highlightMatchingText } from "@/lib/highlightText";
 
 type Props = {
   value: SearchBarFilters;
@@ -163,12 +164,14 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
   });
 
   const categorySuggestions = useMemo(
-    () => equipmentAutocomplete.suggestions.filter((s) => s.type === "category"),
+    () =>
+      equipmentAutocomplete.suggestions.filter((s) => s.type === "category"),
     [equipmentAutocomplete.suggestions]
   );
 
   const equipmentSuggestions = useMemo(
-    () => equipmentAutocomplete.suggestions.filter((s) => s.type === "equipment"),
+    () =>
+      equipmentAutocomplete.suggestions.filter((s) => s.type === "equipment"),
     [equipmentAutocomplete.suggestions]
   );
 
@@ -290,7 +293,8 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
   useEffect(() => {
     if (!value.equipmentCategoryId || value.equipmentType) return;
     const match = equipmentOptions.find(
-      (opt) => !opt.id.startsWith("fallback-") && opt.id === value.equipmentCategoryId
+      (opt) =>
+        !opt.id.startsWith("fallback-") && opt.id === value.equipmentCategoryId
     );
     if (match) {
       onChange({ ...value, equipmentType: match.name });
@@ -326,57 +330,67 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
         ? options.className || undefined
         : "rounded-2xl border";
     return (
-      <Command
-        className={commandClassName}
-        shouldFilter={false}
-      >
-      <CommandInput
-        placeholder={placeholder}
-        value={addressAutocomplete.query}
-        onValueChange={addressAutocomplete.setQuery}
-      />
-      <CommandList aria-busy={addressAutocomplete.loading}>
-        <CommandEmpty>
-          {addressAutocomplete.loading
-            ? "Searching..."
-            : addressAutocomplete.query.trim().length === 0
-            ? "Start typing to search locations."
-            : addressAutocomplete.error
-            ? `Error: ${addressAutocomplete.error}`
-            : "No locations found."}
-        </CommandEmpty>
-        {addressAutocomplete.query.trim().length >= 2 &&
-          addressAutocomplete.suggestions.length > 0 && (
-            <CommandGroup heading="Suggestions">
-              {addressAutocomplete.suggestions.map((s) => (
-                <CommandItem
-                  key={s.id}
-                  onSelect={() => {
-                    handleLocationSelect(s.label);
-                    addressAutocomplete.setQuery("");
-                  }}
-                  className="cursor-pointer"
-                >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  {s.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-        <CommandGroup heading={options?.popularHeading ?? "Popular"}>
-          {POPULAR_LOCATIONS.map((loc) => (
-            <CommandItem
-              key={loc}
-              onSelect={() => handleLocationSelect(loc)}
-              className="cursor-pointer"
-            >
-              <MapPin className="mr-2 h-4 w-4" />
-              {loc}
-            </CommandItem>
-          ))}
-        </CommandGroup>
-      </CommandList>
-    </Command>
+      <Command className={commandClassName} shouldFilter={false}>
+        <CommandInput
+          placeholder={placeholder}
+          value={addressAutocomplete.query}
+          onValueChange={addressAutocomplete.setQuery}
+        />
+        <CommandList aria-busy={addressAutocomplete.loading}>
+          <CommandEmpty>
+            {addressAutocomplete.loading
+              ? "Searching..."
+              : addressAutocomplete.query.trim().length === 0
+              ? "Start typing to search locations."
+              : addressAutocomplete.error
+              ? `Error: ${addressAutocomplete.error}`
+              : "No locations found."}
+          </CommandEmpty>
+          {addressAutocomplete.query.trim().length >= 2 &&
+            addressAutocomplete.suggestions.length > 0 && (
+              <CommandGroup
+                heading="Suggestions"
+                className="animate-suggestions-in"
+              >
+                {addressAutocomplete.suggestions.map((s, idx) => (
+                  <CommandItem
+                    key={s.id}
+                    onSelect={() => {
+                      handleLocationSelect(s.label);
+                      addressAutocomplete.setQuery("");
+                    }}
+                    className="cursor-pointer animate-suggestion-item"
+                    style={{ "--item-index": idx } as React.CSSProperties}
+                  >
+                    <MapPin className="mr-2 h-4 w-4" />
+                    <span className="truncate">
+                      {highlightMatchingText(
+                        s.label,
+                        addressAutocomplete.query
+                      )}
+                    </span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          <CommandGroup
+            heading={options?.popularHeading ?? "Popular"}
+            className="animate-suggestions-in"
+          >
+            {POPULAR_LOCATIONS.map((loc, idx) => (
+              <CommandItem
+                key={loc}
+                onSelect={() => handleLocationSelect(loc)}
+                className="cursor-pointer animate-suggestion-item"
+                style={{ "--item-index": idx } as React.CSSProperties}
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                {loc}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </Command>
     );
   };
 
@@ -424,9 +438,9 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
       // Equipment item selection: precise search via text search only
       onChange({
         ...value,
-        equipmentType: suggestion.label,     // Display name
-        equipmentCategoryId: undefined,      // Don't filter by category
-        search: suggestion.label,            // Search by exact title
+        equipmentType: suggestion.label, // Display name
+        equipmentCategoryId: undefined, // Don't filter by category
+        search: suggestion.label, // Search by exact title
       });
     }
 
@@ -521,10 +535,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
               "You've previously denied location access. Click the location icon (📍) in your browser's address bar to allow access, then try again.",
             variant: "destructive",
             action: (
-              <ToastAction
-                altText="Try again"
-                onClick={handleLocationClick}
-              >
+              <ToastAction altText="Try again" onClick={handleLocationClick}>
                 Try Again
               </ToastAction>
             ),
@@ -538,10 +549,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
               "Couldn't get your location. Check signal and try again.",
             variant: "destructive",
             action: (
-              <ToastAction
-                altText="Try again"
-                onClick={handleLocationClick}
-              >
+              <ToastAction altText="Try again" onClick={handleLocationClick}>
                 Try Again
               </ToastAction>
             ),
@@ -653,7 +661,11 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                 {MOBILE_SECTIONS.map((section) => {
                   // Use dynamic icon for "What" section based on selection type
                   let Icon = section.icon;
-                  if (section.key === "what" && value.equipmentType && value.search) {
+                  if (
+                    section.key === "what" &&
+                    value.equipmentType &&
+                    value.search
+                  ) {
                     Icon = Wrench;
                   }
                   const isActive = activeSection === section.key;
@@ -692,7 +704,8 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                   </div>
                   <Button
                     variant="secondary"
-                    className="w-full justify-start"
+                    className="w-full justify-start animate-suggestion-item"
+                    style={{ "--item-index": 0 } as React.CSSProperties}
                     onClick={handleLocationClick}
                     disabled={isLocating}
                     aria-label="Use current location"
@@ -704,15 +717,16 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                       : "Use current location"}
                   </Button>
                   {renderAutocompleteCommand("Try Yosemite National Park")}
-                  <div className="flex flex-wrap gap-2">
-                    {POPULAR_LOCATIONS.map((loc) => (
+                  <div className="flex flex-wrap gap-2 animate-suggestions-in">
+                    {POPULAR_LOCATIONS.map((loc, idx) => (
                       <Button
                         key={`${loc}-chip`}
                         variant={
                           value.location === loc ? "default" : "secondary"
                         }
                         size="sm"
-                        className="rounded-full"
+                        className="rounded-full animate-suggestion-item"
+                        style={{ animationDelay: `${idx * 40}ms` }}
                         onClick={() => handleLocationSelect(loc)}
                       >
                         {loc}
@@ -750,8 +764,8 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                       Add a flexible range to see availability.
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {quickDateRanges.map((option) => (
+                  <div className="flex flex-wrap gap-2 animate-suggestions-in">
+                    {quickDateRanges.map((option, idx) => (
                       <Button
                         key={option.label}
                         variant={
@@ -765,14 +779,18 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                             : "secondary"
                         }
                         size="sm"
-                        className="rounded-full"
+                        className="rounded-full animate-suggestion-item"
+                        style={{ animationDelay: `${idx * 50}ms` }}
                         onClick={() => handlePresetDateSelect(option.range)}
                       >
                         {option.label}
                       </Button>
                     ))}
                   </div>
-                  <div className="rounded-2xl border p-4">
+                  <div
+                    className="rounded-2xl border p-4 animate-suggestions-in"
+                    style={{ animationDelay: "100ms" }}
+                  >
                     <Calendar
                       mode="range"
                       selected={value.dateRange}
@@ -827,7 +845,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                       value={equipmentAutocomplete.query}
                       onValueChange={equipmentAutocomplete.setQuery}
                     />
-                    <CommandList className="max-h-[400px]" aria-busy={equipmentAutocomplete.loading}>
+                    <CommandList
+                      className="max-h-[400px]"
+                      aria-busy={equipmentAutocomplete.loading}
+                    >
                       <CommandEmpty>
                         {equipmentAutocomplete.loading ? (
                           <div className="flex items-center justify-center gap-2 py-6">
@@ -846,7 +867,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                       {/* Recent Searches (shown when no search query) */}
                       {equipmentAutocomplete.query.trim().length === 0 &&
                         recentSearches.length > 0 && (
-                          <CommandGroup heading="Recent">
+                          <CommandGroup
+                            heading="Recent"
+                            className="animate-suggestions-in"
+                          >
                             {recentSearches.map((searchTerm, idx) => (
                               <CommandItem
                                 key={`recent-${idx}`}
@@ -872,7 +896,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                                     setSheetOpen(false);
                                   }
                                 }}
-                                className="cursor-pointer py-3"
+                                className="cursor-pointer py-3 animate-suggestion-item"
+                                style={
+                                  { "--item-index": idx } as React.CSSProperties
+                                }
                               >
                                 <Search className="mr-2 h-4 w-4 text-muted-foreground" />
                                 {searchTerm}
@@ -883,8 +910,11 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
 
                       {/* Popular Categories (shown when no search query) */}
                       {equipmentAutocomplete.query.trim().length === 0 && (
-                        <CommandGroup heading="Popular">
-                          {POPULAR_CATEGORIES.map((categoryName) => (
+                        <CommandGroup
+                          heading="Popular"
+                          className="animate-suggestions-in"
+                        >
+                          {POPULAR_CATEGORIES.map((categoryName, idx) => (
                             <CommandItem
                               key={categoryName}
                               onSelect={() => {
@@ -909,7 +939,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                                   setSheetOpen(false);
                                 }
                               }}
-                              className="cursor-pointer py-3"
+                              className="cursor-pointer py-3 animate-suggestion-item"
+                              style={
+                                { "--item-index": idx } as React.CSSProperties
+                              }
                             >
                               <Package className="mr-2 h-4 w-4" />
                               {categoryName}
@@ -920,15 +953,34 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
 
                       {/* Categories Group */}
                       {categorySuggestions.length > 0 && (
-                        <CommandGroup heading="Categories">
-                          {categorySuggestions.map((s) => (
+                        <CommandGroup
+                          heading="Categories"
+                          className="animate-suggestions-in"
+                        >
+                          {categorySuggestions.map((s, idx) => (
                             <CommandItem
                               key={s.id}
-                              onSelect={() => handleEquipmentSuggestionSelect(s)}
-                              className="cursor-pointer py-3"
+                              onSelect={() =>
+                                handleEquipmentSuggestionSelect(s)
+                              }
+                              className="cursor-pointer py-3 animate-suggestion-item"
+                              style={
+                                { "--item-index": idx } as React.CSSProperties
+                              }
                             >
-                              <Package className="mr-2 h-4 w-4" />
-                              {s.label}
+                              <Package className="mr-2 h-4 w-4 shrink-0" />
+                              <span className="flex-1 truncate">
+                                {highlightMatchingText(
+                                  s.label,
+                                  equipmentAutocomplete.query
+                                )}
+                              </span>
+                              {typeof s.itemCount === "number" && (
+                                <span className="text-xs text-muted-foreground ml-auto pl-2 shrink-0">
+                                  {s.itemCount}{" "}
+                                  {s.itemCount === 1 ? "item" : "items"}
+                                </span>
+                              )}
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -936,16 +988,29 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
 
                       {/* Equipment Items Group */}
                       {equipmentSuggestions.length > 0 && (
-                        <CommandGroup heading="Equipment">
-                          {equipmentSuggestions.map((s) => (
+                        <CommandGroup
+                          heading="Equipment"
+                          className="animate-suggestions-in"
+                        >
+                          {equipmentSuggestions.map((s, idx) => (
                             <CommandItem
                               key={s.id}
-                              onSelect={() => handleEquipmentSuggestionSelect(s)}
-                              className="cursor-pointer py-3"
+                              onSelect={() =>
+                                handleEquipmentSuggestionSelect(s)
+                              }
+                              className="cursor-pointer py-3 animate-suggestion-item"
+                              style={
+                                { "--item-index": idx } as React.CSSProperties
+                              }
                             >
-                              <Search className="mr-2 h-4 w-4" />
-                              <div className="flex flex-col min-w-0">
-                                <span className="truncate">{s.label}</span>
+                              <Search className="mr-2 h-4 w-4 shrink-0" />
+                              <div className="flex flex-col min-w-0 flex-1">
+                                <span className="truncate">
+                                  {highlightMatchingText(
+                                    s.label,
+                                    equipmentAutocomplete.query
+                                  )}
+                                </span>
                                 {s.categoryName && (
                                   <span className="text-xs text-muted-foreground truncate">
                                     in {s.categoryName}
@@ -1212,7 +1277,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                 {/* Recent Searches (shown when no search query) */}
                 {equipmentAutocomplete.query.trim().length === 0 &&
                   recentSearches.length > 0 && (
-                    <CommandGroup heading="Recent">
+                    <CommandGroup
+                      heading="Recent"
+                      className="animate-suggestions-in"
+                    >
                       {recentSearches.map((searchTerm, idx) => (
                         <CommandItem
                           key={`recent-${idx}`}
@@ -1238,7 +1306,8 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                               setEquipmentOpen(false);
                             }
                           }}
-                          className="cursor-pointer"
+                          className="cursor-pointer animate-suggestion-item"
+                          style={{ "--item-index": idx } as React.CSSProperties}
                         >
                           <Search className="mr-2 h-4 w-4 text-muted-foreground" />
                           {searchTerm}
@@ -1249,8 +1318,11 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
 
                 {/* Popular Categories (shown when no search query) */}
                 {equipmentAutocomplete.query.trim().length === 0 && (
-                  <CommandGroup heading="Popular">
-                    {POPULAR_CATEGORIES.map((categoryName) => (
+                  <CommandGroup
+                    heading="Popular"
+                    className="animate-suggestions-in"
+                  >
+                    {POPULAR_CATEGORIES.map((categoryName, idx) => (
                       <CommandItem
                         key={categoryName}
                         onSelect={() => {
@@ -1275,7 +1347,8 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                             setEquipmentOpen(false);
                           }
                         }}
-                        className="cursor-pointer"
+                        className="cursor-pointer animate-suggestion-item"
+                        style={{ "--item-index": idx } as React.CSSProperties}
                       >
                         <Package className="mr-2 h-4 w-4" />
                         {categoryName}
@@ -1286,15 +1359,29 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
 
                 {/* Categories Group */}
                 {categorySuggestions.length > 0 && (
-                  <CommandGroup heading="Categories">
-                    {categorySuggestions.map((s) => (
+                  <CommandGroup
+                    heading="Categories"
+                    className="animate-suggestions-in"
+                  >
+                    {categorySuggestions.map((s, idx) => (
                       <CommandItem
                         key={s.id}
                         onSelect={() => handleEquipmentSuggestionSelect(s)}
-                        className="cursor-pointer"
+                        className="cursor-pointer animate-suggestion-item"
+                        style={{ "--item-index": idx } as React.CSSProperties}
                       >
-                        <Package className="mr-2 h-4 w-4" />
-                        {s.label}
+                        <Package className="mr-2 h-4 w-4 shrink-0" />
+                        <span className="flex-1 truncate">
+                          {highlightMatchingText(
+                            s.label,
+                            equipmentAutocomplete.query
+                          )}
+                        </span>
+                        {typeof s.itemCount === "number" && (
+                          <span className="text-xs text-muted-foreground ml-auto pl-2 shrink-0">
+                            {s.itemCount} {s.itemCount === 1 ? "item" : "items"}
+                          </span>
+                        )}
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -1302,16 +1389,25 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
 
                 {/* Equipment Items Group */}
                 {equipmentSuggestions.length > 0 && (
-                  <CommandGroup heading="Equipment">
-                    {equipmentSuggestions.map((s) => (
+                  <CommandGroup
+                    heading="Equipment"
+                    className="animate-suggestions-in"
+                  >
+                    {equipmentSuggestions.map((s, idx) => (
                       <CommandItem
                         key={s.id}
                         onSelect={() => handleEquipmentSuggestionSelect(s)}
-                        className="cursor-pointer"
+                        className="cursor-pointer animate-suggestion-item"
+                        style={{ "--item-index": idx } as React.CSSProperties}
                       >
-                        <Search className="mr-2 h-4 w-4" />
-                        <div className="flex flex-col min-w-0">
-                          <span className="truncate">{s.label}</span>
+                        <Search className="mr-2 h-4 w-4 shrink-0" />
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="truncate">
+                            {highlightMatchingText(
+                              s.label,
+                              equipmentAutocomplete.query
+                            )}
+                          </span>
                           {s.categoryName && (
                             <span className="text-xs text-muted-foreground truncate">
                               in {s.categoryName}

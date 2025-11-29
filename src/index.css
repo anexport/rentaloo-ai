@@ -69,7 +69,7 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --trust-excellent: oklch(0.48 0.20 145);
+  --trust-excellent: oklch(0.48 0.2 145);
   --trust-good: oklch(0.52 0.17 135);
   --trust-fair: oklch(0.58 0.17 95);
   --trust-low: oklch(0.55 0.17 50);
@@ -137,7 +137,54 @@
   }
   /* Hide scrollbar for IE, Edge and Firefox */
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+/* Suggestion list animations */
+@keyframes suggestion-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes suggestion-item-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-suggestions-in {
+  animation: suggestion-fade-in 0.2s ease-out;
+}
+
+.animate-suggestion-item {
+  animation: suggestion-item-fade-in 0.15s ease-out backwards;
+}
+
+/* Stagger animation for suggestion items using CSS custom property
+   Set --item-index inline: style={{ '--item-index': idx } as React.CSSProperties}
+   This avoids nth-child issues with cmdk's DOM structure (heading as sibling) */
+.animate-suggestion-item {
+  --item-index: 0;
+  animation-delay: calc(var(--item-index) * 25ms);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-suggestions-in,
+  .animate-suggestion-item {
+    animation: none;
   }
 }

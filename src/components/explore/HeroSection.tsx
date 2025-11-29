@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import CountUp from "@/components/ui/count-up";
 import { TrendingUp, Shield, Users } from "lucide-react";
 
 type Props = {
@@ -60,7 +61,7 @@ const HeroSection = ({ children }: Props) => {
         <div className="grid grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto">
           <div className="text-center">
             <div className="text-2xl sm:text-3xl font-bold text-foreground">
-              15,000+
+              <CountUp end={15000} duration={2000} suffix="+" />
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground mt-1">
               Items available
@@ -68,7 +69,7 @@ const HeroSection = ({ children }: Props) => {
           </div>
           <div className="text-center border-x border-border">
             <div className="text-2xl sm:text-3xl font-bold text-foreground">
-              5,000+
+              <CountUp end={5000} duration={2000} suffix="+" />
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground mt-1">
               Happy renters
@@ -76,7 +77,7 @@ const HeroSection = ({ children }: Props) => {
           </div>
           <div className="text-center">
             <div className="text-2xl sm:text-3xl font-bold text-foreground">
-              50+
+              <CountUp end={50} duration={1500} suffix="+" />
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground mt-1">
               Cities
