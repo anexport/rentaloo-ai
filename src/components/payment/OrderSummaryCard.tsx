@@ -54,6 +54,7 @@ const OrderSummaryCard = ({
             src={primaryPhoto.photo_url}
             alt={listing.title}
             className="w-full h-40 object-cover"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-40 bg-muted flex items-center justify-center">

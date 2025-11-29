@@ -1,5 +1,6 @@
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { supabase } from "./supabase";
+import type { InsuranceType } from "@/types/booking";
 
 // Stripe publishable key - In production, use environment variable
 const STRIPE_PUBLISHABLE_KEY =
@@ -28,7 +29,7 @@ export type PaymentBookingData = {
   start_date: string;
   end_date: string;
   total_amount: number;
-  insurance_type: string;
+  insurance_type: InsuranceType;
   insurance_cost: number;
   damage_deposit_amount: number;
 };

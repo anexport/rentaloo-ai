@@ -258,6 +258,10 @@ const PaymentCheckoutForm = ({
   const isInitializingRef = useRef(false);
   const hasInitializedRef = useRef(false);
 
+  // Serialize bookingData to create a stable dependency for useEffect
+  // This prevents unnecessary re-runs when the parent re-renders with same values
+  const bookingDataKey = JSON.stringify(bookingData);
+
   useEffect(() => {
     if (isInitializingRef.current || hasInitializedRef.current) {
       return;
@@ -288,7 +292,6 @@ const PaymentCheckoutForm = ({
             ? err.message
             : "Failed to initialize payment. Please try again."
         );
-        isInitializingRef.current = false;
       } finally {
         setLoading(false);
         isInitializingRef.current = false;
@@ -296,7 +299,8 @@ const PaymentCheckoutForm = ({
     };
 
     void initializePayment();
-  }, [bookingData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingDataKey]);
 
   if (loading) {
     return (
