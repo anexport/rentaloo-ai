@@ -660,6 +660,7 @@ const EquipmentDetailDialog = ({
                     location={data.location}
                     latitude={data.latitude}
                     longitude={data.longitude}
+                    equipmentTitle={data.title}
                   />
                 </section>
 
