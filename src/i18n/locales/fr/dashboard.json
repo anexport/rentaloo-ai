@@ -1,0 +1,116 @@
+{
+  "renter": {
+    "header": {
+      "title": "Aperçu du Tableau de Bord",
+      "description": "Bienvenue! Voici ce qui se passe avec vos locations."
+    },
+    "verification": {
+      "incomplete_title": "Complétez votre vérification",
+      "incomplete_message": "Votre compte est {{progress}}% vérifié. Complétez la vérification d'identité pour commencer à louer en toute sécurité.",
+      "verify_button": "Vérifier maintenant"
+    },
+    "overview": {
+      "section_title": "Aperçu",
+      "section_description": "Votre activité de location en un coup d'œil"
+    },
+    "bookings": {
+      "section_title": "Mes Réservations",
+      "section_description": "Gérez vos réservations de location",
+      "view_all": "Afficher Tous",
+      "loading": "Chargement des réservations...",
+      "empty_state": {
+        "title": "Aucune réservation pour l'instant",
+        "description": "Commencez par parcourir les équipements disponibles et effectuez votre première location",
+        "button": "Parcourir les Équipements"
+      }
+    },
+    "reviews": {
+      "card_title": "Mes Avis",
+      "card_description": "Avis que vous avez écrits pour les propriétaires d'équipements"
+    },
+    "tabs": {
+      "overview": "Aperçu",
+      "bookings": "Réservations"
+    }
+  },
+  "owner": {
+    "header": {
+      "title": "Tableau de Bord du Propriétaire",
+      "description": "Gérez vos annonces d'équipements et suivez vos revenus"
+    },
+    "stats": {
+      "total_listings": {
+        "label": "Annonces Totales",
+        "description": "Équipements actifs"
+      },
+      "pending_requests": {
+        "label": "Demandes en Attente",
+        "description": "En attente de paiement"
+      },
+      "total_earnings": {
+        "label": "Revenus Totaux",
+        "description": "Total"
+      },
+      "average_rating": {
+        "label": "Note Moyenne",
+        "description": "Selon les avis"
+      }
+    },
+    "tabs": {
+      "overview": "Aperçu",
+      "equipment": "Gestion des Équipements",
+      "bookings": "Demandes de Location",
+      "messages": "Messages",
+      "reviews": "Avis",
+      "payments": "Paiements et Séquestre"
+    },
+    "overview": {
+      "quick_actions": {
+        "add_equipment": {
+          "title": "Ajouter un Équipement",
+          "description": "Créez une annonce pour un nouvel équipement à louer",
+          "button": "Ajouter un Équipement"
+        },
+        "manage_listings": {
+          "title": "Gérer les Annonces",
+          "description": "Visualisez et modifiez vos annonces d'équipements",
+          "button": "Gérer les Annonces"
+        },
+        "analytics": {
+          "title": "Analyses",
+          "description": "Suivez les performances et les revenus",
+          "button": "Bientôt disponible"
+        }
+      },
+      "recent_activity": {
+        "title": "Activité Récente",
+        "description": "Vos dernières annonces d'équipements et demandes de location",
+        "empty_state": {
+          "title": "Aucune activité récente",
+          "description": "Commencez par ajouter votre premier équipement"
+        }
+      }
+    },
+    "bookings": {
+      "section_title": "Demandes de Location",
+      "section_description": "Gérez les demandes de location de vos équipements",
+      "loading": "Chargement des demandes de location...",
+      "empty_state": {
+        "title": "Aucune demande de location pour l'instant",
+        "description": "Les demandes de location apparaîtront ici lorsque les locataires demanderont votre équipement"
+      }
+    },
+    "messages": {
+      "section_title": "Messages",
+      "section_description": "Communiquez avec les locataires à propos des locations"
+    },
+    "reviews": {
+      "section_title": "Avis des Clients",
+      "section_description": "Avis et évaluations des locataires qui ont utilisé votre équipement"
+    },
+    "payments": {
+      "section_title": "Paiements et Séquestre",
+      "section_description": "Gérez vos revenus et vos fonds en séquestre"
+    }
+  }
+}

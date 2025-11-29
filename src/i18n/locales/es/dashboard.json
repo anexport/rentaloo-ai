@@ -1,0 +1,116 @@
+{
+  "renter": {
+    "header": {
+      "title": "Descripción General del Panel",
+      "description": "¡Bienvenido de nuevo! Esto es lo que está pasando con tus alquileres."
+    },
+    "verification": {
+      "incomplete_title": "Completa tu verificación",
+      "incomplete_message": "Tu cuenta está {{progress}}% verificada. Completa la verificación de identidad para comenzar a alquilar con seguridad.",
+      "verify_button": "Verificar ahora"
+    },
+    "overview": {
+      "section_title": "Descripción General",
+      "section_description": "Tu actividad de alquiler de un vistazo"
+    },
+    "bookings": {
+      "section_title": "Mis Alquileres",
+      "section_description": "Gestiona tus reservas de alquiler",
+      "view_all": "Ver Todos",
+      "loading": "Cargando alquileres...",
+      "empty_state": {
+        "title": "Sin alquileres aún",
+        "description": "Comienza explorando equipos disponibles y realiza tu primer alquiler",
+        "button": "Explorar Equipos"
+      }
+    },
+    "reviews": {
+      "card_title": "Mis Reseñas",
+      "card_description": "Reseñas que has escrito para los propietarios de equipos"
+    },
+    "tabs": {
+      "overview": "Descripción General",
+      "bookings": "Alquileres"
+    }
+  },
+  "owner": {
+    "header": {
+      "title": "Panel del Propietario",
+      "description": "Gestiona tus listados de equipos y realiza un seguimiento de tus ganancias"
+    },
+    "stats": {
+      "total_listings": {
+        "label": "Total de Listados",
+        "description": "Equipos activos"
+      },
+      "pending_requests": {
+        "label": "Solicitudes Pendientes",
+        "description": "Esperando pago"
+      },
+      "total_earnings": {
+        "label": "Ganancias Totales",
+        "description": "En total"
+      },
+      "average_rating": {
+        "label": "Calificación Promedio",
+        "description": "Según reseñas"
+      }
+    },
+    "tabs": {
+      "overview": "Descripción General",
+      "equipment": "Gestión de Equipos",
+      "bookings": "Solicitudes de Alquiler",
+      "messages": "Mensajes",
+      "reviews": "Reseñas",
+      "payments": "Pagos y Depósito en Garantía"
+    },
+    "overview": {
+      "quick_actions": {
+        "add_equipment": {
+          "title": "Agregar Equipo",
+          "description": "Crea un listado de equipo nuevo para alquilar",
+          "button": "Agregar Equipo"
+        },
+        "manage_listings": {
+          "title": "Gestionar Listados",
+          "description": "Ver y editar tus listados de equipos",
+          "button": "Gestionar Listados"
+        },
+        "analytics": {
+          "title": "Analítica",
+          "description": "Realiza un seguimiento del rendimiento y las ganancias",
+          "button": "Próximamente"
+        }
+      },
+      "recent_activity": {
+        "title": "Actividad Reciente",
+        "description": "Tus listados de equipos y solicitudes de alquiler más recientes",
+        "empty_state": {
+          "title": "Sin actividad reciente",
+          "description": "Comienza agregando tu primer equipo"
+        }
+      }
+    },
+    "bookings": {
+      "section_title": "Solicitudes de Alquiler",
+      "section_description": "Gestiona las solicitudes de alquiler de tus equipos",
+      "loading": "Cargando solicitudes de alquiler...",
+      "empty_state": {
+        "title": "Sin solicitudes de alquiler aún",
+        "description": "Las solicitudes de alquiler aparecerán aquí cuando los inquilinos soliciten tu equipo"
+      }
+    },
+    "messages": {
+      "section_title": "Mensajes",
+      "section_description": "Comunícate con los inquilinos sobre alquileres"
+    },
+    "reviews": {
+      "section_title": "Reseñas de Clientes",
+      "section_description": "Reseñas y calificaciones de los inquilinos que usaron tu equipo"
+    },
+    "payments": {
+      "section_title": "Pagos y Depósito en Garantía",
+      "section_description": "Gestiona tus ganancias y fondos en depósito"
+    }
+  }
+}

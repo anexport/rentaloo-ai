@@ -1,43 +1,46 @@
 import { Search, Calendar, Handshake, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const steps = [
-  {
-    icon: Search,
-    title: "Search & Browse",
-    description: "Find gear near you from thousands of local listings",
-    step: 1,
-  },
-  {
-    icon: Calendar,
-    title: "Request to Book",
-    description: "Pick your dates and send a booking request to the owner",
-    step: 2,
-  },
-  {
-    icon: Handshake,
-    title: "Meet & Rent",
-    description: "Pick up from the owner and enjoy your adventure",
-    step: 3,
-  },
-  {
-    icon: Star,
-    title: "Return & Review",
-    description: "Return the gear and leave feedback for the community",
-    step: 4,
-  },
-];
+import { useTranslation } from "react-i18next";
 
 const HowItWorksSection = () => {
+  const { t } = useTranslation("marketing");
+
+  const steps = [
+    {
+      icon: Search,
+      title: t("how_it_works.step_1_title"),
+      description: t("how_it_works.step_1_description"),
+      step: 1,
+    },
+    {
+      icon: Calendar,
+      title: t("how_it_works.step_2_title"),
+      description: t("how_it_works.step_2_description"),
+      step: 2,
+    },
+    {
+      icon: Handshake,
+      title: t("how_it_works.step_3_title"),
+      description: t("how_it_works.step_3_description"),
+      step: 3,
+    },
+    {
+      icon: Star,
+      title: t("how_it_works.step_4_title"),
+      description: t("how_it_works.step_4_description"),
+      step: 4,
+    },
+  ];
+
   return (
     <section className="py-16 sm:py-20 bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            How RentAloo works
+            {t("how_it_works.section_title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Renting outdoor gear is simple and secure. Get started in minutes.
+            {t("how_it_works.section_subtitle")}
           </p>
         </div>
 

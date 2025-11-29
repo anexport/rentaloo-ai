@@ -2,49 +2,58 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import StarRating from "@/components/reviews/StarRating";
 import { Quote } from "lucide-react";
-
-const testimonials = [
-  {
-    name: "Sarah Mitchell",
-    role: "Adventure Enthusiast",
-    rating: 5,
-    text: "Saved over $800 renting ski equipment for our family trip to Tahoe. The gear was in excellent condition and the owner was incredibly helpful!",
-    initials: "SM",
-  },
-  {
-    name: "James Chen",
-    role: "Weekend Warrior",
-    rating: 5,
-    text: "As someone who loves trying new sports, RentAloo is perfect. I've rented everything from kayaks to camping gear without breaking the bank.",
-    initials: "JC",
-  },
-  {
-    name: "Emily Rodriguez",
-    role: "Equipment Owner",
-    rating: 5,
-    text: "I've made over $1,200 in 3 months renting out my mountain bike and camping gear. It's amazing passive income from stuff I wasn't using!",
-    initials: "ER",
-  },
-];
-
-const stats = [
-  { value: "4.9/5", label: "Average rating" },
-  { value: "2,000+", label: "Reviews" },
-  { value: "98%", label: "Would recommend" },
-];
+import { useTranslation } from "react-i18next";
 
 const SocialProofSection = () => {
+  const { t } = useTranslation("marketing");
+
+  const testimonials = [
+    {
+      name: t("social_proof.testimonial_1_name"),
+      role: t("social_proof.testimonial_1_role"),
+      rating: 5,
+      text: t("social_proof.testimonial_1_text"),
+      initials: "SM",
+    },
+    {
+      name: t("social_proof.testimonial_2_name"),
+      role: t("social_proof.testimonial_2_role"),
+      rating: 5,
+      text: t("social_proof.testimonial_2_text"),
+      initials: "JC",
+    },
+    {
+      name: t("social_proof.testimonial_3_name"),
+      role: t("social_proof.testimonial_3_role"),
+      rating: 5,
+      text: t("social_proof.testimonial_3_text"),
+      initials: "ER",
+    },
+  ];
+
+  const stats = [
+    { value: t("social_proof.stat_rating_value"), label: t("social_proof.stat_rating_label") },
+    { value: t("social_proof.stat_reviews_value"), label: t("social_proof.stat_reviews_label") },
+    { value: t("social_proof.stat_recommend_value"), label: t("social_proof.stat_recommend_label") },
+  ];
+
+  const brands = [
+    t("social_proof.brand_1"),
+    t("social_proof.brand_2"),
+    t("social_proof.brand_3"),
+    t("social_proof.brand_4"),
+  ];
+
   return (
     <section className="py-16 sm:py-20 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Loved by adventurers everywhere
+            {t("social_proof.section_title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of happy renters and owners in the RentAloo
-            community
+            {t("social_proof.section_subtitle")}
           </p>
         </div>
 
@@ -106,12 +115,12 @@ const SocialProofSection = () => {
         <div className="mt-12 pt-12 border-t border-border">
           <div className="text-center mb-8">
             <p className="text-sm text-muted-foreground font-medium">
-              TRUSTED BY LEADING ORGANIZATIONS
+              {t("social_proof.trust_label")}
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 opacity-40">
             {/* Placeholder for actual logos */}
-            {["REI", "Patagonia", "The North Face", "Arc'teryx"].map((brand) => (
+            {brands.map((brand) => (
               <div
                 key={brand}
                 className="text-lg font-bold text-muted-foreground"

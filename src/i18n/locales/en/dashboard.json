@@ -1,0 +1,116 @@
+{
+  "renter": {
+    "header": {
+      "title": "Dashboard Overview",
+      "description": "Welcome back! Here's what's happening with your rentals."
+    },
+    "verification": {
+      "incomplete_title": "Complete your verification",
+      "incomplete_message": "Your account is {{progress}}% verified. Complete identity verification to start renting safely.",
+      "verify_button": "Verify now"
+    },
+    "overview": {
+      "section_title": "Overview",
+      "section_description": "Your rental activity at a glance"
+    },
+    "bookings": {
+      "section_title": "My Bookings",
+      "section_description": "Manage your rental reservations",
+      "view_all": "View All",
+      "loading": "Loading bookings...",
+      "empty_state": {
+        "title": "No bookings yet",
+        "description": "Start by browsing available equipment and make your first rental",
+        "button": "Browse Equipment"
+      }
+    },
+    "reviews": {
+      "card_title": "My Reviews",
+      "card_description": "Reviews you've written for equipment owners"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "bookings": "Bookings"
+    }
+  },
+  "owner": {
+    "header": {
+      "title": "Owner Dashboard",
+      "description": "Manage your equipment listings and track your earnings"
+    },
+    "stats": {
+      "total_listings": {
+        "label": "Total Listings",
+        "description": "Active equipment"
+      },
+      "pending_requests": {
+        "label": "Pending Requests",
+        "description": "Awaiting payment"
+      },
+      "total_earnings": {
+        "label": "Total Earnings",
+        "description": "All time"
+      },
+      "average_rating": {
+        "label": "Average Rating",
+        "description": "Based on reviews"
+      }
+    },
+    "tabs": {
+      "overview": "Overview",
+      "equipment": "Equipment Management",
+      "bookings": "Booking Requests",
+      "messages": "Messages",
+      "reviews": "Reviews",
+      "payments": "Payments & Escrow"
+    },
+    "overview": {
+      "quick_actions": {
+        "add_equipment": {
+          "title": "Add Equipment",
+          "description": "List new equipment for rent",
+          "button": "Add Equipment"
+        },
+        "manage_listings": {
+          "title": "Manage Listings",
+          "description": "View and edit your equipment listings",
+          "button": "Manage Listings"
+        },
+        "analytics": {
+          "title": "Analytics",
+          "description": "Track performance and earnings",
+          "button": "Coming Soon"
+        }
+      },
+      "recent_activity": {
+        "title": "Recent Activity",
+        "description": "Your latest equipment listings and booking requests",
+        "empty_state": {
+          "title": "No recent activity",
+          "description": "Start by adding your first piece of equipment"
+        }
+      }
+    },
+    "bookings": {
+      "section_title": "Booking Requests",
+      "section_description": "Manage rental requests for your equipment",
+      "loading": "Loading booking requests...",
+      "empty_state": {
+        "title": "No booking requests yet",
+        "description": "Booking requests will appear here when renters request your equipment"
+      }
+    },
+    "messages": {
+      "section_title": "Messages",
+      "section_description": "Communicate with renters about bookings"
+    },
+    "reviews": {
+      "section_title": "Customer Reviews",
+      "section_description": "Reviews and ratings from renters who used your equipment"
+    },
+    "payments": {
+      "section_title": "Payments & Escrow",
+      "section_description": "Manage your earnings and escrow funds"
+    }
+  }
+}
