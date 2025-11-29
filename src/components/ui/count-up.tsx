@@ -89,6 +89,13 @@ const CountUp = ({
     const element = elementRef.current;
     if (!element || hasAnimated) return;
 
+    // Guard against missing IntersectionObserver (older browsers, some webviews)
+    if (typeof IntersectionObserver === "undefined") {
+      setHasAnimated(true);
+      animate();
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
