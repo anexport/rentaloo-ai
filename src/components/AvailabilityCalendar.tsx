@@ -18,6 +18,15 @@ interface AvailabilityCalendarProps {
   equipmentId: string;
   defaultDailyRate: number;
   viewOnly?: boolean;
+  /**
+   * Callback when a date is clicked in view-only mode.
+   * Useful for populating a date selector from the calendar.
+   */
+  onDateSelect?: (date: Date) => void;
+  /**
+   * Currently selected date range (for highlighting in view mode)
+   */
+  selectedRange?: { from?: Date; to?: Date };
 }
 
 type AvailabilityRecord =
@@ -27,6 +36,8 @@ const AvailabilityCalendar = ({
   equipmentId,
   defaultDailyRate,
   viewOnly = false,
+  onDateSelect,
+  selectedRange,
 }: AvailabilityCalendarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [availability, setAvailability] = useState<AvailabilityRecord[]>([]);
@@ -83,7 +94,20 @@ const AvailabilityCalendar = ({
   };
 
   const handleDateClick = (date: Date) => {
-    if (viewOnly) return;
+    // In view-only mode, call onDateSelect if date is available
+    if (viewOnly) {
+      if (onDateSelect) {
+        const dateAvailability = getAvailabilityForDate(date);
+        const isBlocked = dateAvailability?.is_available === false;
+        // Only allow selecting available dates
+        if (!isBlocked) {
+          onDateSelect(date);
+        }
+      }
+      return;
+    }
+    
+    // Owner editing mode
     setSelectedDate(date);
     const existing = getAvailabilityForDate(date);
     if (existing) {
@@ -211,6 +235,16 @@ const AvailabilityCalendar = ({
       const dateAvailability = getAvailabilityForDate(date);
       const isPast = date < today;
       const isSelected = selectedDate?.toDateString() === date.toDateString();
+      const isBlockedDate = dateAvailability?.is_available === false;
+      
+      // Check if date is in selected range (for view mode highlighting)
+      const isRangeStart = selectedRange?.from?.toDateString() === date.toDateString();
+      const isRangeEnd = selectedRange?.to?.toDateString() === date.toDateString();
+      const isInRange = selectedRange?.from && selectedRange?.to && 
+        date >= selectedRange.from && date <= selectedRange.to;
+      
+      // Determine if date is clickable in view mode
+      const isClickableInViewMode = viewOnly && onDateSelect && !isPast && !isBlockedDate;
 
       let bgColor = "bg-background hover:bg-muted";
       let textColor = "text-foreground";
@@ -219,7 +253,7 @@ const AvailabilityCalendar = ({
       if (isPast) {
         bgColor = "bg-muted/50";
         textColor = "text-muted-foreground";
-      } else if (dateAvailability?.is_available === false) {
+      } else if (isBlockedDate) {
         bgColor = "bg-red-100 dark:bg-red-950";
         textColor = "text-red-700 dark:text-red-300";
         border = "border border-red-300 dark:border-red-700";
@@ -229,23 +263,38 @@ const AvailabilityCalendar = ({
         border = "border border-blue-300 dark:border-blue-700";
       }
 
-      if (isSelected) {
+      // Highlight selected range dates
+      if (isRangeStart || isRangeEnd) {
+        bgColor = "bg-primary";
+        textColor = "text-primary-foreground";
+        border = "border-2 border-primary";
+      } else if (isInRange && !isPast && !isBlockedDate) {
+        bgColor = "bg-primary/20";
+        border = "border border-primary/40";
+      }
+
+      if (isSelected && !viewOnly) {
         border = "border-2 border-primary";
       }
+
+      // Determine cursor and disabled state
+      const isDisabled = isPast || (viewOnly && !isClickableInViewMode);
+      const cursorClass = isDisabled ? "cursor-default" : "cursor-pointer";
 
       days.push(
         <button
           key={day}
           onClick={() => handleDateClick(date)}
-          disabled={isPast || viewOnly}
-          className={`p-2 rounded-lg text-sm transition-colors ${bgColor} ${textColor} ${border} ${
-            isPast || viewOnly ? "cursor-default" : "cursor-pointer"
-          } relative group`}
+          disabled={isDisabled}
+          aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric" })}${
+            isBlockedDate ? " - Unavailable" : ""
+          }${isRangeStart ? " - Start date" : ""}${isRangeEnd ? " - End date" : ""}`}
+          className={`p-2 rounded-lg text-sm transition-colors ${bgColor} ${textColor} ${border} ${cursorClass} relative group`}
         >
           <div className="font-medium">{day}</div>
           {dateAvailability && (
             <div className="text-xs mt-1">
-              {dateAvailability.is_available === false ? (
+              {isBlockedDate ? (
                 <Ban className="h-3 w-3 mx-auto" />
               ) : dateAvailability.custom_rate ? (
                 <span className="font-bold">
@@ -254,7 +303,8 @@ const AvailabilityCalendar = ({
               ) : null}
             </div>
           )}
-          {!isPast && !viewOnly && (
+          {/* Hover overlay for clickable dates */}
+          {((!isPast && !viewOnly) || isClickableInViewMode) && (
             <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity" />
           )}
         </button>
@@ -281,7 +331,9 @@ const AvailabilityCalendar = ({
           </CardTitle>
           <CardDescription>
             {viewOnly
-              ? "View when this equipment is available"
+              ? onDateSelect 
+                ? "Click on available dates to select your rental period"
+                : "View when this equipment is available"
               : "Set custom pricing or block dates when your equipment is unavailable"}
           </CardDescription>
         </CardHeader>

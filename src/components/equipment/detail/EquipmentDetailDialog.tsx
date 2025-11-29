@@ -308,6 +308,33 @@ const EquipmentDetailDialog = ({
     [dateRange, calculateBooking]
   );
 
+  // Handle date selection from the availability calendar
+  const handleCalendarDateSelect = useCallback(
+    (date: Date) => {
+      // If no start date selected, set as start
+      if (!dateRange?.from) {
+        handleStartDateSelect(date);
+        return;
+      }
+
+      // If start date exists but no end date
+      if (!dateRange.to) {
+        // If clicked date is before start date, make it the new start
+        if (date < dateRange.from) {
+          handleStartDateSelect(date);
+        } else {
+          // Set as end date
+          handleEndDateSelect(date);
+        }
+        return;
+      }
+
+      // Both dates are set - start fresh with clicked date as new start
+      handleStartDateSelect(date);
+    },
+    [dateRange, handleStartDateSelect, handleEndDateSelect]
+  );
+
   // Handle creating booking request and initializing payment
   const handleBookAndPay = useCallback(async () => {
     // Early return if loading conflicts or already creating
@@ -645,13 +672,12 @@ const EquipmentDetailDialog = ({
                   <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                     Availability
                   </h2>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Select dates in the booking panel to check availability and pricing.
-                  </p>
                   <AvailabilityCalendar
                     equipmentId={data.id}
                     defaultDailyRate={data.daily_rate}
                     viewOnly={true}
+                    onDateSelect={handleCalendarDateSelect}
+                    selectedRange={dateRange}
                   />
                 </section>
 
