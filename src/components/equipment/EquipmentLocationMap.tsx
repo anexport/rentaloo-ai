@@ -248,15 +248,28 @@ const EquipmentLocationMap = ({
   );
 };
 
+// Helper to escape HTML entities to prevent XSS attacks
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
 // Helper function to create info window HTML content
 const createInfoWindowContent = (title?: string, address?: string): string => {
+  const safeTitle = title ? escapeHtml(title) : "Pickup Location";
+  const safeAddress = address ? escapeHtml(address) : "";
+  
   return `
     <div style="padding: 8px; max-width: 200px;">
       <h4 style="margin: 0 0 4px 0; font-weight: 600; font-size: 14px; color: #111;">
-        ${title || "Pickup Location"}
+        ${safeTitle}
       </h4>
       <p style="margin: 0; font-size: 12px; color: #666; line-height: 1.4;">
-        ${address || ""}
+        ${safeAddress}
       </p>
     </div>
   `;
