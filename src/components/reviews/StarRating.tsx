@@ -50,7 +50,7 @@ const StarRating = ({
             disabled={!interactive}
             aria-label={
               starNumber > 1
-                ? t("star_rating.aria_rate", { starNumber })
+                ? t("star_rating.aria_rate", { starNumber, plural: "s" })
                 : t("star_rating.aria_rate_single", { starNumber })
             }
           >
