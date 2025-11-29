@@ -12,6 +12,8 @@ import enMessaging from "./locales/en/messaging.json";
 import enPayment from "./locales/en/payment.json";
 import enReviews from "./locales/en/reviews.json";
 import enVerification from "./locales/en/verification.json";
+import enMarketing from "./locales/en/marketing.json";
+import enDashboard from "./locales/en/dashboard.json";
 
 import esCommon from "./locales/es/common.json";
 import esAuth from "./locales/es/auth.json";
@@ -22,6 +24,8 @@ import esMessaging from "./locales/es/messaging.json";
 import esPayment from "./locales/es/payment.json";
 import esReviews from "./locales/es/reviews.json";
 import esVerification from "./locales/es/verification.json";
+import esMarketing from "./locales/es/marketing.json";
+import esDashboard from "./locales/es/dashboard.json";
 
 import frCommon from "./locales/fr/common.json";
 import frAuth from "./locales/fr/auth.json";
@@ -32,6 +36,8 @@ import frMessaging from "./locales/fr/messaging.json";
 import frPayment from "./locales/fr/payment.json";
 import frReviews from "./locales/fr/reviews.json";
 import frVerification from "./locales/fr/verification.json";
+import frMarketing from "./locales/fr/marketing.json";
+import frDashboard from "./locales/fr/dashboard.json";
 
 import deCommon from "./locales/de/common.json";
 import deAuth from "./locales/de/auth.json";
@@ -42,6 +48,8 @@ import deMessaging from "./locales/de/messaging.json";
 import dePayment from "./locales/de/payment.json";
 import deReviews from "./locales/de/reviews.json";
 import deVerification from "./locales/de/verification.json";
+import deMarketing from "./locales/de/marketing.json";
+import deDashboard from "./locales/de/dashboard.json";
 
 // Define resources
 const resources = {
@@ -55,6 +63,8 @@ const resources = {
     payment: enPayment,
     reviews: enReviews,
     verification: enVerification,
+    marketing: enMarketing,
+    dashboard: enDashboard,
   },
   es: {
     common: esCommon,
@@ -66,6 +76,8 @@ const resources = {
     payment: esPayment,
     reviews: esReviews,
     verification: esVerification,
+    marketing: esMarketing,
+    dashboard: esDashboard,
   },
   fr: {
     common: frCommon,
@@ -77,6 +89,8 @@ const resources = {
     payment: frPayment,
     reviews: frReviews,
     verification: frVerification,
+    marketing: frMarketing,
+    dashboard: frDashboard,
   },
   de: {
     common: deCommon,
@@ -88,6 +102,8 @@ const resources = {
     payment: dePayment,
     reviews: deReviews,
     verification: deVerification,
+    marketing: deMarketing,
+    dashboard: deDashboard,
   },
 } as const;
 
@@ -122,6 +138,8 @@ void i18n
       "payment",
       "reviews",
       "verification",
+      "marketing",
+      "dashboard",
     ],
     interpolation: {
       escapeValue: false, // React already escapes values
