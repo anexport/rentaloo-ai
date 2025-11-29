@@ -947,6 +947,21 @@ export type Database = {
       }
     }
     Views: {
+      available_equipment_counts_by_category: {
+        Row: {
+          available_count: number | null
+          category_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       geography_columns: {
         Row: {
           coord_dimension: number | null

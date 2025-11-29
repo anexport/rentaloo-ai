@@ -78,12 +78,12 @@ export async function suggestEquipment(
   const equipmentLimit = opts.equipmentLimit ?? 10;
 
   try {
-    // Query categories, equipment counts (available only), and equipment items in parallel
-    // Note: We query categories separately from counts because .eq("equipment.is_available", true)
-    // on a joined relation acts as an INNER JOIN, excluding categories with 0 available items.
+    // Query categories, pre-aggregated counts (from view), and equipment items in parallel
+    // The view `available_equipment_counts_by_category` provides server-side aggregated counts,
+    // avoiding PostgREST's row cap and reducing bandwidth/CPU usage.
     const [categoriesResult, availableCountsResult, equipmentResult] =
       await Promise.all([
-        // Query 1: Get matching categories (without equipment filter to include all)
+        // Query 1: Get matching categories
         (async () => {
           let categoryQuery = supabase
             .from("categories")
@@ -98,13 +98,12 @@ export async function suggestEquipment(
           return categoryQuery;
         })(),
 
-        // Query 2: Get counts of available equipment per category
-        // This is a separate query to avoid the LEFT JOIN -> INNER JOIN issue
+        // Query 2: Get pre-aggregated counts from the database view
+        // This returns {category_id, available_count} already grouped and counted server-side
         (async () => {
           let countQuery = supabase
-            .from("equipment")
-            .select("category_id")
-            .eq("is_available", true);
+            .from("available_equipment_counts_by_category")
+            .select("category_id, available_count");
 
           if (opts.signal) {
             countQuery = countQuery.abortSignal(opts.signal);
@@ -137,15 +136,14 @@ export async function suggestEquipment(
         })(),
       ]);
 
-    // Build a map of category_id -> count of available equipment
+    // Build a map of category_id -> count from pre-aggregated view data
     const availableCountMap = new Map<string, number>();
     if (availableCountsResult.data) {
-      availableCountsResult.data.forEach((item) => {
-        if (item.category_id) {
-          const currentCount = availableCountMap.get(item.category_id) ?? 0;
-          availableCountMap.set(item.category_id, currentCount + 1);
+      availableCountsResult.data.forEach(
+        (row: { category_id: string; available_count: number }) => {
+          availableCountMap.set(row.category_id, row.available_count);
         }
-      });
+      );
     }
 
     // Handle category results - merge with available counts
