@@ -28,9 +28,9 @@ serve(async (req) => {
     }
 
     // Validate language
-    if (!["es", "fr", "de"].includes(targetLang)) {
+    if (!["es", "fr", "de", "it"].includes(targetLang)) {
       return new Response(
-        JSON.stringify({ error: "Unsupported language. Use: es, fr, de" }),
+        JSON.stringify({ error: "Unsupported language. Use: es, fr, de, it" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -38,11 +38,12 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client
+    // Initialize Supabase clients
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
       console.error("Supabase credentials not configured");
       return new Response(
         JSON.stringify({ error: "Translation service misconfigured" }),
@@ -53,10 +54,67 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Extract JWT from Authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - Missing authorization header" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+
+    // Create authenticated client with user's JWT
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
+
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - Invalid token" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Try to fetch equipment with authenticated client (respects RLS)
+    // This ensures user can only translate equipment they have access to
+    const { data: equipment, error: equipmentError } = await supabaseAuth
+      .from("equipment")
+      .select("title, description, owner_id, is_available")
+      .eq("id", equipmentId)
+      .single();
+
+    if (equipmentError || !equipment) {
+      return new Response(
+        JSON.stringify({
+          error: "Equipment not found or you don't have access to it"
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Use service role client only for cache operations
+    const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check cache first
-    const { data: cachedTranslations } = await supabase
+    const { data: cachedTranslations } = await supabaseService
       .from("content_translations")
       .select("*")
       .eq("content_type", "equipment")
@@ -79,23 +137,6 @@ serve(async (req) => {
         }),
         {
           status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Get original equipment data
-    const { data: equipment, error: equipmentError } = await supabase
-      .from("equipment")
-      .select("title, description")
-      .eq("id", equipmentId)
-      .single();
-
-    if (equipmentError || !equipment) {
-      return new Response(
-        JSON.stringify({ error: "Equipment not found" }),
-        {
-          status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
@@ -126,8 +167,8 @@ serve(async (req) => {
       );
       if (translatedTitle) {
         title = translatedTitle;
-        // Cache the translation
-        await supabase.from("content_translations").upsert({
+        // Cache the translation (service role needed for insert)
+        await supabaseService.from("content_translations").upsert({
           content_type: "equipment",
           content_id: equipmentId,
           field_name: "title",
@@ -151,8 +192,8 @@ serve(async (req) => {
       );
       if (translatedDescription) {
         description = translatedDescription;
-        // Cache the translation
-        await supabase.from("content_translations").upsert({
+        // Cache the translation (service role needed for insert)
+        await supabaseService.from("content_translations").upsert({
           content_type: "equipment",
           content_id: equipmentId,
           field_name: "description",
