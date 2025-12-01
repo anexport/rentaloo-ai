@@ -5,6 +5,7 @@
     "no_conversations": "Nessun messaggio ancora",
     "start_conversation": "Inizia una conversazione prenotando un'attrezzatura",
     "unread_count": "{{count}} non letto",
+    "unread_count_plural": "{{count}} non letti",
     "search_placeholder": "Cerca conversazioni...",
     "filter_placeholder": "Filtra",
     "unknown_user": "Utente Sconosciuto",
