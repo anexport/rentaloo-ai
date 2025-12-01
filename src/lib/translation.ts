@@ -1,5 +1,25 @@
 import { supabase } from "@/lib/supabase";
 
+async function fetchOriginalContent(
+  equipmentId: string
+): Promise<{ title: string; description: string }> {
+  const { data, error } = await supabase
+    .from("equipment")
+    .select("title, description")
+    .eq("id", equipmentId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching original equipment content:", error);
+    return { title: "", description: "" };
+  }
+
+  return {
+    title: data?.title || "",
+    description: data?.description || "",
+  };
+}
+
 /**
  * Translate equipment content using Supabase Edge Function
  *
@@ -17,16 +37,7 @@ export async function translateEquipmentContent(
 ): Promise<{ title: string; description: string }> {
   // If target language is English or not supported, fetch original
   if (targetLang === "en" || !["es", "fr", "de", "it"].includes(targetLang)) {
-    const { data: equipment } = await supabase
-      .from("equipment")
-      .select("title, description")
-      .eq("id", equipmentId)
-      .single();
-
-    return {
-      title: equipment?.title || "",
-      description: equipment?.description || "",
-    };
+    return fetchOriginalContent(equipmentId);
   }
 
   try {
@@ -41,16 +52,7 @@ export async function translateEquipmentContent(
     if (error) {
       console.error("Translation edge function error:", error);
       // Fallback to original content
-      const { data: equipment } = await supabase
-        .from("equipment")
-        .select("title, description")
-        .eq("id", equipmentId)
-        .single();
-
-      return {
-        title: equipment?.title || "",
-        description: equipment?.description || "",
-      };
+      return fetchOriginalContent(equipmentId);
     }
 
     return {
@@ -61,16 +63,7 @@ export async function translateEquipmentContent(
     console.error("Translation error:", error);
 
     // Fallback to original content on error
-    const { data: equipment } = await supabase
-      .from("equipment")
-      .select("title, description")
-      .eq("id", equipmentId)
-      .single();
-
-    return {
-      title: equipment?.title || "",
-      description: equipment?.description || "",
-    };
+    return fetchOriginalContent(equipmentId);
   }
 }
 

@@ -258,8 +258,29 @@ async function translateText(
       return null;
     }
 
-    const data = await response.json();
-    return data.data.translations[0].translatedText;
+    let data: unknown;
+
+    try {
+      data = await response.json();
+    } catch (error) {
+      console.error("Failed to parse translation API response as JSON:", error);
+      return null;
+    }
+
+    const translations = (data as { data?: { translations?: Array<{ translatedText?: unknown }> } }).data
+      ?.translations;
+
+    if (
+      !translations ||
+      !Array.isArray(translations) ||
+      translations.length === 0 ||
+      typeof translations[0]?.translatedText !== "string"
+    ) {
+      console.error("Unexpected translation API response shape:", data);
+      return null;
+    }
+
+    return translations[0].translatedText;
   } catch (error) {
     console.error("Translation error:", error);
     return null;
