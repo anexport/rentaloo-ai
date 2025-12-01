@@ -52,8 +52,8 @@
   },
   "filters": {
     "all": "Tutte",
-    "positive": "Positive",
-    "negative": "Negative",
+    "positive": "Positivo",
+    "negative": "Negativo",
     "recent": "Recenti",
     "all_reviews": "Tutte le Recensioni",
     "5_stars": "5 Stelle",
