@@ -402,6 +402,7 @@ const EquipmentDetailDialog = ({
     calculation,
     toast,
     loadingConflicts,
+    t,
   ]);
 
   // Handle booking button click - proceeds to payment mode
