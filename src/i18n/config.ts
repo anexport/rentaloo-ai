@@ -150,7 +150,7 @@ const customLanguageDetector = {
 const languageDetector = new LanguageDetector();
 languageDetector.addDetector(customLanguageDetector);
 
-// Initialize i18n synchronously since all resources are preloaded
+// Initialize i18n - when resources are provided inline, init is synchronous
 i18n
   .use(languageDetector)
   .use(initReactI18next)
@@ -184,11 +184,12 @@ i18n
       caches: ["localStorage"],
       lookupLocalStorage: "userLanguagePreference",
     },
-    // Initialize immediately and synchronously since resources are preloaded
-    initImmediate: false,
     react: {
       useSuspense: false, // Disable suspense to avoid render blocking
     },
+  })
+  .catch((error: Error) => {
+    console.error("i18n initialization failed:", error);
   });
 
 export default i18n;
