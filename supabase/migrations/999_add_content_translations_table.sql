@@ -33,13 +33,52 @@ CREATE POLICY "Authenticated users can insert translations"
 ON content_translations
 FOR INSERT
 TO authenticated
-WITH CHECK (true);
+WITH CHECK (
+    EXISTS (
+        SELECT 1
+        FROM equipment e
+        WHERE e.id = content_id
+          AND e.owner_id = auth.uid()
+          AND content_type = 'equipment'
+    )
+);
 
 CREATE POLICY "Authenticated users can update translations"
 ON content_translations
 FOR UPDATE
 TO authenticated
-USING (true);
+USING (
+    EXISTS (
+        SELECT 1
+        FROM equipment e
+        WHERE e.id = content_id
+          AND e.owner_id = auth.uid()
+          AND content_type = 'equipment'
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1
+        FROM equipment e
+        WHERE e.id = content_id
+          AND e.owner_id = auth.uid()
+          AND content_type = 'equipment'
+    )
+);
+
+CREATE POLICY "Authenticated owners can delete translations"
+ON content_translations
+FOR DELETE
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1
+        FROM equipment e
+        WHERE e.id = content_id
+          AND e.owner_id = auth.uid()
+          AND content_type = 'equipment'
+    )
+);
 
 -- Add trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_content_translations_updated_at()
