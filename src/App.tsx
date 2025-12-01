@@ -18,11 +18,13 @@ import PaymentConfirmation from "@/pages/payment/PaymentConfirmation";
 import PaymentsPage from "@/pages/renter/PaymentsPage";
 import VerifyIdentity from "@/pages/verification/VerifyIdentity";
 import ProfileSettings from "@/pages/ProfileSettings";
+import SupportPage from "@/pages/SupportPage";
 import EquipmentInspectionPage from "@/pages/inspection/EquipmentInspectionPage";
 import InspectionView from "@/components/inspection/InspectionView";
 import FileClaimPage from "@/pages/claims/FileClaimPage";
 import ReviewClaimPage from "@/pages/claims/ReviewClaimPage";
 import { Analytics } from "@vercel/analytics/react";
+import OwnerUpgrade from "@/pages/owner/OwnerUpgrade";
 
 function App() {
   const { user, loading } = useAuth();
@@ -71,7 +73,9 @@ function App() {
                 <Route path="/renter/payments" element={<PaymentsPage />} />
                 <Route path="/owner" element={<OwnerDashboard />} />
                 <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+                <Route path="/owner/become-owner" element={<OwnerUpgrade />} />
                 <Route path="/messages" element={<MessagingPage />} />
+                <Route path="/support" element={<SupportPage />} />
                 <Route
                   path="/payment/confirmation"
                   element={<PaymentConfirmation />}
