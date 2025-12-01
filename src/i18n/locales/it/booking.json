@@ -1,0 +1,117 @@
+{
+  "sidebar": {
+    "title": "Prenota Questa Attrezzatura",
+    "select_dates": "Seleziona Date",
+    "start_date": "Data di Inizio",
+    "end_date": "Data di Fine",
+    "pricing": "Dettagli Prezzo",
+    "daily_rate": "Tariffa Giornaliera",
+    "number_of_days": "Numero di Giorni",
+    "subtotal": "Subtotale",
+    "service_fee": "Commissione di Servizio",
+    "total": "Totale",
+    "request_booking": "Richiedi Prenotazione",
+    "requesting": "Richiesta in corso...",
+    "dates_required": "Seleziona le date di inizio e fine",
+    "unavailable_dates": "Alcune date nella tua selezione non sono disponibili",
+    "aria_booking_info": "Informazioni prenotazione",
+    "aria_pricing": "Prezzi",
+    "aria_location_contact": "Posizione e Contatto",
+    "aria_dates": "Date",
+    "aria_pricing_breakdown": "Dettaglio Prezzi",
+    "aria_insurance": "Opzioni Assicurative"
+  },
+  "status": {
+    "pending": "In Attesa",
+    "approved": "Approvato",
+    "declined": "Rifiutato",
+    "cancelled": "Cancellato",
+    "completed": "Completato"
+  },
+  "requests": {
+    "my_requests": "Le Mie Richieste di Prenotazione",
+    "incoming_requests": "Richieste in Arrivo",
+    "no_requests": "Nessuna richiesta di prenotazione ancora",
+    "view_details": "Visualizza Dettagli",
+    "approve": "Approva",
+    "decline": "Rifiuta",
+    "cancel": "Cancella Prenotazione",
+    "confirm_cancel": "Sei sicuro di voler cancellare questa prenotazione?"
+  },
+  "details": {
+    "booking_details": "Dettagli Prenotazione",
+    "equipment": "Attrezzatura",
+    "renter": "Noleggiante",
+    "owner": "Proprietario",
+    "dates": "Date Noleggio",
+    "duration": "Durata",
+    "total_cost": "Costo Totale",
+    "booking_status": "Stato",
+    "message_from_renter": "Messaggio dal Noleggiante",
+    "pickup_method": "Metodo di Ritiro",
+    "delivery_address": "Indirizzo di Consegna"
+  },
+  "calendar": {
+    "available": "Disponibile",
+    "unavailable": "Non Disponibile",
+    "booked": "Prenotato",
+    "select_range": "Seleziona le tue date di noleggio",
+    "minimum_rental": "Noleggio minimo {{count}} giorno",
+    "minimum_rental_plural": "Noleggio minimo {{count}} giorni"
+  },
+  "messages": {
+    "request_sent": "Richiesta di prenotazione inviata con successo",
+    "request_approved": "Richiesta di prenotazione approvata",
+    "request_declined": "Richiesta di prenotazione rifiutata",
+    "booking_cancelled": "Prenotazione cancellata con successo"
+  },
+  "card": {
+    "status": {
+      "awaiting_payment": "In Attesa di Pagamento",
+      "booking_confirmed": "Prenotazione Confermata"
+    },
+    "labels": {
+      "renter": "Noleggiante",
+      "owner": "Proprietario",
+      "message": "Messaggio:",
+      "per_day": "/giorno"
+    },
+    "buttons": {
+      "view_renter_info": "Visualizza Info Noleggiante",
+      "hide_renter_info": "Nascondi Info Noleggiante",
+      "pickup_inspection": "Ispezione al Ritiro",
+      "view_pickup_inspection": "Visualizza Ispezione al Ritiro",
+      "return_inspection": "Ispezione alla Restituzione",
+      "view_return_inspection": "Visualizza Ispezione alla Restituzione",
+      "file_damage_claim": "Segnala Danno",
+      "cancel_booking": "Cancella Prenotazione",
+      "cancelling": "Cancellazione in corso...",
+      "message": "Messaggio",
+      "loading": "Caricamento..."
+    },
+    "alerts": {
+      "awaiting_payment_owner": "Questa richiesta di prenotazione è in attesa di pagamento dal noleggiante.",
+      "awaiting_payment_renter": "La tua richiesta di prenotazione è in attesa di pagamento. Completa il pagamento per confermare la prenotazione.",
+      "payment_confirmed": "Pagamento ricevuto! La prenotazione è confermata.",
+      "cancelled_renter": "Hai cancellato questa richiesta di prenotazione.",
+      "cancelled_owner": "Questa richiesta di prenotazione è stata cancellata dal noleggiante."
+    },
+    "modals": {
+      "complete_payment": "Completa Pagamento",
+      "renter_verification": "Profilo di Verifica del Noleggiante"
+    },
+    "confirmations": {
+      "cancel_owner": "Sei sicuro di voler cancellare questa prenotazione? Il noleggiante riceverà un rimborso completo.",
+      "cancel_renter": "Sei sicuro di voler cancellare questa prenotazione? Riceverai un rimborso completo."
+    },
+    "timestamps": {
+      "requested": "Richiesto:",
+      "updated": "Aggiornato:"
+    },
+    "errors": {
+      "refund_failed": "Elaborazione del rimborso fallita. Contatta l'assistenza per cancellare questa prenotazione.",
+      "conversation_failed": "Impossibile avviare la conversazione. Riprova.",
+      "cancel_failed": "Impossibile cancellare la prenotazione. Riprova."
+    }
+  }
+}

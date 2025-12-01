@@ -51,6 +51,18 @@ import deVerification from "./locales/de/verification.json";
 import deMarketing from "./locales/de/marketing.json";
 import deDashboard from "./locales/de/dashboard.json";
 
+import itCommon from "./locales/it/common.json";
+import itAuth from "./locales/it/auth.json";
+import itNavigation from "./locales/it/navigation.json";
+import itEquipment from "./locales/it/equipment.json";
+import itBooking from "./locales/it/booking.json";
+import itMessaging from "./locales/it/messaging.json";
+import itPayment from "./locales/it/payment.json";
+import itReviews from "./locales/it/reviews.json";
+import itVerification from "./locales/it/verification.json";
+import itMarketing from "./locales/it/marketing.json";
+import itDashboard from "./locales/it/dashboard.json";
+
 // Define resources
 const resources = {
   en: {
@@ -104,6 +116,19 @@ const resources = {
     verification: deVerification,
     marketing: deMarketing,
     dashboard: deDashboard,
+  },
+  it: {
+    common: itCommon,
+    auth: itAuth,
+    navigation: itNavigation,
+    equipment: itEquipment,
+    booking: itBooking,
+    messaging: itMessaging,
+    payment: itPayment,
+    reviews: itReviews,
+    verification: itVerification,
+    marketing: itMarketing,
+    dashboard: itDashboard,
   },
 } as const;
 
