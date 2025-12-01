@@ -49,12 +49,11 @@ type Props = {
   activeFilterCount: number;
 };
 
-// Note: CONDITIONS labels are in equipment.json under condition.*
 const CONDITIONS: Array<{ value: EquipmentCondition; label: string }> = [
-  { value: "new", label: "New" },
-  { value: "excellent", label: "Excellent" },
-  { value: "good", label: "Good" },
-  { value: "fair", label: "Fair" },
+  { value: "new", label: "condition.new" },
+  { value: "excellent", label: "condition.excellent" },
+  { value: "good", label: "condition.good" },
+  { value: "fair", label: "condition.fair" },
 ];
 
 const FiltersSheet = ({
@@ -171,7 +170,7 @@ const FiltersSheet = ({
                     htmlFor={`condition-${condition.value}`}
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                   >
-                    {condition.label}
+                    {t(condition.label)}
                   </label>
                 </div>
               ))}

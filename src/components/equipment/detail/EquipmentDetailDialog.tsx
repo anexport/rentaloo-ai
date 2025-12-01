@@ -205,7 +205,7 @@ const EquipmentDetailDialog = ({
 
       void checkConflicts();
     },
-    [data, handleCalculationChange, selectedInsurance]
+    [data, handleCalculationChange, selectedInsurance, t]
   );
 
   // Recalculate when insurance selection changes

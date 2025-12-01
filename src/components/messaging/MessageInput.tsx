@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,16 +23,18 @@ import { Spinner } from "../ui/spinner";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Card } from "../ui/card";
 
-const messageSchema = z.object({
-  content: z
-    .string()
-    .refine((val) => val.trim().length > 0, {
-      message: "Message cannot be empty",
-    })
-    .refine((val) => val.trim().length <= 1000, {
-      message: "Message too long",
-    }),
-});
+// Schema will be created inside component to access t()
+const createMessageSchema = (t: (key: string) => string) =>
+  z.object({
+    content: z
+      .string()
+      .refine((val) => val.trim().length > 0, {
+        message: t("input.errors.empty_message"),
+      })
+      .refine((val) => val.trim().length <= 1000, {
+        message: t("input.errors.message_too_long"),
+      }),
+  });
 
 interface MessageInputProps {
   onSendMessage: (content: string) => Promise<void> | void;
@@ -46,6 +48,7 @@ const MessageInput = ({
   disabled = false,
 }: MessageInputProps) => {
   const { t } = useTranslation("messaging");
+  const messageSchema = useMemo(() => createMessageSchema(t), [t]);
   const [sendError, setSendError] = useState<string | null>(null);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isEmojiOpen, setIsEmojiOpen] = useState(false);
