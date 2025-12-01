@@ -51,6 +51,24 @@
     "settings": "Impostazioni",
     "my_equipment_listings": "Le mie inserzioni attrezzature",
     "verification": "Verifica",
-    "trust_score": "Punteggio fiducia"
+    "trust_score": "Punteggio fiducia",
+    "owner": "Proprietario",
+    "watchlist": "Lista preferiti",
+    "support": "Supporto",
+    "payouts": "Pagamenti",
+    "add_new_listing": "Aggiungi nuova inserzione",
+    "add_new_listing_subtitle": "Mantieni l'inventario fresco",
+    "list_equipment": "Elenca la tua attrezzatura",
+    "list_equipment_subtitle": "Guadagna quando la tua attrezzatura è inattiva",
+    "upcoming_booking": "Prenotazione imminente",
+    "total": "Totale",
+    "view_details": "Visualizza dettagli",
+    "payout_glance_title": "Pagamenti",
+    "payout_glance_pending": "{{count}} in sospeso",
+    "track_earnings": "Traccia i tuoi guadagni",
+    "last_payout": "Ultimo pagamento: {{date}}",
+    "view_payouts": "Visualizza pagamenti",
+    "whats_new": "Novità",
+    "updates": "Aggiornamenti"
   }
 }
