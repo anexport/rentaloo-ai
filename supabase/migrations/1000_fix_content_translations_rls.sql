@@ -20,6 +20,13 @@ USING (
   )
 );
 
+-- Policy 2: Allow service role to select any translations (for cache lookups)
+CREATE POLICY "Service role can select any translations"
+ON content_translations
+FOR SELECT
+TO service_role
+USING (true);
+
 -- Policy 1: Users can only insert translations for equipment they own
 CREATE POLICY "Users can insert translations for own equipment"
 ON content_translations

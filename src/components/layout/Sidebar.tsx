@@ -414,7 +414,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
             <Link
               to={
                 user
-                  ? profile?.role === "owner"
+                  ? user?.user_metadata?.role === "owner"
                     ? "/owner/dashboard?tab=equipment"
                     : "/owner/become-owner"
                   : "/register/owner"

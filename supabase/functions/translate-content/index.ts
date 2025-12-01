@@ -54,61 +54,23 @@ serve(async (req) => {
       );
     }
 
-    // Extract JWT from Authorization header
+    // Extract JWT from Authorization header if provided (anonymous users won't have one)
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({
-          error: "Unauthorized - Missing authorization header",
-        }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+    const token =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : null;
 
-    if (!authHeader.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({
-          error: "Unauthorized - Invalid authorization format",
-        }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-    const token = authHeader.slice(7); // "Bearer ".length
-
-    // Create authenticated client with user's JWT
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+    // Create client that respects RLS using anon role by default, or the user's JWT when available
+    const supabaseRls = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       },
     });
 
-    // Verify the user is authenticated
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAuth.auth.getUser(token);
-
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - Invalid token" }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Try to fetch equipment with authenticated client (respects RLS)
-    // This ensures user can only translate equipment they have access to
-    const { data: equipment, error: equipmentError } = await supabaseAuth
+    // Try to fetch equipment with an RLS-respecting client (anon or authenticated)
+    // This ensures users only translate equipment they can access
+    const { data: equipment, error: equipmentError } = await supabaseRls
       .from("equipment")
       .select("title, description, owner_id, is_available")
       .eq("id", equipmentId)
