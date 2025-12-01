@@ -51,8 +51,8 @@
     "no_reviews": "Aucun avis pour le moment",
     "be_first": "Soyez le premier à laisser un avis !",
     "no_matching_filter": "Aucun avis ne correspond à votre filtre",
-    "reviews_count_single": "Avis ({{count}})",
-    "reviews_count_plural": "Avis ({{count}})"
+    "reviews_count_one": "Avis ({{count}})",
+    "reviews_count_other": "Avis ({{count}})"
   },
   "filters": {
     "all": "Tous",

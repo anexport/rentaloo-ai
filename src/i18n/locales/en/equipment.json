@@ -45,6 +45,7 @@
     "aria_reviews": "Reviews - Owner ratings and feedback",
     "aria_book": "Book",
     "view_details_description": "View equipment details, availability, and booking information",
+    "equipment_details_fallback": "Equipment Details",
     "no_reviews_title": "No Reviews Yet",
     "no_reviews_message": "This owner hasn't received any reviews yet. Be the first to rent and share your experience!",
     "category_missing_title": "Category Information Missing",
@@ -144,7 +145,11 @@
     "where_placeholder": "Where to?",
     "plan_your_outing": "Plan your next outing",
     "browse_by_destination": "Browse gear by destination, dates, and activity",
-    "search_equipment_aria": "Search equipment"
+    "search_equipment_aria": "Search equipment",
+    "set_dates_aria": "Set dates",
+    "dates": "Dates",
+    "select_dates_title": "Select dates (placeholder)",
+    "date_picker_placeholder": "Date picker integration can be added later."
   },
   "search_popover": {
     "where_section_title": "Where do you need gear?",

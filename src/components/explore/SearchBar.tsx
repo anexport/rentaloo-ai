@@ -96,16 +96,20 @@ const SearchBar = ({ value, onChange, onSubmit }: Props) => {
           <div className="flex items-center gap-2 px-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" aria-label="Set dates">
-                  <Calendar className="h-4 w-4 mr-2" /> Dates
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={t("search_bar.set_dates_aria")}
+                >
+                  <Calendar className="h-4 w-4 mr-2" /> {t("search_bar.dates")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Select dates (placeholder)</DialogTitle>
+                  <DialogTitle>{t("search_bar.select_dates_title")}</DialogTitle>
                 </DialogHeader>
                 <div className="text-sm text-muted-foreground">
-                  Date picker integration can be added later.
+                  {t("search_bar.date_picker_placeholder")}
                 </div>
               </DialogContent>
             </Dialog>

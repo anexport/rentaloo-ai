@@ -775,7 +775,7 @@ const EquipmentDetailDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogTitle className="sr-only">
-          {data?.title || "Equipment Details"}
+          {data?.title || t("details_dialog.equipment_details_fallback")}
         </DialogTitle>
         <DialogDescription className="sr-only">
           {t("details_dialog.view_details_description")}

@@ -55,9 +55,23 @@ export async function translateEquipmentContent(
       return fetchOriginalContent(equipmentId);
     }
 
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      console.error("Translation edge function returned invalid payload:", data);
+      return fetchOriginalContent(equipmentId);
+    }
+
+    const title =
+      typeof (data as { title?: unknown }).title === "string"
+        ? (data as { title?: string }).title
+        : "";
+    const description =
+      typeof (data as { description?: unknown }).description === "string"
+        ? (data as { description?: string }).description
+        : "";
+
     return {
-      title: data.title || "",
-      description: data.description || "",
+      title,
+      description,
     };
   } catch (error) {
     console.error("Translation error:", error);

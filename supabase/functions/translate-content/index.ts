@@ -168,15 +168,21 @@ serve(async (req) => {
       if (translatedTitle) {
         title = translatedTitle;
         // Cache the translation (service role needed for insert)
-        await supabaseService.from("content_translations").upsert({
-          content_type: "equipment",
-          content_id: equipmentId,
-          field_name: "title",
-          source_lang: "en",
-          target_lang: targetLang,
-          original_text: equipment.title,
-          translated_text: translatedTitle,
-        });
+        const { error: cacheError } = await supabaseService
+          .from("content_translations")
+          .upsert({
+            content_type: "equipment",
+            content_id: equipmentId,
+            field_name: "title",
+            source_lang: "en",
+            target_lang: targetLang,
+            original_text: equipment.title,
+            translated_text: translatedTitle,
+          });
+
+        if (cacheError) {
+          console.error("Failed to cache translated title:", cacheError);
+        }
       }
     } else {
       title = cachedTitle.translated_text;
@@ -184,24 +190,35 @@ serve(async (req) => {
 
     // Translate description if not cached
     if (!cachedDescription) {
-      const translatedDescription = await translateText(
-        equipment.description,
-        "en",
-        targetLang,
-        googleApiKey
-      );
+      let translatedDescription: string | null = "";
+
+      if (equipment.description) {
+        translatedDescription = await translateText(
+          equipment.description,
+          "en",
+          targetLang,
+          googleApiKey
+        );
+      }
+
       if (translatedDescription) {
         description = translatedDescription;
         // Cache the translation (service role needed for insert)
-        await supabaseService.from("content_translations").upsert({
-          content_type: "equipment",
-          content_id: equipmentId,
-          field_name: "description",
-          source_lang: "en",
-          target_lang: targetLang,
-          original_text: equipment.description,
-          translated_text: translatedDescription,
-        });
+        const { error: cacheError } = await supabaseService
+          .from("content_translations")
+          .upsert({
+            content_type: "equipment",
+            content_id: equipmentId,
+            field_name: "description",
+            source_lang: "en",
+            target_lang: targetLang,
+            original_text: equipment.description,
+            translated_text: translatedDescription,
+          });
+
+        if (cacheError) {
+          console.error("Failed to cache translated description:", cacheError);
+        }
       }
     } else {
       description = cachedDescription.translated_text;
