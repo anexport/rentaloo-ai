@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import PricingHeader from "./sidebar/PricingHeader";
@@ -52,6 +53,7 @@ const BookingSidebar = ({
   user,
   equipmentId,
 }: BookingSidebarProps) => {
+  const { t } = useTranslation("booking");
   const isOwner = listing.owner?.id === user?.id;
   const hasValidDates = !!dateRange?.from && !!dateRange?.to;
   const hasConflicts = conflicts.length > 0;
@@ -59,13 +61,13 @@ const BookingSidebar = ({
   return (
     <aside
       className="order-first lg:order-last lg:sticky lg:top-6 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto"
-      aria-label="Booking information"
+      aria-label={t("sidebar.aria_booking_info")}
     >
       {/* Card has built-in flex flex-col gap-6 py-6, so we use px-6 for horizontal padding */}
       <Card className="px-6">
         <section aria-labelledby="pricing-section">
           <h3 id="pricing-section" className="sr-only">
-            Pricing
+            {t("sidebar.aria_pricing")}
           </h3>
           <PricingHeader
             dailyRate={listing.daily_rate}
@@ -78,7 +80,7 @@ const BookingSidebar = ({
 
         <section aria-labelledby="location-section">
           <h3 id="location-section" className="sr-only">
-            Location and Contact
+            {t("sidebar.aria_location_contact")}
           </h3>
           <LocationContact location={listing.location} />
         </section>
@@ -87,7 +89,7 @@ const BookingSidebar = ({
 
         <section aria-labelledby="dates-section">
           <h3 id="dates-section" className="sr-only">
-            Dates
+            {t("sidebar.aria_dates")}
           </h3>
           <DateSelector
             dateRange={dateRange}
@@ -104,7 +106,7 @@ const BookingSidebar = ({
 
         <section aria-labelledby="pricing-breakdown-section">
           <h3 id="pricing-breakdown-section" className="sr-only">
-            Pricing Breakdown
+            {t("sidebar.aria_pricing_breakdown")}
           </h3>
           <PricingBreakdown
             calculation={calculation}
@@ -120,7 +122,7 @@ const BookingSidebar = ({
 
             <section aria-labelledby="insurance-section">
               <h3 id="insurance-section" className="sr-only">
-                Insurance Options
+                {t("sidebar.aria_insurance")}
               </h3>
               <InsuranceSelector
                 selectedInsurance={selectedInsurance}

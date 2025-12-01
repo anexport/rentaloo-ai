@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import EquipmentManagement from "@/components/EquipmentManagement";
 import BookingRequestCard from "@/components/booking/BookingRequestCard";
@@ -30,6 +31,7 @@ import { Link } from "react-router-dom";
 
 const OwnerDashboard = () => {
   const { user } = useAuth();
+  const { t } = useTranslation("dashboard");
   const [stats, setStats] = useState({
     totalListings: 0,
     pendingRequests: 0,
@@ -124,10 +126,10 @@ const OwnerDashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-2">
-            Owner Dashboard
+            {t("owner.header.title")}
           </h2>
           <p className="text-muted-foreground">
-            Manage your equipment listings and track your earnings
+            {t("owner.header.description")}
           </p>
         </div>
 
@@ -136,52 +138,52 @@ const OwnerDashboard = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Listings
+                {t("owner.stats.total_listings.label")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalListings}</div>
-              <p className="text-xs text-muted-foreground">Active equipment</p>
+              <p className="text-xs text-muted-foreground">{t("owner.stats.total_listings.description")}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Pending Requests
+                {t("owner.stats.pending_requests.label")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.pendingRequests}</div>
-              <p className="text-xs text-muted-foreground">Awaiting payment</p>
+              <p className="text-xs text-muted-foreground">{t("owner.stats.pending_requests.description")}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Earnings
+                {t("owner.stats.total_earnings.label")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 ${stats.totalEarnings.toFixed(2)}
               </div>
-              <p className="text-xs text-muted-foreground">All time</p>
+              <p className="text-xs text-muted-foreground">{t("owner.stats.total_earnings.description")}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Average Rating
+                {t("owner.stats.average_rating.label")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : "-"}
               </div>
-              <p className="text-xs text-muted-foreground">Based on reviews</p>
+              <p className="text-xs text-muted-foreground">{t("owner.stats.average_rating.description")}</p>
             </CardContent>
           </Card>
         </div>
@@ -197,7 +199,7 @@ const OwnerDashboard = () => {
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
               }`}
             >
-              Overview
+              {t("owner.tabs.overview")}
             </button>
             <button
               onClick={() => setActiveTab("equipment")}
@@ -207,7 +209,7 @@ const OwnerDashboard = () => {
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
               }`}
             >
-              Equipment Management
+              {t("owner.tabs.equipment")}
             </button>
             <button
               onClick={() => setActiveTab("bookings")}
@@ -217,7 +219,7 @@ const OwnerDashboard = () => {
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
               }`}
             >
-              Booking Requests
+              {t("owner.tabs.bookings")}
               {stats.pendingRequests > 0 && (
                 <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
                   {stats.pendingRequests}
@@ -233,7 +235,7 @@ const OwnerDashboard = () => {
               }`}
             >
               <MessageSquare className="h-4 w-4 mr-1 inline" />
-              Messages
+              {t("owner.tabs.messages")}
             </button>
             <button
               onClick={() => setActiveTab("reviews")}
@@ -244,7 +246,7 @@ const OwnerDashboard = () => {
               }`}
             >
               <Star className="h-4 w-4 mr-1 inline" />
-              Reviews
+              {t("owner.tabs.reviews")}
             </button>
             <button
               onClick={() => setActiveTab("payments")}
@@ -255,7 +257,7 @@ const OwnerDashboard = () => {
               }`}
             >
               <Shield className="h-4 w-4 mr-1 inline" />
-              Payments & Escrow
+              {t("owner.tabs.payments")}
             </button>
           </nav>
         </div>
@@ -269,16 +271,16 @@ const OwnerDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Plus className="h-5 w-5 text-primary" />
-                    <span>Add Equipment</span>
+                    <span>{t("owner.overview.quick_actions.add_equipment.title")}</span>
                   </CardTitle>
-                  <CardDescription>List new equipment for rent</CardDescription>
+                  <CardDescription>{t("owner.overview.quick_actions.add_equipment.description")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button
                     className="w-full"
                     onClick={() => setActiveTab("equipment")}
                   >
-                    Add Equipment
+                    {t("owner.overview.quick_actions.add_equipment.button")}
                   </Button>
                 </CardContent>
               </Card>
@@ -287,10 +289,10 @@ const OwnerDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Calendar className="h-5 w-5 text-primary" />
-                    <span>Manage Listings</span>
+                    <span>{t("owner.overview.quick_actions.manage_listings.title")}</span>
                   </CardTitle>
                   <CardDescription>
-                    View and edit your equipment listings
+                    {t("owner.overview.quick_actions.manage_listings.description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -299,7 +301,7 @@ const OwnerDashboard = () => {
                     className="w-full"
                     onClick={() => setActiveTab("equipment")}
                   >
-                    Manage Listings
+                    {t("owner.overview.quick_actions.manage_listings.button")}
                   </Button>
                 </CardContent>
               </Card>
@@ -308,15 +310,15 @@ const OwnerDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <BarChart3 className="h-5 w-5 text-primary" />
-                    <span>Analytics</span>
+                    <span>{t("owner.overview.quick_actions.analytics.title")}</span>
                   </CardTitle>
                   <CardDescription>
-                    Track performance and earnings
+                    {t("owner.overview.quick_actions.analytics.description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button variant="outline" className="w-full" disabled>
-                    Coming Soon
+                    {t("owner.overview.quick_actions.analytics.button")}
                   </Button>
                 </CardContent>
               </Card>
@@ -325,17 +327,17 @@ const OwnerDashboard = () => {
             {/* Recent Activity */}
             <Card>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle>{t("owner.overview.recent_activity.title")}</CardTitle>
                 <CardDescription>
-                  Your latest equipment listings and booking requests
+                  {t("owner.overview.recent_activity.description")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8 text-muted-foreground">
                   <Plus className="h-12 w-12 mx-auto mb-4 text-muted" />
-                  <p>No recent activity</p>
+                  <p>{t("owner.overview.recent_activity.empty_state.title")}</p>
                   <p className="text-sm">
-                    Start by adding your first piece of equipment
+                    {t("owner.overview.recent_activity.empty_state.description")}
                   </p>
                 </div>
               </CardContent>
@@ -350,10 +352,10 @@ const OwnerDashboard = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">
-                  Booking Requests
+                  {t("owner.bookings.section_title")}
                 </h2>
                 <p className="text-muted-foreground">
-                  Manage rental requests for your equipment
+                  {t("owner.bookings.section_description")}
                 </p>
               </div>
             </div>
@@ -361,17 +363,16 @@ const OwnerDashboard = () => {
             {bookingsLoading ? (
               <div className="text-center py-8">
                 <div className="text-muted-foreground">
-                  Loading booking requests...
+                  {t("owner.bookings.loading")}
                 </div>
               </div>
             ) : bookingRequests.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-8">
                   <div className="text-muted-foreground">
-                    <p className="text-lg mb-2">No booking requests yet</p>
+                    <p className="text-lg mb-2">{t("owner.bookings.empty_state.title")}</p>
                     <p className="text-sm">
-                      Booking requests will appear here when renters request
-                      your equipment
+                      {t("owner.bookings.empty_state.description")}
                     </p>
                   </div>
                 </CardContent>
@@ -395,9 +396,9 @@ const OwnerDashboard = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-2xl font-bold text-foreground">Messages</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t("owner.messages.section_title")}</h2>
                 <p className="text-muted-foreground">
-                  Communicate with renters about bookings
+                  {t("owner.messages.section_description")}
                 </p>
               </div>
             </div>
@@ -410,10 +411,10 @@ const OwnerDashboard = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">
-                  Customer Reviews
+                  {t("owner.reviews.section_title")}
                 </h2>
                 <p className="text-muted-foreground">
-                  Reviews and ratings from renters who used your equipment
+                  {t("owner.reviews.section_description")}
                 </p>
               </div>
             </div>
@@ -430,10 +431,10 @@ const OwnerDashboard = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">
-                  Payments & Escrow
+                  {t("owner.payments.section_title")}
                 </h2>
                 <p className="text-muted-foreground">
-                  Manage your earnings and escrow funds
+                  {t("owner.payments.section_description")}
                 </p>
               </div>
             </div>

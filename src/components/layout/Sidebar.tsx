@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Home,
   Search,
@@ -46,6 +47,7 @@ interface NavItem {
 }
 
 const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
+  const { t } = useTranslation("navigation");
   const location = useLocation();
   const { profile } = useVerification();
   const verificationProgress = profile ? getVerificationProgress(profile) : 0;
@@ -292,26 +294,26 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
   // Navigation items grouped by section
   const mainNavItems: NavItem[] = [
-    { label: "Dashboard", icon: Home, href: "/renter/dashboard" },
-    { label: "Browse Equipment", icon: Search, href: "/equipment" },
-    { label: "Watchlist", icon: Heart, href: "/renter/dashboard?tab=saved" },
+    { label: t("sidebar.dashboard"), icon: Home, href: "/renter/dashboard" },
+    { label: t("sidebar.browse_equipment"), icon: Search, href: "/equipment" },
+    { label: t("sidebar.watchlist"), icon: Heart, href: "/renter/dashboard?tab=saved" },
   ];
 
   const activityNavItems: NavItem[] = [
     {
-      label: "My Bookings",
+      label: t("sidebar.my_bookings"),
       icon: Calendar,
       href: "/renter/dashboard?tab=bookings",
     },
     {
-      label: "Messages",
+      label: t("sidebar.messages"),
       icon: MessageSquare,
       href: "/messages",
       ...(unreadMessages > 0 && { badge: unreadMessages }),
     },
-    { label: "Payments", icon: CreditCard, href: "/renter/payments" },
+    { label: t("sidebar.payments"), icon: CreditCard, href: "/renter/payments" },
     {
-      label: "Support",
+      label: t("sidebar.support"),
       icon: LifeBuoy,
       href: "/support",
       ...(openSupportTickets > 0 && { badge: openSupportTickets }),
@@ -319,12 +321,12 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   ];
 
   const accountNavItems: NavItem[] = [
-    { label: "Settings", icon: User, href: "/settings" },
+    { label: t("sidebar.settings"), icon: User, href: "/settings" },
   ];
 
   const ownerNavItems: NavItem[] = [
     {
-      label: "Payouts",
+      label: t("sidebar.payouts"),
       icon: PiggyBank,
       href: "/owner/dashboard?tab=payments",
       ...(pendingPayouts > 0 && { badge: pendingPayouts }),
@@ -369,7 +371,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
             size="icon"
             onClick={onToggle}
             className="h-8 w-8"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? t("aria.expand_sidebar") : t("aria.collapse_sidebar")}
           >
             {collapsed ? (
               <ChevronRight className="h-4 w-4" />
@@ -390,13 +392,13 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                 "flex items-center gap-3 rounded-lg border border-dashed border-primary/40 px-3 py-2.5 text-sm font-medium text-primary transition hover:border-primary hover:bg-primary/10",
                 collapsed ? "justify-center" : ""
               )}
-              title={collapsed ? "Add new listing" : undefined}
+              title={collapsed ? t("sidebar.add_new_listing") : undefined}
             >
               <Plus className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>Add new listing</span>}
+              {!collapsed && <span>{t("sidebar.add_new_listing")}</span>}
               {!collapsed && (
                 <span className="ml-auto text-xs text-primary/80">
-                  Keep inventory fresh
+                  {t("sidebar.add_new_listing_subtitle")}
                 </span>
               )}
             </Link>
@@ -413,14 +415,14 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                 "flex items-center gap-3 rounded-lg border border-dashed border-muted px-3 py-2.5 text-sm font-medium transition hover:border-primary hover:bg-primary/5",
                 collapsed ? "justify-center" : ""
               )}
-              title={collapsed ? "List your equipment" : undefined}
+              title={collapsed ? t("sidebar.list_equipment") : undefined}
             >
               <Sparkles className="h-4 w-4 shrink-0 text-primary" />
               {!collapsed && (
                 <div className="flex flex-col">
-                  <span>List your equipment</span>
+                  <span>{t("sidebar.list_equipment")}</span>
                   <span className="text-xs text-muted-foreground">
-                    Earn when your gear is idle
+                    {t("sidebar.list_equipment_subtitle")}
                   </span>
                 </div>
               )}
@@ -433,7 +435,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           {/* Main Section */}
           {!collapsed && (
             <div className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-              Main
+              {t("sidebar.main")}
             </div>
           )}
           <div className="space-y-1 mb-6">
@@ -473,7 +475,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           {/* Activity Section */}
           {!collapsed && (
             <div className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-              Activity
+              {t("sidebar.activity")}
             </div>
           )}
           <div className="space-y-1 mb-6">
@@ -515,7 +517,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
             <>
               {!collapsed && (
                 <div className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-                  Owner
+                  {t("sidebar.owner")}
                 </div>
               )}
               <div className="space-y-1 mb-6">
@@ -557,7 +559,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           {/* Account Section */}
           {!collapsed && (
             <div className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-              Account
+              {t("sidebar.account")}
             </div>
           )}
           <div className="space-y-1">
@@ -625,7 +627,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
                   <CalendarClock className="h-4 w-4 text-primary" />
-                  {!collapsed && <span>Upcoming booking</span>}
+                  {!collapsed && <span>{t("sidebar.upcoming_booking")}</span>}
                 </div>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
                   {formatDateRange(nextBooking.startDate, nextBooking.endDate)}
@@ -637,7 +639,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                     {nextBooking.equipmentName}
                   </div>
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Total</span>
+                    <span>{t("sidebar.total")}</span>
                     <span className="font-semibold text-foreground">
                       {formatCurrency(nextBooking.totalAmount)}
                     </span>
@@ -646,7 +648,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                     to="/renter/dashboard?tab=bookings"
                     className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                   >
-                    View details <ArrowRight className="h-3 w-3" />
+                    {t("sidebar.view_details")} <ArrowRight className="h-3 w-3" />
                   </Link>
                 </>
               )}
@@ -663,27 +665,27 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
                   <PiggyBank className="h-4 w-4 text-primary" />
-                  {!collapsed && <span>Payouts</span>}
+                  {!collapsed && <span>{t("sidebar.payout_glance_title")}</span>}
                 </div>
                 {pendingPayouts > 0 && (
                   <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                    {pendingPayouts} pending
+                    {t("sidebar.payout_glance_pending", { count: pendingPayouts })}
                   </span>
                 )}
               </div>
               {!collapsed && (
                 <>
                   <div className="mt-2 text-sm font-semibold text-foreground">
-                    Track your earnings
+                    {t("sidebar.track_earnings")}
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Last payout: {formatDateLabel(lastPayoutAt)}
+                    {t("sidebar.last_payout", { date: formatDateLabel(lastPayoutAt) })}
                   </p>
                   <Link
                     to="/owner/dashboard?tab=payments"
                     className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                   >
-                    View payouts <ArrowRight className="h-3 w-3" />
+                    {t("sidebar.view_payouts")} <ArrowRight className="h-3 w-3" />
                   </Link>
                 </>
               )}
@@ -702,7 +704,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-sm"
               )}
-              title={collapsed ? "My Equipment Listings" : undefined}
+              title={collapsed ? t("sidebar.my_equipment_listings") : undefined}
             >
               <Package
                 className={cn(
@@ -710,7 +712,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                   !isActive("/owner/dashboard") && "group-hover:scale-110"
                 )}
               />
-              {!collapsed && <span>My Equipment Listings</span>}
+              {!collapsed && <span>{t("sidebar.my_equipment_listings")}</span>}
               {!collapsed && (
                 <div className="ml-auto flex items-center gap-2">
                   {pendingOwnerRequests > 0 && (
@@ -735,15 +737,15 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-accent",
               collapsed ? "justify-center" : "justify-between"
             )}
-            title={collapsed ? "What's new" : undefined}
+            title={collapsed ? t("sidebar.whats_new") : undefined}
           >
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              {!collapsed && <span>What&apos;s new</span>}
+              {!collapsed && <span>{t("sidebar.whats_new")}</span>}
             </div>
             {!collapsed && (
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                Updates
+                {t("sidebar.updates")}
               </span>
             )}
           </Link>
@@ -758,14 +760,14 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                 "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
                 collapsed ? "justify-center" : ""
               )}
-              title={collapsed ? "Verification" : undefined}
+              title={collapsed ? t("sidebar.verification") : undefined}
             >
               <Shield className="h-5 w-5 shrink-0 text-primary" />
               {!collapsed && (
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-medium text-foreground">
-                      Trust Score
+                      {t("sidebar.trust_score")}
                     </span>
                     <span className="text-xs font-semibold text-primary">
                       {verificationProgress}%

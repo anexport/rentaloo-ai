@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Mountain, User, Store } from "lucide-react";
 import {
   Dialog,
@@ -18,6 +19,7 @@ type SignupModalProps = {
 };
 
 const SignupModal = ({ open, onOpenChange, initialRole }: SignupModalProps) => {
+  const { t } = useTranslation("auth");
   const [selectedRole, setSelectedRole] = useState<"renter" | "owner" | null>(
     initialRole || null
   );
@@ -87,9 +89,9 @@ const SignupModal = ({ open, onOpenChange, initialRole }: SignupModalProps) => {
               <div className="flex justify-center mb-4">
                 <Mountain className="h-12 w-12 text-primary" />
               </div>
-              <DialogTitle className="text-2xl">Join RentAloo</DialogTitle>
+              <DialogTitle className="text-2xl">{t("signup.title")}</DialogTitle>
               <DialogDescription>
-                Choose how you'd like to use RentAloo
+                {t("signup.subtitle")}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -106,11 +108,10 @@ const SignupModal = ({ open, onOpenChange, initialRole }: SignupModalProps) => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold mb-1">
-                      Join as a Renter
+                      {t("signup.renter_option_title")}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Rent outdoor equipment from local owners. Perfect for
-                      trying new activities or occasional adventures.
+                      {t("signup.renter_option_description")}
                     </p>
                   </div>
                 </div>
@@ -129,11 +130,10 @@ const SignupModal = ({ open, onOpenChange, initialRole }: SignupModalProps) => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold mb-1">
-                      Join as an Owner
+                      {t("signup.owner_option_title")}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      List your equipment and earn money. Share your gear with
-                      the community and start earning today.
+                      {t("signup.owner_option_description")}
                     </p>
                   </div>
                 </div>
@@ -141,19 +141,19 @@ const SignupModal = ({ open, onOpenChange, initialRole }: SignupModalProps) => {
 
               {/* Reassuring message about role flexibility */}
               <p className="text-sm text-muted-foreground text-center pt-2">
-                Don't worry - you can always switch roles or add the other role later in your account settings.
+                {t("signup.role_flexibility_message")}
               </p>
 
               {/* Login Link */}
               <div className="text-center pt-4">
                 <p className="text-sm text-muted-foreground">
-                  Already have an account?{" "}
+                  {t("signup.already_have_account")}{" "}
                   <button
                     type="button"
                     onClick={handleShowLogin}
                     className="text-primary hover:underline font-medium"
                   >
-                    Sign in
+                    {t("signup.login_link")}
                   </button>
                 </p>
               </div>

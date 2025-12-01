@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,7 @@ type Props = {
 };
 
 const SearchBar = ({ value, onChange, onSubmit }: Props) => {
+  const { t } = useTranslation("equipment");
   const [localValue, setLocalValue] = useState<BasicSearchFilters>(value);
 
   useEffect(() => {
@@ -47,8 +49,8 @@ const SearchBar = ({ value, onChange, onSubmit }: Props) => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            aria-label="Search equipment"
-            placeholder="Search equipment"
+            aria-label={t("search_bar.search_equipment_aria")}
+            placeholder={t("search.placeholder")}
             className="h-12 pl-9 rounded-none border-0 focus-visible:ring-0"
             value={localValue.search}
             onChange={(e) =>
@@ -60,7 +62,7 @@ const SearchBar = ({ value, onChange, onSubmit }: Props) => {
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             aria-label="Location"
-            placeholder="Where?"
+            placeholder={t("search_bar.where_placeholder")}
             className="h-12 pl-9 rounded-none border-0 focus-visible:ring-0"
             value={localValue.location}
             onChange={(e) =>
@@ -76,17 +78,17 @@ const SearchBar = ({ value, onChange, onSubmit }: Props) => {
             }
           >
             <SelectTrigger
-              aria-label="Condition"
+              aria-label={t("filters_sheet.condition")}
               className="h-12 rounded-none border-0 focus:ring-0"
             >
-              <SelectValue placeholder="Condition" />
+              <SelectValue placeholder={t("filters_sheet.condition")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All conditions</SelectItem>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="excellent">Excellent</SelectItem>
-              <SelectItem value="good">Good</SelectItem>
-              <SelectItem value="fair">Fair</SelectItem>
+              <SelectItem value="all">{t("condition.all", { defaultValue: "All conditions" })}</SelectItem>
+              <SelectItem value="new">{t("condition.new")}</SelectItem>
+              <SelectItem value="excellent">{t("condition.excellent")}</SelectItem>
+              <SelectItem value="good">{t("condition.good")}</SelectItem>
+              <SelectItem value="fair">{t("condition.fair")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -107,8 +109,8 @@ const SearchBar = ({ value, onChange, onSubmit }: Props) => {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button onClick={handleApply} aria-label="Search" className="h-9">
-              Search
+            <Button onClick={handleApply} aria-label={t("search_popover.search")} className="h-9">
+              {t("search_popover.search")}
             </Button>
           </div>
         </div>

@@ -1,0 +1,48 @@
+{
+  "checkout": {
+    "title": "Zahlung",
+    "payment_details": "Zahlungsdetails",
+    "card_number": "Kartennummer",
+    "expiry_date": "Ablaufdatum",
+    "cvc": "CVC",
+    "billing_address": "Rechnungsadresse",
+    "pay_now": "Jetzt bezahlen",
+    "processing": "Zahlung wird verarbeitet...",
+    "secure_payment": "Sichere Zahlung mit Stripe"
+  },
+  "confirmation": {
+    "title": "Zahlung erfolgreich",
+    "message": "Ihre Zahlung wurde erfolgreich verarbeitet",
+    "booking_confirmed": "Ihre Buchung ist bestätigt",
+    "receipt_sent": "Eine Quittung wurde an Ihre E-Mail gesendet",
+    "view_booking": "Buchung anzeigen",
+    "back_to_dashboard": "Zurück zum Dashboard"
+  },
+  "escrow": {
+    "funds_held": "Gelder in Treuhand",
+    "release_on_completion": "Gelder werden an den Eigentümer nach Abschluss der Miete freigegeben",
+    "protection_message": "Ihre Zahlung ist geschützt, bis die Miete abgeschlossen ist"
+  },
+  "refund": {
+    "refund_initiated": "Rückerstattung eingeleitet",
+    "refund_processing": "Ihre Rückerstattung wird verarbeitet",
+    "refund_completed": "Rückerstattung abgeschlossen",
+    "refund_amount": "Rückerstattungsbetrag",
+    "refund_reason": "Grund für Rückerstattung"
+  },
+  "history": {
+    "payment_history": "Zahlungsverlauf",
+    "transaction_id": "Transaktions-ID",
+    "date": "Datum",
+    "amount": "Betrag",
+    "status": "Status",
+    "download_receipt": "Quittung herunterladen",
+    "no_payments": "Noch kein Zahlungsverlauf"
+  },
+  "errors": {
+    "payment_failed": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "invalid_card": "Ungültige Kartendetails",
+    "insufficient_funds": "Unzureichende Deckung",
+    "card_declined": "Karte abgelehnt"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "menu": {
+    "dashboard": "Panel de Control",
+    "browse_equipment": "Explorar Equipamiento",
+    "messages": "Mensajes",
+    "verification": "Verificación",
+    "settings": "Configuración",
+    "sign_out": "Cerrar Sesión",
+    "explore": "Explorar",
+    "my_rentals": "Mis Alquileres",
+    "my_listings": "Mis Anuncios",
+    "payments": "Pagos"
+  },
+  "user_role": {
+    "loading": "Cargando...",
+    "equipment_owner": "Propietario de Equipamiento",
+    "renter": "Arrendatario"
+  },
+  "pages": {
+    "home": "Inicio",
+    "explore": "Explorar Equipamiento",
+    "dashboard": "Panel de Control",
+    "messages": "Mensajes",
+    "settings": "Configuración",
+    "verification": "Verificación de Identidad",
+    "payment_confirmation": "Confirmación de Pago"
+  },
+  "auth": {
+    "sign_in": "Iniciar Sesión",
+    "get_started": "Comenzar"
+  },
+  "errors": {
+    "signout_failed_title": "Error al cerrar sesión",
+    "signout_failed_message": "No se pudo cerrar sesión. Por favor, inténtelo de nuevo."
+  },
+  "aria": {
+    "open_menu": "Abrir menú",
+    "expand_sidebar": "Expandir barra lateral",
+    "collapse_sidebar": "Contraer barra lateral",
+    "user_menu": "Menú de usuario"
+  },
+  "sidebar": {
+    "main": "Principal",
+    "activity": "Actividad",
+    "account": "Cuenta",
+    "dashboard": "Panel de Control",
+    "browse_equipment": "Explorar Equipamiento",
+    "my_bookings": "Mis Reservas",
+    "messages": "Mensajes",
+    "payments": "Pagos",
+    "settings": "Configuración",
+    "my_equipment_listings": "Mis Anuncios de Equipamiento",
+    "verification": "Verificación",
+    "trust_score": "Puntuación de Confianza",
+    "owner": "Propietario",
+    "watchlist": "Lista de deseos",
+    "support": "Soporte",
+    "payouts": "Pagos",
+    "add_new_listing": "Agregar nuevo anuncio",
+    "add_new_listing_subtitle": "Mantener inventario fresco",
+    "list_equipment": "Anunciar tu equipamiento",
+    "list_equipment_subtitle": "Gana cuando tu equipo está ocioso",
+    "upcoming_booking": "Reserva próxima",
+    "total": "Total",
+    "view_details": "Ver detalles",
+    "payout_glance_title": "Pagos",
+    "payout_glance_pending": "{{count}} pendientes",
+    "track_earnings": "Rastrear tus ganancias",
+    "last_payout": "Último pago: {{date}}",
+    "view_payouts": "Ver pagos",
+    "whats_new": "Qué hay de nuevo",
+    "updates": "Actualizaciones"
+  }
+}

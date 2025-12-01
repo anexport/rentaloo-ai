@@ -1,0 +1,63 @@
+{
+  "title": "Identity Verification",
+  "subtitle": "Verify your identity to build trust in the community",
+  "steps": {
+    "email": "Email Verification",
+    "phone": "Phone Verification",
+    "identity": "Identity Document",
+    "address": "Address Verification"
+  },
+  "status": {
+    "verified": "Verified",
+    "pending": "Pending",
+    "unverified": "Not Verified",
+    "failed": "Verification Failed"
+  },
+  "email": {
+    "title": "Verify Your Email",
+    "description": "Confirm your email address to continue",
+    "send_code": "Send Verification Code",
+    "resend_code": "Resend Code",
+    "enter_code": "Enter the code sent to {{email}}",
+    "verified_message": "Your email has been verified"
+  },
+  "phone": {
+    "title": "Verify Your Phone Number",
+    "description": "Add your phone number for account security",
+    "enter_phone": "Enter Phone Number",
+    "send_code": "Send Code",
+    "enter_code": "Enter Verification Code",
+    "verified_message": "Your phone number has been verified"
+  },
+  "identity": {
+    "title": "Upload Identity Document",
+    "description": "Upload a government-issued ID",
+    "document_types": "Accepted: Passport, Driver's License, National ID",
+    "upload_front": "Upload Front",
+    "upload_back": "Upload Back (if applicable)",
+    "uploading": "Uploading...",
+    "submitted_message": "Your document has been submitted for review",
+    "verified_message": "Your identity has been verified"
+  },
+  "address": {
+    "title": "Verify Your Address",
+    "description": "Provide proof of address",
+    "document_types": "Accepted: Utility Bill, Bank Statement",
+    "upload_document": "Upload Document",
+    "submitted_message": "Your address proof has been submitted",
+    "verified_message": "Your address has been verified"
+  },
+  "trust_score": {
+    "title": "Trust Score",
+    "description": "Complete verifications to increase your trust score",
+    "score": "{{score}}/100",
+    "benefits": "Higher trust scores lead to more bookings"
+  },
+  "badges": {
+    "email_verified": "Email Verified",
+    "phone_verified": "Phone Verified",
+    "identity_verified": "Identity Verified",
+    "address_verified": "Address Verified",
+    "trusted_member": "Trusted Member"
+  }
+}

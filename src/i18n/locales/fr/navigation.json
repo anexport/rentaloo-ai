@@ -1,0 +1,74 @@
+{
+  "menu": {
+    "dashboard": "Tableau de bord",
+    "browse_equipment": "Parcourir le matériel",
+    "messages": "Messages",
+    "verification": "Vérification",
+    "settings": "Paramètres",
+    "sign_out": "Se déconnecter",
+    "explore": "Explorer",
+    "my_rentals": "Mes locations",
+    "my_listings": "Mes annonces",
+    "payments": "Paiements"
+  },
+  "user_role": {
+    "loading": "Chargement...",
+    "equipment_owner": "Propriétaire de matériel",
+    "renter": "Locataire"
+  },
+  "pages": {
+    "home": "Accueil",
+    "explore": "Explorer le matériel",
+    "dashboard": "Tableau de bord",
+    "messages": "Messages",
+    "settings": "Paramètres",
+    "verification": "Vérification d'identité",
+    "payment_confirmation": "Confirmation de paiement"
+  },
+  "auth": {
+    "sign_in": "Se connecter",
+    "get_started": "Commencer"
+  },
+  "errors": {
+    "signout_failed_title": "Déconnexion échouée",
+    "signout_failed_message": "Échec de la déconnexion. Veuillez réessayer."
+  },
+  "aria": {
+    "open_menu": "Ouvrir le menu",
+    "expand_sidebar": "Développer la barre latérale",
+    "collapse_sidebar": "Réduire la barre latérale",
+    "user_menu": "Menu utilisateur"
+  },
+  "sidebar": {
+    "main": "Principal",
+    "activity": "Activité",
+    "account": "Compte",
+    "dashboard": "Tableau de bord",
+    "browse_equipment": "Parcourir le matériel",
+    "my_bookings": "Mes réservations",
+    "messages": "Messages",
+    "payments": "Paiements",
+    "settings": "Paramètres",
+    "my_equipment_listings": "Mes annonces de matériel",
+    "verification": "Vérification",
+    "trust_score": "Score de confiance",
+    "owner": "Propriétaire",
+    "watchlist": "Liste de suivi",
+    "support": "Support",
+    "payouts": "Paiements",
+    "add_new_listing": "Ajouter une nouvelle annonce",
+    "add_new_listing_subtitle": "Garder l'inventaire frais",
+    "list_equipment": "Mettre en liste votre équipement",
+    "list_equipment_subtitle": "Gagnez quand votre équipement est inactif",
+    "upcoming_booking": "Réservation à venir",
+    "total": "Total",
+    "view_details": "Voir les détails",
+    "payout_glance_title": "Paiements",
+    "payout_glance_pending": "{{count}} en attente",
+    "track_earnings": "Suivez vos gains",
+    "last_payout": "Dernier paiement: {{date}}",
+    "view_payouts": "Voir les paiements",
+    "whats_new": "Quoi de neuf",
+    "updates": "Mises à jour"
+  }
+}

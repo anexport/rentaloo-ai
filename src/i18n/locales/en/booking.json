@@ -1,0 +1,117 @@
+{
+  "sidebar": {
+    "title": "Book This Equipment",
+    "select_dates": "Select Dates",
+    "start_date": "Start Date",
+    "end_date": "End Date",
+    "pricing": "Pricing Details",
+    "daily_rate": "Daily Rate",
+    "number_of_days": "Number of Days",
+    "subtotal": "Subtotal",
+    "service_fee": "Service Fee",
+    "total": "Total",
+    "request_booking": "Request to Book",
+    "requesting": "Requesting...",
+    "dates_required": "Please select start and end dates",
+    "unavailable_dates": "Some dates in your selection are unavailable",
+    "aria_booking_info": "Booking information",
+    "aria_pricing": "Pricing",
+    "aria_location_contact": "Location and Contact",
+    "aria_dates": "Dates",
+    "aria_pricing_breakdown": "Pricing Breakdown",
+    "aria_insurance": "Insurance Options"
+  },
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "declined": "Declined",
+    "cancelled": "Cancelled",
+    "completed": "Completed"
+  },
+  "requests": {
+    "my_requests": "My Booking Requests",
+    "incoming_requests": "Incoming Requests",
+    "no_requests": "No booking requests yet",
+    "view_details": "View Details",
+    "approve": "Approve",
+    "decline": "Decline",
+    "cancel": "Cancel Booking",
+    "confirm_cancel": "Are you sure you want to cancel this booking?"
+  },
+  "details": {
+    "booking_details": "Booking Details",
+    "equipment": "Equipment",
+    "renter": "Renter",
+    "owner": "Owner",
+    "dates": "Rental Dates",
+    "duration": "Duration",
+    "total_cost": "Total Cost",
+    "booking_status": "Status",
+    "message_from_renter": "Message from Renter",
+    "pickup_method": "Pickup Method",
+    "delivery_address": "Delivery Address"
+  },
+  "calendar": {
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "booked": "Booked",
+    "select_range": "Select your rental dates",
+    "minimum_rental": "Minimum {{count}} day rental",
+    "minimum_rental_plural": "Minimum {{count}} days rental"
+  },
+  "messages": {
+    "request_sent": "Booking request sent successfully",
+    "request_approved": "Booking request approved",
+    "request_declined": "Booking request declined",
+    "booking_cancelled": "Booking cancelled successfully"
+  },
+  "card": {
+    "status": {
+      "awaiting_payment": "Awaiting Payment",
+      "booking_confirmed": "Booking Confirmed"
+    },
+    "labels": {
+      "renter": "Renter",
+      "owner": "Owner",
+      "message": "Message:",
+      "per_day": "/day"
+    },
+    "buttons": {
+      "view_renter_info": "View Renter Info",
+      "hide_renter_info": "Hide Renter Info",
+      "pickup_inspection": "Pickup Inspection",
+      "view_pickup_inspection": "View Pickup Inspection",
+      "return_inspection": "Return Inspection",
+      "view_return_inspection": "View Return Inspection",
+      "file_damage_claim": "File Damage Claim",
+      "cancel_booking": "Cancel Booking",
+      "cancelling": "Cancelling...",
+      "message": "Message",
+      "loading": "Loading..."
+    },
+    "alerts": {
+      "awaiting_payment_owner": "This booking request is awaiting payment from the renter.",
+      "awaiting_payment_renter": "Your booking request is awaiting payment. Complete payment to confirm your booking.",
+      "payment_confirmed": "Payment received! Booking is confirmed.",
+      "cancelled_renter": "You have cancelled this booking request.",
+      "cancelled_owner": "This booking request has been cancelled by the renter."
+    },
+    "modals": {
+      "complete_payment": "Complete Payment",
+      "renter_verification": "Renter Verification Profile"
+    },
+    "confirmations": {
+      "cancel_owner": "Are you sure you want to cancel this booking? The renter will receive a full refund.",
+      "cancel_renter": "Are you sure you want to cancel this booking? You will receive a full refund."
+    },
+    "timestamps": {
+      "requested": "Requested:",
+      "updated": "Updated:"
+    },
+    "errors": {
+      "refund_failed": "Refund processing failed. Please contact support to cancel this booking.",
+      "conversation_failed": "Failed to start conversation. Please try again.",
+      "cancel_failed": "Failed to cancel booking. Please try again."
+    }
+  }
+}

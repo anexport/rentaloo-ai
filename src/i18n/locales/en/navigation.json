@@ -1,0 +1,74 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "browse_equipment": "Browse Equipment",
+    "messages": "Messages",
+    "verification": "Verification",
+    "settings": "Settings",
+    "sign_out": "Sign Out",
+    "explore": "Explore",
+    "my_rentals": "My Rentals",
+    "my_listings": "My Listings",
+    "payments": "Payments"
+  },
+  "auth": {
+    "sign_in": "Sign In",
+    "get_started": "Get Started"
+  },
+  "user_role": {
+    "loading": "Loading...",
+    "equipment_owner": "Equipment Owner",
+    "renter": "Renter"
+  },
+  "pages": {
+    "home": "Home",
+    "explore": "Explore Equipment",
+    "dashboard": "Dashboard",
+    "messages": "Messages",
+    "settings": "Settings",
+    "verification": "Identity Verification",
+    "payment_confirmation": "Payment Confirmation"
+  },
+  "errors": {
+    "signout_failed_title": "Sign out failed",
+    "signout_failed_message": "Failed to sign out. Please try again."
+  },
+  "aria": {
+    "open_menu": "Open menu",
+    "expand_sidebar": "Expand sidebar",
+    "collapse_sidebar": "Collapse sidebar",
+    "user_menu": "User menu"
+  },
+  "sidebar": {
+    "main": "Main",
+    "activity": "Activity",
+    "account": "Account",
+    "owner": "Owner",
+    "dashboard": "Dashboard",
+    "browse_equipment": "Browse Equipment",
+    "watchlist": "Watchlist",
+    "my_bookings": "My Bookings",
+    "messages": "Messages",
+    "payments": "Payments",
+    "support": "Support",
+    "settings": "Settings",
+    "payouts": "Payouts",
+    "my_equipment_listings": "My Equipment Listings",
+    "verification": "Verification",
+    "trust_score": "Trust Score",
+    "add_new_listing": "Add new listing",
+    "add_new_listing_subtitle": "Keep inventory fresh",
+    "list_equipment": "List your equipment",
+    "list_equipment_subtitle": "Earn when your gear is idle",
+    "upcoming_booking": "Upcoming booking",
+    "total": "Total",
+    "view_details": "View details",
+    "payout_glance_title": "Payouts",
+    "payout_glance_pending": "{{count}} pending",
+    "track_earnings": "Track your earnings",
+    "last_payout": "Last payout: {{date}}",
+    "view_payouts": "View payouts",
+    "whats_new": "What's new",
+    "updates": "Updates"
+  }
+}

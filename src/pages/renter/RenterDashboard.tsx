@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Link, useSearchParams } from "react-router-dom";
 import { useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import ReviewList from "@/components/reviews/ReviewList";
 import BookingRequestCard from "@/components/booking/BookingRequestCard";
 import { useBookingRequests } from "@/hooks/useBookingRequests";
@@ -27,6 +28,7 @@ const RenterDashboard = () => {
   const { profile, loading: verificationLoading } = useVerification();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "overview";
+  const { t } = useTranslation("dashboard");
 
   // Fetch renter bookings
   const {
@@ -73,8 +75,8 @@ const RenterDashboard = () => {
         {/* Header Section */}
         <div>
           <PageHeader
-            title="Dashboard Overview"
-            description="Welcome back! Here's what's happening with your rentals."
+            title={t("renter.header.title")}
+            description={t("renter.header.description")}
           />
         </div>
 
@@ -90,11 +92,10 @@ const RenterDashboard = () => {
                   </div>
                   <div>
                     <p className="text-base font-semibold text-destructive">
-                      Complete your verification
+                      {t("renter.verification.incomplete_title")}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Your account is {progress}% verified. Complete identity verification to start
-                      renting safely.
+                      {t("renter.verification.incomplete_message", { progress })}
                     </p>
                   </div>
                 </div>
@@ -103,10 +104,10 @@ const RenterDashboard = () => {
                     variant="default"
                     size="lg"
                     className="font-semibold shadow-lg ring-2 ring-primary/50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
-                    aria-label="Verify now"
+                    aria-label={t("renter.verification.verify_button")}
                     data-testid="verify-now-banner"
                   >
-                    Verify now
+                    {t("renter.verification.verify_button")}
                   </Button>
                 </Link>
               </CardContent>
@@ -123,10 +124,10 @@ const RenterDashboard = () => {
         <div className="space-y-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground">
-              Overview
+              {t("renter.overview.section_title")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Your rental activity at a glance
+              {t("renter.overview.section_description")}
             </p>
           </div>
           <StatsOverview />
@@ -141,16 +142,16 @@ const RenterDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                    My Bookings
+                    {t("renter.bookings.section_title")}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    Manage your rental reservations
+                    {t("renter.bookings.section_description")}
                   </p>
                 </div>
                 {renterBookings.length > 3 && activeTab !== "bookings" && (
                   <Link to="/renter/dashboard?tab=bookings">
                     <Button variant="outline" size="sm">
-                      View All
+                      {t("renter.bookings.view_all")}
                     </Button>
                   </Link>
                 )}
@@ -159,7 +160,7 @@ const RenterDashboard = () => {
                 <Card>
                   <CardContent className="text-center py-12">
                     <div className="text-muted-foreground">
-                      Loading bookings...
+                      {t("renter.bookings.loading")}
                     </div>
                   </CardContent>
                 </Card>
@@ -171,14 +172,13 @@ const RenterDashboard = () => {
                         <Calendar className="h-8 w-8 text-muted-foreground" />
                       </div>
                       <h3 className="text-lg font-semibold mb-1">
-                        No bookings yet
+                        {t("renter.bookings.empty_state.title")}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                        Start by browsing available equipment and make your
-                        first rental
+                        {t("renter.bookings.empty_state.description")}
                       </p>
                       <Link to="/equipment">
-                        <Button size="lg">Browse Equipment</Button>
+                        <Button size="lg">{t("renter.bookings.empty_state.button")}</Button>
                       </Link>
                     </div>
                   </CardContent>
@@ -208,10 +208,10 @@ const RenterDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <Star className="h-5 w-5 text-primary" />
-                    <span>My Reviews</span>
+                    <span>{t("renter.reviews.card_title")}</span>
                   </CardTitle>
                   <CardDescription>
-                    Reviews you've written for equipment owners
+                    {t("renter.reviews.card_description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

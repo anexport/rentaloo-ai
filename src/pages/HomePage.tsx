@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { usePrefetchData } from "@/hooks/usePrefetchData";
 import ExploreHeader from "@/components/layout/ExploreHeader";
 import LoginModal from "@/components/auth/LoginModal";
@@ -53,6 +54,7 @@ type SortOption =
   | "rating";
 
 export default function HomePage() {
+  const { t } = useTranslation("equipment");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [categoryId, setCategoryId] = useState<string>("all");
@@ -326,9 +328,9 @@ export default function HomePage() {
       <section className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">Browse all equipment</h2>
+            <h2 className="text-3xl font-bold mb-2">{t("browse.title")}</h2>
             <p className="text-muted-foreground">
-              Explore our full collection of available gear
+              {t("browse.subtitle")}
             </p>
           </div>
 
@@ -348,17 +350,16 @@ export default function HomePage() {
           <div className="flex items-center justify-between gap-4 mb-4">
             <div className="flex-1">
               <h3 className="text-lg font-semibold">
-                {clientFilteredListings.length}{" "}
-                {clientFilteredListings.length === 1 ? "item" : "items"}
+                {t("browse.items_count", { count: clientFilteredListings.length })}
                 {debouncedFilters.location && (
                   <span className="text-muted-foreground font-normal">
                     {" "}
-                    in {debouncedFilters.location}
+                    {t("browse.in_location", { location: debouncedFilters.location })}
                   </span>
                 )}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Available for rent near you
+                {t("browse.available_near_you")}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -372,15 +373,15 @@ export default function HomePage() {
                 value={sortBy}
                 onValueChange={(value) => setSortBy(value as SortOption)}
               >
-                <SelectTrigger className="min-w-[180px]" aria-label="Sort by">
-                  <SelectValue placeholder="Sort by" />
+                <SelectTrigger className="min-w-[180px]" aria-label={t("filters.sort_by")}>
+                  <SelectValue placeholder={t("filters.sort_by")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="recommended">Recommended</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
+                  <SelectItem value="recommended">{t("filters.recommended")}</SelectItem>
+                  <SelectItem value="price-low">{t("filters.price_low_high")}</SelectItem>
+                  <SelectItem value="price-high">{t("filters.price_high_low")}</SelectItem>
+                  <SelectItem value="newest">{t("filters.newest_first")}</SelectItem>
+                  <SelectItem value="rating">{t("filters.highest_rated")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -392,15 +393,15 @@ export default function HomePage() {
             {isError ? (
               <div className="text-center py-10">
                 <div className="text-muted-foreground mb-4">
-                  Failed to load equipment. Please try again.
+                  {t("errors.load_failed")}
                 </div>
                 <Button
                   onClick={() => {
                     void refetch();
                   }}
-                  aria-label="Retry"
+                  aria-label={t("errors.retry")}
                 >
-                  Retry
+                  {t("errors.retry")}
                 </Button>
               </div>
             ) : isLoading ? (
@@ -440,7 +441,7 @@ export default function HomePage() {
                 onClick={handleBrowseAll}
                 className="group"
               >
-                View All on Browse Page
+                {t("browse.view_all")}
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </div>
@@ -461,14 +462,13 @@ export default function HomePage() {
       <div className="bg-muted py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Ready to start renting?
+            {t("cta.ready_title")}
           </h2>
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of renters and owners making the most of their outdoor
-            gear. Start browsing equipment near you today.
+            {t("cta.ready_message")}
           </p>
           <Button size="lg" onClick={handleBrowseAll}>
-            Start Browsing
+            {t("cta.start_browsing")}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

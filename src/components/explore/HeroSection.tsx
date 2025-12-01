@@ -1,12 +1,15 @@
 import { Badge } from "@/components/ui/badge";
 import CountUp from "@/components/ui/count-up";
 import { TrendingUp, Shield, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   children: React.ReactNode;
 };
 
 const HeroSection = ({ children }: Props) => {
+  const { t } = useTranslation("marketing");
+
   return (
     <div className="relative bg-gradient-to-br from-primary/5 via-background to-accent/5 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
@@ -14,15 +17,15 @@ const HeroSection = ({ children }: Props) => {
           {/* Main headline */}
           <div className="space-y-3">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-              Rent outdoor gear from{" "}
+              {t("hero.main_headline")}{" "}
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                locals nearby
+                {t("hero.highlight")}
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Save 50-80% vs. buying. Access thousands of items with{" "}
+              {t("hero.subheading")}{" "}
               <span className="font-semibold text-foreground">
-                $1M insurance coverage
+                {t("hero.insurance")}
               </span>
               .
             </p>
@@ -35,21 +38,21 @@ const HeroSection = ({ children }: Props) => {
               className="px-4 py-2 text-sm font-medium flex items-center gap-2"
             >
               <Shield className="h-4 w-4 text-primary" />
-              Secure payments
+              {t("hero.badge_secure")}
             </Badge>
             <Badge
               variant="secondary"
               className="px-4 py-2 text-sm font-medium flex items-center gap-2"
             >
               <Users className="h-4 w-4 text-primary" />
-              Verified owners
+              {t("hero.badge_verified")}
             </Badge>
             <Badge
               variant="secondary"
               className="px-4 py-2 text-sm font-medium flex items-center gap-2"
             >
               <TrendingUp className="h-4 w-4 text-primary" />
-              Best prices
+              {t("hero.badge_prices")}
             </Badge>
           </div>
         </div>
@@ -64,7 +67,7 @@ const HeroSection = ({ children }: Props) => {
               <CountUp end={15000} duration={2000} suffix="+" />
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Items available
+              {t("hero.stat_items")}
             </div>
           </div>
           <div className="text-center border-x border-border">
@@ -72,7 +75,7 @@ const HeroSection = ({ children }: Props) => {
               <CountUp end={5000} duration={2000} suffix="+" />
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Happy renters
+              {t("hero.stat_renters")}
             </div>
           </div>
           <div className="text-center">
@@ -80,7 +83,7 @@ const HeroSection = ({ children }: Props) => {
               <CountUp end={50} duration={1500} suffix="+" />
             </div>
             <div className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Cities
+              {t("hero.stat_cities")}
             </div>
           </div>
         </div>

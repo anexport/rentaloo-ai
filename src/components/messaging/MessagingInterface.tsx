@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useMessaging } from "../../hooks/useMessaging";
 import { useAuth } from "../../hooks/useAuth";
 import { usePresence } from "../../hooks/usePresence";
@@ -44,6 +45,7 @@ const MessagingInterface = ({
   initialConversationId,
   onClose,
 }: MessagingInterfaceProps) => {
+  const { t } = useTranslation("messaging");
   const { user } = useAuth();
   const { isOnline } = usePresence();
   const { conversations, messages, loading, fetchMessages, sendMessage } =
@@ -119,9 +121,8 @@ const MessagingInterface = ({
           } catch (error) {
             console.error("Failed to fetch messages:", error);
             toast({
-              title: "Failed to load messages",
-              description:
-                "We couldn't load the messages for this conversation. Please try again.",
+              title: t("errors.load_failed_title"),
+              description: t("errors.load_failed_message"),
               variant: "destructive",
             });
           }
@@ -307,9 +308,9 @@ const MessagingInterface = ({
               <MessageSquare className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold leading-tight">Messages</h2>
+              <h2 className="text-lg font-semibold leading-tight">{t("conversation_list.title")}</h2>
               <p className="text-muted-foreground text-xs">
-                Stay in sync with your renters
+                {t("conversation_list.subtitle")}
               </p>
             </div>
           </div>
@@ -319,7 +320,7 @@ const MessagingInterface = ({
               size="icon"
               onClick={onClose}
               className="hidden md:inline-flex"
-              aria-label="Close messaging panel"
+              aria-label={t("aria_labels.close_panel")}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -333,14 +334,14 @@ const MessagingInterface = ({
             >
               <SelectTrigger
                 className="h-9 flex-1"
-                aria-label="Filter conversations"
+                aria-label={t("aria_labels.filter_conversations")}
               >
-                <SelectValue placeholder="Filter" />
+                <SelectValue placeholder={t("conversation_list.filter_placeholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All conversations</SelectItem>
-                <SelectItem value="unread">Unread</SelectItem>
-                <SelectItem value="bookings">Bookings</SelectItem>
+                <SelectItem value="all">{t("conversation_list.all_conversations")}</SelectItem>
+                <SelectItem value="unread">{t("conversation_list.unread")}</SelectItem>
+                <SelectItem value="bookings">{t("conversation_list.bookings")}</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -349,7 +350,7 @@ const MessagingInterface = ({
               className="shrink-0"
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              aria-label="Search conversations"
+              aria-label={t("aria_labels.search_conversations")}
               aria-expanded={isSearchOpen}
             >
               <Search className="h-4 w-4" />
@@ -368,9 +369,8 @@ const MessagingInterface = ({
               } catch (error) {
                 console.error("Failed to select conversation:", error);
                 toast({
-                  title: "Failed to load conversation",
-                  description:
-                    "We couldn't load the messages for this conversation. Please try again.",
+                  title: t("errors.conversation_failed_title"),
+                  description: t("errors.conversation_failed_message"),
                   variant: "destructive",
                 });
               }
@@ -388,13 +388,13 @@ const MessagingInterface = ({
         <div className="flex flex-1 flex-col items-center justify-center bg-background px-6">
           <div className="flex flex-col items-center text-center">
             <MessageSquare className="mb-4 h-12 w-12 text-muted-foreground/70" />
-            <h3 className="text-lg font-semibold">Select a conversation</h3>
+            <h3 className="text-lg font-semibold">{t("empty_states.select_conversation_title")}</h3>
             <p className="text-muted-foreground text-sm">
-              Choose a conversation from the list to view messages.
+              {t("empty_states.select_conversation_message")}
             </p>
             {conversations.length === 0 && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Conversations will appear here once you connect with renters.
+                {t("empty_states.no_conversations_yet")}
               </p>
             )}
           </div>
@@ -411,7 +411,7 @@ const MessagingInterface = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsMobileSidebarOpen(true)}
-                aria-label="Open conversations list"
+                aria-label={t("aria_labels.open_conversations")}
               >
                 <Menu className="h-4 w-4" />
               </Button>
@@ -435,7 +435,7 @@ const MessagingInterface = ({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h3 className="truncate text-base font-semibold">
-                  {otherParticipant?.email || "Unknown User"}
+                  {otherParticipant?.email || t("conversation_list.unknown_user")}
                 </h3>
                 {selectedConversation.booking_request && (
                   <Badge variant="outline" className="text-xs font-normal">
@@ -452,7 +452,7 @@ const MessagingInterface = ({
               )}
               {selectedConversation.booking_request && (
                 <p className="text-xs text-muted-foreground">
-                  Regarding{" "}
+                  {t("empty_states.regarding")}{" "}
                   <span className="font-medium">
                     {selectedConversation.booking_request.equipment.title}
                   </span>
@@ -466,7 +466,7 @@ const MessagingInterface = ({
               size="icon"
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              aria-label="Search messages"
+              aria-label={t("aria_labels.search_messages")}
               aria-expanded={isSearchOpen}
             >
               <Search className="h-4 w-4" />
@@ -477,7 +477,7 @@ const MessagingInterface = ({
                 size="icon"
                 className="md:hidden"
                 onClick={onClose}
-                aria-label="Close messaging"
+                aria-label={t("aria_labels.close_messaging")}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -490,9 +490,9 @@ const MessagingInterface = ({
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-card/40 py-10 text-center text-sm text-muted-foreground">
                 <MessageSquare className="mb-3 h-9 w-9 text-muted-foreground/60" />
-                <p>No messages yet</p>
+                <p>{t("empty_states.no_messages_title")}</p>
                 <p className="mt-1 text-xs">
-                  Start the conversation to plan the rental details.
+                  {t("empty_states.no_messages_message")}
                 </p>
               </div>
             ) : (
@@ -543,7 +543,7 @@ const MessagingInterface = ({
           <SheetHeader className="border-b border-border px-4 py-4">
             <SheetTitle className="flex items-center gap-2 text-base">
               <Filter className="h-4 w-4" />
-              Conversations
+              {t("conversation_list.conversations")}
             </SheetTitle>
           </SheetHeader>
           {conversationSidebar}
@@ -584,9 +584,8 @@ const MessagingInterface = ({
             } catch (error) {
               console.error("Failed to select conversation:", error);
               toast({
-                title: "Failed to load conversation",
-                description:
-                  "We couldn't load the messages for this conversation. Please try again.",
+                title: t("errors.conversation_failed_title"),
+                description: t("errors.conversation_failed_message"),
                 variant: "destructive",
               });
             }

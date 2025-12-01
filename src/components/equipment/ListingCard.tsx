@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ type Props = {
 };
 
 const ListingCard = ({ listing, onOpen, className }: Props) => {
+  const { t } = useTranslation("equipment");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -93,7 +95,7 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
           onClick={handleOpen}
           role="button"
           tabIndex={0}
-          aria-label={`View ${listing.title}`}
+          aria-label={t("listing_card.view_listing", { title: listing.title })}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
@@ -122,12 +124,12 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
                         size="icon-sm"
                         variant="ghost"
                         className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white shadow-md max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground"
-                        aria-label="Previous image"
+                        aria-label={t("listing_card.previous_image")}
                       >
                         <ChevronLeft className="h-5 w-5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Previous photo</TooltipContent>
+                    <TooltipContent>{t("listing_card.previous_photo")}</TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -136,12 +138,12 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
                         size="icon-sm"
                         variant="ghost"
                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white shadow-md max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground"
-                        aria-label="Next image"
+                        aria-label={t("listing_card.next_image")}
                       >
                         <ChevronRight className="h-5 w-5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Next photo</TooltipContent>
+                    <TooltipContent>{t("listing_card.next_photo")}</TooltipContent>
                   </Tooltip>
 
                   {/* Dot indicators */}
@@ -158,7 +160,7 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
                             ? "w-6 bg-white"
                             : "w-1.5 bg-white/60 hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-white/80"
                         }`}
-                        aria-label={`Go to image ${idx + 1}`}
+                        aria-label={t("listing_card.go_to_image", { number: idx + 1 })}
                       />
                     ))}
                   </div>
@@ -169,7 +171,7 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-muted">
               <Package className="h-12 w-12 mb-2 opacity-50" />
               <span className="text-sm">
-                {imageError ? "Image unavailable" : "No image"}
+                {imageError ? t("listing_card.image_unavailable") : t("listing_card.no_image")}
               </span>
             </div>
           )}
@@ -181,7 +183,7 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
                 onClick={handleWishlist}
                 className="absolute top-2 right-2 h-9 w-9 rounded-full bg-white hover:bg-white border border-gray-200 shadow-lg opacity-80 group-hover:opacity-100 transition-all flex items-center justify-center z-10 hover:scale-110"
                 aria-label={
-                  isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+                  isWishlisted ? t("listing_card.wishlist_remove") : t("listing_card.wishlist_add")
                 }
               >
                 <Heart
@@ -192,7 +194,7 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              {isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
+              {isWishlisted ? t("listing_card.wishlist_remove") : t("listing_card.wishlist_save")}
             </TooltipContent>
           </Tooltip>
 
@@ -214,7 +216,7 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
               <div className="text-xl font-bold text-primary">
                 ${listing.daily_rate}
               </div>
-              <div className="text-sm text-muted-foreground">per day</div>
+              <div className="text-sm text-muted-foreground">{t("listing_card.per_day")}</div>
             </div>
           </div>
           <div className="flex-1">
@@ -240,7 +242,7 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
                     <span className="text-xs">{avgRating.toFixed(1)}</span>
                   </>
                 ) : (
-                  <span className="text-xs">No reviews</span>
+                  <span className="text-xs">{t("listing_card.no_reviews")}</span>
                 )}
               </div>
             </div>
@@ -250,16 +252,16 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
               variant="outline"
               className="flex-1"
               onClick={handleOpen}
-              aria-label="View details"
+              aria-label={t("listing_card.view_details")}
             >
-              View
+              {t("listing_card.view")}
             </Button>
             <Button
               className="flex-1"
               onClick={handleOpen}
-              aria-label="See availability"
+              aria-label={t("listing_card.see_availability")}
             >
-              See availability
+              {t("listing_card.see_availability")}
             </Button>
           </div>
         </CardContent>

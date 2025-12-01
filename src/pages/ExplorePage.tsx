@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   useQueryState,
   parseAsStringEnum,
@@ -56,6 +57,8 @@ const CONDITION_VALUES: Array<Listing["condition"]> = [
 ];
 
 const ExplorePage = () => {
+  const { t } = useTranslation("equipment");
+  const { t: tNav } = useTranslation("navigation");
   const { user } = useAuth();
   const [sortBy, setSortBy] = useState<SortOption>("recommended");
 
@@ -472,10 +475,10 @@ const ExplorePage = () => {
         {/* Breadcrumbs */}
         <nav className="mb-4 flex items-center text-sm text-muted-foreground">
           <Link to="/" className="hover:text-foreground transition-colors">
-            Home
+            {tNav("pages.home")}
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
-          <span className="text-foreground">Browse Equipment</span>
+          <span className="text-foreground">{tNav("menu.browse_equipment")}</span>
           {categoryId !== "all" && (
             <>
               <ChevronRight className="h-4 w-4 mx-2" />
@@ -500,16 +503,16 @@ const ExplorePage = () => {
         <div className="flex items-center justify-between gap-4 mt-4 mb-4">
           <div className="flex-1">
             <h3 className="text-lg font-semibold">
-              {data?.length ?? 0} {(data?.length ?? 0) === 1 ? "item" : "items"}
+              {t("browse.items_count", { count: data?.length ?? 0 })}
               {debouncedFilters.location && (
                 <span className="text-muted-foreground font-normal">
                   {" "}
-                  in {debouncedFilters.location}
+                  {t("browse.in_location", { location: debouncedFilters.location })}
                 </span>
               )}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Available for rent near you
+              {t("browse.available_near_you")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -523,15 +526,15 @@ const ExplorePage = () => {
               value={sortBy}
               onValueChange={(value) => setSortBy(value as SortOption)}
             >
-              <SelectTrigger className="min-w-[180px]" aria-label="Sort by">
-                <SelectValue placeholder="Sort by" />
+              <SelectTrigger className="min-w-[180px]" aria-label={t("filters.sort_by")}>
+                <SelectValue placeholder={t("filters.sort_by")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recommended">Recommended</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="rating">Highest Rated</SelectItem>
+                <SelectItem value="recommended">{t("filters.recommended")}</SelectItem>
+                <SelectItem value="price-low">{t("filters.price_low_high")}</SelectItem>
+                <SelectItem value="price-high">{t("filters.price_high_low")}</SelectItem>
+                <SelectItem value="newest">{t("filters.newest_first")}</SelectItem>
+                <SelectItem value="rating">{t("filters.highest_rated")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -543,15 +546,15 @@ const ExplorePage = () => {
           {isError ? (
             <div className="text-center py-10">
               <div className="text-muted-foreground mb-4">
-                Failed to load equipment. Please try again.
+                {t("errors.load_failed")}
               </div>
               <Button
                 onClick={() => {
                   void refetch();
                 }}
-                aria-label="Retry"
+                aria-label={t("errors.retry")}
               >
-                Retry
+                {t("errors.retry")}
               </Button>
             </div>
           ) : isLoading ? (

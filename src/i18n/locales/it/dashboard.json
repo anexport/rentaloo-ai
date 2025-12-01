@@ -1,0 +1,116 @@
+{
+  "renter": {
+    "header": {
+      "title": "Panoramica Dashboard",
+      "description": "Bentornato! Ecco cosa sta succedendo con i tuoi noleggi."
+    },
+    "verification": {
+      "incomplete_title": "Completa la tua verifica",
+      "incomplete_message": "Il tuo account è verificato al {{progress}}%. Completa la verifica dell'identità per iniziare a noleggiare in sicurezza.",
+      "verify_button": "Verifica ora"
+    },
+    "overview": {
+      "section_title": "Panoramica",
+      "section_description": "La tua attività di noleggio a colpo d'occhio"
+    },
+    "bookings": {
+      "section_title": "Le Mie Prenotazioni",
+      "section_description": "Gestisci le tue prenotazioni di noleggio",
+      "view_all": "Visualizza Tutto",
+      "loading": "Caricamento prenotazioni...",
+      "empty_state": {
+        "title": "Nessuna prenotazione ancora",
+        "description": "Inizia sfogliando l'attrezzatura disponibile e fai il tuo primo noleggio",
+        "button": "Sfoglia Attrezzatura"
+      }
+    },
+    "reviews": {
+      "card_title": "Le Mie Recensioni",
+      "card_description": "Recensioni che hai scritto per i proprietari di attrezzatura"
+    },
+    "tabs": {
+      "overview": "Panoramica",
+      "bookings": "Prenotazioni"
+    }
+  },
+  "owner": {
+    "header": {
+      "title": "Dashboard Proprietario",
+      "description": "Gestisci i tuoi annunci di attrezzatura e monitora i tuoi guadagni"
+    },
+    "stats": {
+      "total_listings": {
+        "label": "Annunci Totali",
+        "description": "Attrezzatura attiva"
+      },
+      "pending_requests": {
+        "label": "Richieste in Attesa",
+        "description": "In attesa di pagamento"
+      },
+      "total_earnings": {
+        "label": "Guadagni Totali",
+        "description": "Di sempre"
+      },
+      "average_rating": {
+        "label": "Valutazione Media",
+        "description": "Basata sulle recensioni"
+      }
+    },
+    "tabs": {
+      "overview": "Panoramica",
+      "equipment": "Gestione Attrezzatura",
+      "bookings": "Richieste di Prenotazione",
+      "messages": "Messaggi",
+      "reviews": "Recensioni",
+      "payments": "Pagamenti e Deposito"
+    },
+    "overview": {
+      "quick_actions": {
+        "add_equipment": {
+          "title": "Aggiungi Attrezzatura",
+          "description": "Inserisci nuova attrezzatura in affitto",
+          "button": "Aggiungi Attrezzatura"
+        },
+        "manage_listings": {
+          "title": "Gestisci Annunci",
+          "description": "Visualizza e modifica i tuoi annunci di attrezzatura",
+          "button": "Gestisci Annunci"
+        },
+        "analytics": {
+          "title": "Analisi",
+          "description": "Monitora prestazioni e guadagni",
+          "button": "Prossimamente"
+        }
+      },
+      "recent_activity": {
+        "title": "Attività Recente",
+        "description": "I tuoi ultimi annunci di attrezzatura e richieste di prenotazione",
+        "empty_state": {
+          "title": "Nessuna attività recente",
+          "description": "Inizia aggiungendo la tua prima attrezzatura"
+        }
+      }
+    },
+    "bookings": {
+      "section_title": "Richieste di Prenotazione",
+      "section_description": "Gestisci le richieste di noleggio per la tua attrezzatura",
+      "loading": "Caricamento richieste di prenotazione...",
+      "empty_state": {
+        "title": "Nessuna richiesta di prenotazione ancora",
+        "description": "Le richieste di prenotazione appariranno qui quando i noleggianti richiederanno la tua attrezzatura"
+      }
+    },
+    "messages": {
+      "section_title": "Messaggi",
+      "section_description": "Comunica con i noleggianti riguardo alle prenotazioni"
+    },
+    "reviews": {
+      "section_title": "Recensioni dei Clienti",
+      "section_description": "Recensioni e valutazioni dai noleggianti che hanno utilizzato la tua attrezzatura"
+    },
+    "payments": {
+      "section_title": "Pagamenti e Deposito",
+      "section_description": "Gestisci i tuoi guadagni e i fondi in deposito"
+    }
+  }
+}

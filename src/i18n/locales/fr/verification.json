@@ -1,0 +1,63 @@
+{
+  "title": "Vérification d'identité",
+  "subtitle": "Vérifiez votre identité pour renforcer la confiance dans la communauté",
+  "steps": {
+    "email": "Vérification de l'email",
+    "phone": "Vérification du téléphone",
+    "identity": "Document d'identité",
+    "address": "Vérification de l'adresse"
+  },
+  "status": {
+    "verified": "Vérifié",
+    "pending": "En attente",
+    "unverified": "Non vérifié",
+    "failed": "Vérification échouée"
+  },
+  "email": {
+    "title": "Vérifiez votre email",
+    "description": "Confirmez votre adresse email pour continuer",
+    "send_code": "Envoyer le code de vérification",
+    "resend_code": "Renvoyer le code",
+    "enter_code": "Entrez le code envoyé à {{email}}",
+    "verified_message": "Votre email a été vérifié"
+  },
+  "phone": {
+    "title": "Vérifiez votre numéro de téléphone",
+    "description": "Ajoutez votre numéro de téléphone pour la sécurité du compte",
+    "enter_phone": "Entrez votre numéro de téléphone",
+    "send_code": "Envoyer le code",
+    "enter_code": "Entrez le code de vérification",
+    "verified_message": "Votre numéro de téléphone a été vérifié"
+  },
+  "identity": {
+    "title": "Télécharger un document d'identité",
+    "description": "Téléchargez une pièce d'identité officielle",
+    "document_types": "Accepté: Passeport, Permis de conduire, Carte d'identité nationale",
+    "upload_front": "Télécharger l'avant",
+    "upload_back": "Télécharger l'arrière (si applicable)",
+    "uploading": "Téléchargement...",
+    "submitted_message": "Votre document a été soumis pour examen",
+    "verified_message": "Votre identité a été vérifiée"
+  },
+  "address": {
+    "title": "Vérifiez votre adresse",
+    "description": "Fournissez une preuve d'adresse",
+    "document_types": "Accepté: Facture d'électricité, Relevé bancaire",
+    "upload_document": "Télécharger le document",
+    "submitted_message": "Votre preuve d'adresse a été soumise",
+    "verified_message": "Votre adresse a été vérifiée"
+  },
+  "trust_score": {
+    "title": "Score de confiance",
+    "description": "Complétez les vérifications pour augmenter votre score de confiance",
+    "score": "{{score}}/100",
+    "benefits": "Un score de confiance plus élevé conduit à plus de réservations"
+  },
+  "badges": {
+    "email_verified": "Email vérifié",
+    "phone_verified": "Téléphone vérifié",
+    "identity_verified": "Identité vérifiée",
+    "address_verified": "Adresse vérifiée",
+    "trusted_member": "Membre de confiance"
+  }
+}

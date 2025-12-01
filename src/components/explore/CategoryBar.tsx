@@ -1,4 +1,5 @@
 import { useEffect, useState, memo } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ type Props = {
 };
 
 const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
+  const { t } = useTranslation("equipment");
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [countsLoading, setCountsLoading] = useState(true);
 
@@ -41,8 +43,8 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
           if (signal.aborted) return;
           console.error("Error fetching categories:", error);
           toast({
-            title: "Error loading categories",
-            description: "Failed to load categories. Please try again later.",
+            title: t("category_bar.error_title"),
+            description: t("category_bar.error_desc"),
             variant: "destructive",
           });
           setCategories([]);
@@ -135,7 +137,7 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
     <button
       type="button"
       onClick={onClick}
-      aria-label={`Filter by ${name}${typeof count === "number" ? `, ${count} items` : ""}`}
+      aria-label={`Filter by ${name}${typeof count === "number" ? `, ${t("category_bar.items_aria", { count })}` : ""}`}
       aria-pressed={isActive}
       className={cn(
         "group relative inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full transition-all duration-200 whitespace-nowrap text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -182,7 +184,7 @@ const CategoryBar = ({ activeCategoryId, onCategoryChange }: Props) => {
         {/* All Categories */}
         <CategoryPill
           id="all"
-          name="All"
+          name={t("category_bar.all")}
           icon={Package}
           isActive={activeCategoryId === "all"}
           onClick={() => onCategoryChange("all")}

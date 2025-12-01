@@ -2,6 +2,7 @@ import type { ConversationWithDetails } from "../../types/messaging";
 import { useAuth } from "../../hooks/useAuth";
 import { usePresence } from "../../hooks/usePresence";
 import { useProfileLookup } from "../../hooks/useProfileLookup";
+import { useTranslation } from "react-i18next";
 import { Skeleton } from "../ui/skeleton";
 import {
   Empty,
@@ -93,6 +94,7 @@ const ConversationList = ({
 }: ConversationListProps) => {
   const { user } = useAuth();
   const { isOnline } = usePresence();
+  const { t } = useTranslation("messaging");
   const prevConversationIdsRef = useRef<Set<string>>(new Set());
 
   // Collect all participant IDs from conversations (memoized to prevent unnecessary re-runs)
@@ -128,10 +130,9 @@ const ConversationList = ({
           <MessageSquare className="h-6 w-6" />
         </EmptyMedia>
         <EmptyHeader>
-          <EmptyTitle>No conversations yet</EmptyTitle>
+          <EmptyTitle>{t("conversation_list.empty_title")}</EmptyTitle>
           <EmptyDescription>
-            You&apos;ll see booking messages and renter chats here once they
-            start.
+            {t("conversation_list.empty_description")}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -150,7 +151,7 @@ const ConversationList = ({
             : undefined;
 
           const otherParticipantName =
-            otherParticipant?.email || "Unknown user";
+            otherParticipant?.email || t("conversation_list.unknown_user");
           const otherParticipantInitials = getFirstCharacter(
             otherParticipant?.email
           );

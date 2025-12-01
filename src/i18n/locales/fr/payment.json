@@ -1,0 +1,48 @@
+{
+  "checkout": {
+    "title": "Paiement",
+    "payment_details": "Détails du paiement",
+    "card_number": "Numéro de carte",
+    "expiry_date": "Date d'expiration",
+    "cvc": "CVC",
+    "billing_address": "Adresse de facturation",
+    "pay_now": "Payer maintenant",
+    "processing": "Traitement du paiement...",
+    "secure_payment": "Paiement sécurisé fourni par Stripe"
+  },
+  "confirmation": {
+    "title": "Paiement réussi",
+    "message": "Votre paiement a été traité avec succès",
+    "booking_confirmed": "Votre réservation est confirmée",
+    "receipt_sent": "Un reçu a été envoyé à votre email",
+    "view_booking": "Voir la réservation",
+    "back_to_dashboard": "Retour au tableau de bord"
+  },
+  "escrow": {
+    "funds_held": "Fonds en séquestre",
+    "release_on_completion": "Les fonds seront versés au propriétaire à la fin de la location",
+    "protection_message": "Votre paiement est protégé jusqu'à la fin de la location"
+  },
+  "refund": {
+    "refund_initiated": "Remboursement initié",
+    "refund_processing": "Votre remboursement est en cours de traitement",
+    "refund_completed": "Remboursement complété",
+    "refund_amount": "Montant du remboursement",
+    "refund_reason": "Raison du remboursement"
+  },
+  "history": {
+    "payment_history": "Historique des paiements",
+    "transaction_id": "ID de transaction",
+    "date": "Date",
+    "amount": "Montant",
+    "status": "Statut",
+    "download_receipt": "Télécharger le reçu",
+    "no_payments": "Aucun historique de paiement pour le moment"
+  },
+  "errors": {
+    "payment_failed": "Le paiement a échoué. Veuillez réessayer.",
+    "invalid_card": "Détails de carte invalides",
+    "insufficient_funds": "Fonds insuffisants",
+    "card_declined": "Carte refusée"
+  }
+}

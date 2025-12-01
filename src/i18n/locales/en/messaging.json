@@ -1,0 +1,84 @@
+{
+  "conversation_list": {
+    "title": "Messages",
+    "subtitle": "Stay in sync with your renters",
+    "no_conversations": "No messages yet",
+    "start_conversation": "Start a conversation by booking equipment",
+    "unread_count": "{{count}} unread",
+    "search_placeholder": "Search conversations...",
+    "filter_placeholder": "Filter",
+    "unknown_user": "Unknown User",
+    "all_conversations": "All conversations",
+    "unread": "Unread",
+    "bookings": "Bookings",
+    "conversations": "Conversations",
+    "empty_title": "No conversations yet",
+    "empty_description": "You'll see booking messages and renter chats here once they start."
+  },
+  "empty_states": {
+    "select_conversation_title": "Select a conversation",
+    "select_conversation_message": "Choose a conversation from the list to view messages.",
+    "no_conversations_yet": "Conversations will appear here once you connect with renters.",
+    "no_messages_title": "No messages yet",
+    "no_messages_message": "Start the conversation to plan the rental details.",
+    "regarding": "Regarding"
+  },
+  "chat": {
+    "type_message": "Type a message...",
+    "send": "Send",
+    "sending": "Sending...",
+    "online": "Online",
+    "offline": "Offline",
+    "typing": "{{name}} is typing...",
+    "last_seen": "Last seen {{time}}",
+    "just_now": "Just now",
+    "minutes_ago": "{{count}} minute ago",
+    "minutes_ago_plural": "{{count}} minutes ago",
+    "hours_ago": "{{count}} hour ago",
+    "hours_ago_plural": "{{count}} hours ago",
+    "days_ago": "{{count}} day ago",
+    "days_ago_plural": "{{count}} days ago"
+  },
+  "system_messages": {
+    "booking_created": "Booking request created",
+    "booking_approved": "Booking approved",
+    "booking_declined": "Booking declined",
+    "booking_cancelled": "Booking cancelled",
+    "payment_completed": "Payment completed"
+  },
+  "actions": {
+    "view_booking": "View Booking",
+    "view_equipment": "View Equipment",
+    "delete_conversation": "Delete Conversation",
+    "mark_as_read": "Mark as Read",
+    "mark_as_unread": "Mark as Unread",
+    "retry": "Retry"
+  },
+  "aria_labels": {
+    "close_panel": "Close messaging panel",
+    "filter_conversations": "Filter conversations",
+    "search_conversations": "Search conversations",
+    "open_conversations": "Open conversations list",
+    "search_messages": "Search messages",
+    "close_messaging": "Close messaging"
+  },
+  "errors": {
+    "load_failed_title": "Failed to load messages",
+    "load_failed_message": "We couldn't load the messages for this conversation. Please try again.",
+    "conversation_failed_title": "Failed to load conversation",
+    "conversation_failed_message": "We couldn't load the messages for this conversation. Please try again."
+  },
+  "input": {
+    "placeholder": "Type a message...",
+    "send": "Send message",
+    "attach_file": "Attach file",
+    "insert_emoji": "Insert emoji",
+    "quick_replies": "Quick replies",
+    "send_error": "We couldn't send your message. Try again in a moment.",
+    "templates": {
+      "availability": "Thanks for reaching out! I can confirm availability for those dates.",
+      "help": "I'm happy to help. Could you share a bit more about how you plan to use the gear?",
+      "pickup": "Let's coordinate pickup logistics. Do you prefer morning or afternoon?"
+    }
+  }
+}

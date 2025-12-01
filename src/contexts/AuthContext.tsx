@@ -2,6 +2,7 @@ import React, { createContext, useEffect, useState } from "react";
 import type { User, Session, AuthError, PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
+import i18n from "@/i18n/config";
 
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 type UserMetadata = { role: "renter" | "owner" } & Record<string, unknown>;
@@ -61,7 +62,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
+
+        // Sync language preference from user metadata
+        if (session?.user?.user_metadata?.language_preference) {
+          const userLang = session.user.user_metadata.language_preference as string;
+          if (i18n.language !== userLang) {
+            void i18n.changeLanguage(userLang);
+            localStorage.setItem("userLanguagePreference", userLang);
+          }
+        }
+
         try {
           supabase.realtime.setAuth(session?.access_token ?? null);
         } catch (realtimeError) {
@@ -84,6 +94,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Sync language preference from user metadata
+      if (session?.user?.user_metadata?.language_preference) {
+        const userLang = session.user.user_metadata.language_preference as string;
+        if (i18n.language !== userLang) {
+          void i18n.changeLanguage(userLang);
+          localStorage.setItem("userLanguagePreference", userLang);
+        }
+      }
+
       try {
         supabase.realtime.setAuth(session?.access_token ?? null);
       } catch (error) {
