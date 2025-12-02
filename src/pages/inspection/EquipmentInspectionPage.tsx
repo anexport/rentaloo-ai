@@ -19,7 +19,7 @@ interface BookingDetails {
     title: string;
     owner_id: string;
     category: {
-      slug: string;
+      sport_type: string;
     } | null;
   };
 }
@@ -62,7 +62,7 @@ export default function EquipmentInspectionPage() {
               id,
               title,
               owner_id,
-              category:categories(slug)
+              category:categories(sport_type)
             )
           `
           )
@@ -167,7 +167,7 @@ export default function EquipmentInspectionPage() {
           <CardContent>
             <InspectionForm
               bookingId={booking.id}
-              categorySlug={booking.equipment?.category?.slug}
+              categorySlug={booking.equipment?.category?.sport_type}
               inspectionType={inspectionType}
               isOwner={isOwner}
               onSuccess={handleSuccess}
