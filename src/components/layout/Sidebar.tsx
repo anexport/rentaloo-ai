@@ -451,30 +451,31 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               )}
             </Link>
           ) : (
-            <Link
-              to={
-                user
-                  ? user?.user_metadata?.role === "owner"
-                    ? "/owner/dashboard?tab=equipment"
-                    : "/owner/become-owner"
-                  : "/register/owner"
-              }
-              className={cn(
-                "flex items-center gap-3 rounded-lg border border-dashed border-muted px-3 py-2.5 text-sm font-medium transition hover:border-primary hover:bg-primary/5",
-                collapsed ? "justify-center" : ""
-              )}
-              title={collapsed ? t("sidebar.list_equipment") : undefined}
-            >
-              <Sparkles className="h-4 w-4 shrink-0 text-primary" />
-              {!collapsed && (
-                <div className="flex flex-col">
-                  <span>{t("sidebar.list_equipment")}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {t("sidebar.list_equipment_subtitle")}
-                  </span>
-                </div>
-              )}
-            </Link>
+            // Only show "List your equipment" link if user is not already an owner
+            user?.user_metadata?.role !== "owner" && (
+              <Link
+                to={
+                  user
+                    ? "/owner/become-owner"
+                    : "/register/owner"
+                }
+                className={cn(
+                  "flex items-center gap-3 rounded-lg border border-dashed border-muted px-3 py-2.5 text-sm font-medium transition hover:border-primary hover:bg-primary/5",
+                  collapsed ? "justify-center" : ""
+                )}
+                title={collapsed ? t("sidebar.list_equipment") : undefined}
+              >
+                <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                {!collapsed && (
+                  <div className="flex flex-col">
+                    <span>{t("sidebar.list_equipment")}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {t("sidebar.list_equipment_subtitle")}
+                    </span>
+                  </div>
+                )}
+              </Link>
+            )
           )}
         </div>
         )}
