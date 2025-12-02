@@ -19,6 +19,7 @@ import {
   Plus,
   Sparkles,
   PiggyBank,
+  ListChecks,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,11 +29,13 @@ import VerificationBadge from "@/components/verification/VerificationBadge";
 import { useVerification } from "@/hooks/useVerification";
 import { getVerificationProgress } from "@/lib/verification";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleMode } from "@/contexts/RoleModeContext";
 import { useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/payment";
 import { formatDateLabel, formatDateRange } from "@/lib/format";
 import { useQuery } from "@tanstack/react-query";
+import RoleSwitcher from "@/components/RoleSwitcher";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -52,6 +55,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const { profile } = useVerification();
   const verificationProgress = profile ? getVerificationProgress(profile) : 0;
   const { user } = useAuth();
+  const { activeMode } = useRoleMode();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const userId = user?.id;
@@ -290,8 +294,8 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const pendingPayouts = payoutInfo?.pendingPayouts ?? 0;
   const lastPayoutAt = payoutInfo?.lastPayoutAt ?? null;
 
-  // Navigation items grouped by section
-  const mainNavItems: NavItem[] = [
+  // Navigation items based on active mode
+  const renterMainNavItems: NavItem[] = [
     { label: t("sidebar.dashboard"), icon: Home, href: "/renter/dashboard" },
     { label: t("sidebar.browse_equipment"), icon: Search, href: "/equipment" },
     {
@@ -301,7 +305,17 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     },
   ];
 
-  const activityNavItems: NavItem[] = [
+  const ownerMainNavItems: NavItem[] = [
+    { label: t("sidebar.dashboard"), icon: Home, href: "/owner/dashboard" },
+    {
+      label: t("sidebar.my_equipment_listings"),
+      icon: Package,
+      href: "/owner/dashboard?tab=equipment",
+      ...(pendingOwnerRequests > 0 && { badge: pendingOwnerRequests }),
+    },
+  ];
+
+  const renterActivityNavItems: NavItem[] = [
     {
       label: t("sidebar.my_bookings"),
       icon: Calendar,
@@ -326,18 +340,40 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     },
   ];
 
-  const accountNavItems: NavItem[] = [
-    { label: t("sidebar.settings"), icon: User, href: "/settings" },
-  ];
-
-  const ownerNavItems: NavItem[] = [
+  const ownerActivityNavItems: NavItem[] = [
+    {
+      label: t("sidebar.my_bookings"),
+      icon: ListChecks,
+      href: "/owner/dashboard?tab=bookings",
+      ...(pendingOwnerRequests > 0 && { badge: pendingOwnerRequests }),
+    },
+    {
+      label: t("sidebar.messages"),
+      icon: MessageSquare,
+      href: "/messages",
+      ...(unreadMessages > 0 && { badge: unreadMessages }),
+    },
     {
       label: t("sidebar.payouts"),
       icon: PiggyBank,
       href: "/owner/dashboard?tab=payments",
       ...(pendingPayouts > 0 && { badge: pendingPayouts }),
     },
+    {
+      label: t("sidebar.support"),
+      icon: LifeBuoy,
+      href: "/support",
+      ...(openSupportTickets > 0 && { badge: openSupportTickets }),
+    },
   ];
+
+  const accountNavItems: NavItem[] = [
+    { label: t("sidebar.settings"), icon: User, href: "/settings" },
+  ];
+
+  // Select navigation items based on active mode
+  const mainNavItems = activeMode === "owner" ? ownerMainNavItems : renterMainNavItems;
+  const activityNavItems = activeMode === "owner" ? ownerActivityNavItems : renterActivityNavItems;
 
   return (
     <aside
@@ -391,7 +427,11 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
         <Separator className="mb-4" />
 
-        {/* Owner quick action */}
+        {/* Role Switcher */}
+        <RoleSwitcher collapsed={collapsed} variant="sidebar" />
+
+        {/* Owner quick action - only show in owner mode or if user has equipment */}
+        {(activeMode === "owner" || hasEquipment) && (
         <div className="px-2 pb-2">
           {hasEquipment ? (
             <Link
@@ -437,6 +477,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
             </Link>
           )}
         </div>
+        )}
 
         {/* Navigation */}
         <nav className="flex-1 px-2">
@@ -520,49 +561,6 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
             })}
           </div>
 
-          {/* Owner Section */}
-          {hasEquipment && (
-            <>
-              {!collapsed && (
-                <div className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-                  {t("sidebar.owner")}
-                </div>
-              )}
-              <div className="space-y-1 mb-6">
-                {ownerNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.href);
-
-                  return (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      className={cn(
-                        "group flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                        active
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-sm"
-                      )}
-                      title={collapsed ? item.label : undefined}
-                    >
-                      <Icon
-                        className={cn(
-                          "h-5 w-5 shrink-0 transition-transform duration-200",
-                          !active && "group-hover:scale-110"
-                        )}
-                      />
-                      {!collapsed && <span>{item.label}</span>}
-                      {!collapsed && item.badge && item.badge > 0 && (
-                        <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white animate-pulse">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </>
-          )}
 
           {/* Account Section */}
           {!collapsed && (
@@ -629,7 +627,8 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           </div>
         )}
 
-        {nextBooking && (
+        {/* Next booking - only show in renter mode */}
+        {activeMode === "renter" && nextBooking && (
           <div className="px-2 pb-4">
             <div className="rounded-lg border bg-muted/60 p-3 shadow-sm">
               <div className="flex items-center gap-2">
@@ -676,8 +675,8 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
         <Separator className="my-4" />
 
-        {/* Owner payout glance */}
-        {hasEquipment && (
+        {/* Owner payout glance - only show in owner mode */}
+        {activeMode === "owner" && hasEquipment && (
           <div className="px-2 pb-2">
             <div className="rounded-lg border bg-card/60 p-3 shadow-sm">
               <div className="flex items-center gap-2">
@@ -720,39 +719,6 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           </div>
         )}
 
-        {/* My Equipment Listings - Above Trust Score */}
-        {hasEquipment && (
-          <div className="px-2 py-4 flex items-center justify-center">
-            <Link
-              to="/owner/dashboard"
-              className={cn(
-                "group flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                isActive("/owner/dashboard")
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-sm"
-              )}
-              title={collapsed ? t("sidebar.my_equipment_listings") : undefined}
-            >
-              <Package
-                className={cn(
-                  "h-5 w-5 shrink-0 transition-transform duration-200",
-                  !isActive("/owner/dashboard") && "group-hover:scale-110"
-                )}
-              />
-              {!collapsed && <span>{t("sidebar.my_equipment_listings")}</span>}
-              {!collapsed && (
-                <div className="ml-auto flex items-center gap-2">
-                  {pendingOwnerRequests > 0 && (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white animate-pulse">
-                      {pendingOwnerRequests}
-                    </span>
-                  )}
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              )}
-            </Link>
-          </div>
-        )}
 
         <Separator className="my-4" />
 

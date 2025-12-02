@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleMode } from "@/contexts/RoleModeContext";
 import { useToast } from "@/hooks/useToast";
 import {
   LayoutDashboard,
@@ -25,18 +26,10 @@ import LanguageSelector from "@/components/LanguageSelector";
 const UserMenu = () => {
   const { t } = useTranslation("navigation");
   const { user, signOut } = useAuth();
+  const { activeMode } = useRoleMode();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
-  const [userRole, setUserRole] = useState<"owner" | "renter" | null>(null);
-
-  useEffect(() => {
-    if (user?.user_metadata?.role) {
-      setUserRole(user.user_metadata.role as "owner" | "renter");
-    } else {
-      setUserRole(null);
-    }
-  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -89,13 +82,14 @@ const UserMenu = () => {
   };
 
   const getDashboardPath = () => {
-    return userRole === "owner" ? "/owner/dashboard" : "/renter/dashboard";
+    return activeMode === "owner" ? "/owner/dashboard" : "/renter/dashboard";
   };
 
   if (!user) return null;
 
   const initials = getInitials(user.email);
   const displayName = user.user_metadata?.fullName || user.email;
+  const userRole = user.user_metadata?.role as "owner" | "renter" | null;
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>

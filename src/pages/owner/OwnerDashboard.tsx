@@ -1,6 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
 import {
-  Mountain,
   Plus,
   BarChart3,
   Calendar,
@@ -17,8 +16,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
+import { useRoleMode } from "@/contexts/RoleModeContext";
 import EquipmentManagement from "@/components/EquipmentManagement";
 import BookingRequestCard from "@/components/booking/BookingRequestCard";
 import { useBookingRequests } from "@/hooks/useBookingRequests";
@@ -26,12 +27,13 @@ import MessagingInterface from "@/components/messaging/MessagingInterface";
 import ReviewList from "@/components/reviews/ReviewList";
 import EscrowDashboard from "@/components/payment/EscrowDashboard";
 import TransactionHistory from "@/components/payment/TransactionHistory";
-import UserMenu from "@/components/UserMenu";
-import { Link } from "react-router-dom";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const OwnerDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { t } = useTranslation("dashboard");
+  const { isAlsoOwner, isLoading: isCheckingOwner } = useRoleMode();
   const [stats, setStats] = useState({
     totalListings: 0,
     pendingRequests: 0,
@@ -46,6 +48,13 @@ const OwnerDashboard = () => {
     loading: bookingsLoading,
     fetchBookingRequests,
   } = useBookingRequests("owner");
+
+  // Redirect non-owners to become-owner page
+  useEffect(() => {
+    if (!isCheckingOwner && !isAlsoOwner) {
+      navigate("/owner/become-owner", { replace: true });
+    }
+  }, [isAlsoOwner, isCheckingOwner, navigate]);
 
   // Memoize the status change callback to prevent effect re-runs
   const handleBookingStatusChange = useCallback(() => {
@@ -102,29 +111,22 @@ const OwnerDashboard = () => {
     }));
   }, [bookingRequests]);
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card shadow-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link
-              to="/"
-              className="flex items-center space-x-2 hover:opacity-90"
-            >
-              <Mountain className="h-8 w-8 text-primary" />
-              <h1 className="text-xl font-bold text-foreground">RentAloo</h1>
-            </Link>
-            <div className="flex items-center space-x-4">
-              <UserMenu />
-            </div>
-          </div>
+  // Show loading state while checking owner status
+  if (isCheckingOwner || !isAlsoOwner) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
         </div>
-      </header>
+      </DashboardLayout>
+    );
+  }
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+  return (
+    <DashboardLayout>
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/* Header */}
+        <div>
           <h2 className="text-3xl font-bold text-foreground mb-2">
             {t("owner.header.title")}
           </h2>
@@ -134,7 +136,7 @@ const OwnerDashboard = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -189,11 +191,11 @@ const OwnerDashboard = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-border mb-8">
-          <nav className="-mb-px flex space-x-8">
+        <div className="border-b border-border">
+          <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === "overview"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
@@ -203,7 +205,7 @@ const OwnerDashboard = () => {
             </button>
             <button
               onClick={() => setActiveTab("equipment")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === "equipment"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
@@ -213,7 +215,7 @@ const OwnerDashboard = () => {
             </button>
             <button
               onClick={() => setActiveTab("bookings")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === "bookings"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
@@ -228,7 +230,7 @@ const OwnerDashboard = () => {
             </button>
             <button
               onClick={() => setActiveTab("messages")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === "messages"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
@@ -239,7 +241,7 @@ const OwnerDashboard = () => {
             </button>
             <button
               onClick={() => setActiveTab("reviews")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === "reviews"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
@@ -250,7 +252,7 @@ const OwnerDashboard = () => {
             </button>
             <button
               onClick={() => setActiveTab("payments")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === "payments"
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
@@ -264,7 +266,7 @@ const OwnerDashboard = () => {
 
         {/* Tab Content */}
         {activeTab === "overview" && (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-in fade-in duration-300">
             {/* Quick Actions */}
             <div className="grid md:grid-cols-3 gap-6">
               <Card>
@@ -345,10 +347,14 @@ const OwnerDashboard = () => {
           </div>
         )}
 
-        {activeTab === "equipment" && <EquipmentManagement />}
+        {activeTab === "equipment" && (
+          <div className="animate-in fade-in duration-300">
+            <EquipmentManagement />
+          </div>
+        )}
 
         {activeTab === "bookings" && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">
@@ -393,7 +399,7 @@ const OwnerDashboard = () => {
         )}
 
         {activeTab === "messages" && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">{t("owner.messages.section_title")}</h2>
@@ -407,7 +413,7 @@ const OwnerDashboard = () => {
         )}
 
         {activeTab === "reviews" && user && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">
@@ -427,7 +433,7 @@ const OwnerDashboard = () => {
         )}
 
         {activeTab === "payments" && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">
@@ -448,8 +454,8 @@ const OwnerDashboard = () => {
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
