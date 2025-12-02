@@ -236,6 +236,45 @@ export type Database = {
           },
         ]
       }
+      content_translations: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string | null
+          field_name: string
+          id: string
+          original_text: string
+          source_lang: string
+          target_lang: string
+          translated_text: string
+          updated_at: string | null
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string | null
+          field_name: string
+          id?: string
+          original_text: string
+          source_lang?: string
+          target_lang: string
+          translated_text: string
+          updated_at?: string | null
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string | null
+          field_name?: string
+          id?: string
+          original_text?: string
+          source_lang?: string
+          target_lang?: string
+          translated_text?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       conversation_participants: {
         Row: {
           conversation_id: string
@@ -907,6 +946,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_favorites: {
+        Row: {
+          created_at: string | null
+          equipment_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          equipment_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          equipment_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_verifications: {
         Row: {
           created_at: string | null
@@ -1186,6 +1261,10 @@ export type Database = {
           p_start_date: string
         }
         Returns: boolean
+      }
+      cleanup_stale_pending_bookings: {
+        Args: { timeout_minutes?: number }
+        Returns: number
       }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
@@ -1988,7 +2067,7 @@ export type Database = {
         | "disputed"
         | "resolved"
         | "escalated"
-      deposit_status: "held" | "released" | "claimed" | "refunded"
+      deposit_status: "held" | "releasing" | "released" | "claimed" | "refunded"
       equipment_condition: "new" | "excellent" | "good" | "fair"
       inspection_type: "pickup" | "return"
       user_role: "renter" | "owner"
@@ -2142,7 +2221,7 @@ export const Constants = {
         "resolved",
         "escalated",
       ],
-      deposit_status: ["held", "released", "claimed", "refunded"],
+      deposit_status: ["held", "releasing", "released", "claimed", "refunded"],
       equipment_condition: ["new", "excellent", "good", "fair"],
       inspection_type: ["pickup", "return"],
       user_role: ["renter", "owner"],

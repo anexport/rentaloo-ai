@@ -9,10 +9,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MapPin, ChevronLeft, ChevronRight, Heart, Package } from "lucide-react";
+import { MapPin, ChevronLeft, ChevronRight, Heart, Package, Loader2 } from "lucide-react";
 import StarRating from "@/components/reviews/StarRating";
 import type { Listing } from "@/components/equipment/services/listings";
 import { cn } from "@/lib/utils";
+import { useFavorites } from "@/hooks/useFavorites";
+import { toast } from "sonner";
 
 type Props = {
   listing: Listing;
@@ -23,8 +25,11 @@ type Props = {
 const ListingCard = ({ listing, onOpen, className }: Props) => {
   const { t } = useTranslation("equipment");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const { isFavorited, toggleFavorite } = useFavorites();
+  
+  const isWishlisted = isFavorited(listing.id);
   const avgRating = (() => {
     if (!listing.reviews || listing.reviews.length === 0) return 0;
     const validRatings = listing.reviews.filter(
@@ -60,9 +65,22 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
     if (onOpen) onOpen(listing);
   };
 
-  const handleWishlist = (e: React.MouseEvent) => {
+  const handleWishlist = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    try {
+      setIsTogglingFavorite(true);
+      await toggleFavorite(listing.id);
+      toast.success(
+        isWishlisted
+          ? t("listing_card.removed_from_favorites", { defaultValue: "Removed from favorites" })
+          : t("listing_card.added_to_favorites", { defaultValue: "Added to favorites" })
+      );
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+      toast.error(t("listing_card.favorite_error", { defaultValue: "Failed to update favorites" }));
+    } finally {
+      setIsTogglingFavorite(false);
+    }
   };
 
   const handlePrevImage = (e: React.MouseEvent) => {
@@ -181,20 +199,29 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
             <TooltipTrigger asChild>
               <button
                 onClick={handleWishlist}
-                className="absolute top-2 right-2 h-9 w-9 rounded-full bg-white hover:bg-white border border-gray-200 shadow-lg opacity-80 group-hover:opacity-100 transition-all flex items-center justify-center z-10 hover:scale-110"
+                disabled={isTogglingFavorite}
+                className="absolute top-2 right-2 h-9 w-9 rounded-full bg-white hover:bg-white border border-gray-200 shadow-lg opacity-80 group-hover:opacity-100 transition-all flex items-center justify-center z-10 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label={
                   isWishlisted ? t("listing_card.wishlist_remove") : t("listing_card.wishlist_add")
                 }
               >
-                <Heart
-                  className={`h-4 w-4 transition-colors ${
-                    isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700"
-                  }`}
-                />
+                {isTogglingFavorite ? (
+                  <Loader2 className="h-4 w-4 text-gray-700 animate-spin" />
+                ) : (
+                  <Heart
+                    className={`h-4 w-4 transition-colors ${
+                      isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700"
+                    }`}
+                  />
+                )}
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              {isWishlisted ? t("listing_card.wishlist_remove") : t("listing_card.wishlist_save")}
+              {isTogglingFavorite
+                ? t("listing_card.loading", { defaultValue: "Loading..." })
+                : isWishlisted
+                ? t("listing_card.wishlist_remove")
+                : t("listing_card.wishlist_save")}
             </TooltipContent>
           </Tooltip>
 

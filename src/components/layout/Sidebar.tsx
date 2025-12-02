@@ -608,12 +608,12 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         {isNextBookingLoading && !nextBooking && (
           <div className="px-2 pb-4">
             <div className="rounded-lg border bg-muted/60 p-3 shadow-sm">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-4 w-4 rounded-full" />
+              <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
                   {!collapsed && <Skeleton className="h-4 w-24" />}
                 </div>
-                <Skeleton className="h-5 w-24" />
+                {!collapsed && <Skeleton className="h-5 w-24 shrink-0" />}
               </div>
               {!collapsed && (
                 <>
@@ -632,14 +632,23 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         {nextBooking && (
           <div className="px-2 pb-4">
             <div className="rounded-lg border bg-muted/60 p-3 shadow-sm">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                  <CalendarClock className="h-4 w-4 text-primary" />
-                  {!collapsed && <span>{t("sidebar.upcoming_booking")}</span>}
+              <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2 text-xs font-semibold text-foreground">
+                  <CalendarClock className="h-4 w-4 shrink-0 text-primary" />
+                  {!collapsed && (
+                    <span className="truncate">
+                      {t("sidebar.upcoming_booking")}
+                    </span>
+                  )}
                 </div>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                  {formatDateRange(nextBooking.startDate, nextBooking.endDate)}
-                </span>
+                {!collapsed && (
+                  <span className="shrink-0 whitespace-nowrap rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                    {formatDateRange(
+                      nextBooking.startDate,
+                      nextBooking.endDate
+                    )}
+                  </span>
+                )}
               </div>
               {!collapsed && (
                 <>
@@ -671,15 +680,17 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         {hasEquipment && (
           <div className="px-2 pb-2">
             <div className="rounded-lg border bg-card/60 p-3 shadow-sm">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                  <PiggyBank className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2 text-xs font-semibold text-foreground">
+                  <PiggyBank className="h-4 w-4 shrink-0 text-primary" />
                   {!collapsed && (
-                    <span>{t("sidebar.payout_glance_title")}</span>
+                    <span className="truncate">
+                      {t("sidebar.payout_glance_title")}
+                    </span>
                   )}
                 </div>
-                {pendingPayouts > 0 && (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                {!collapsed && pendingPayouts > 0 && (
+                  <span className="shrink-0 whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
                     {t("sidebar.payout_glance_pending", {
                       count: pendingPayouts,
                     })}

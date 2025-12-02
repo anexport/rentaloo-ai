@@ -65,6 +65,7 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
             equipment:equipment(
               *,
               category:categories(*),
+              photos:equipment_photos(*),
               owner:profiles!equipment_owner_id_fkey(*)
             ),
             renter:profiles!booking_requests_renter_id_fkey(*)
@@ -94,6 +95,7 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
             equipment:equipment(
               *,
               category:categories(*),
+              photos:equipment_photos(*),
               owner:profiles!equipment_owner_id_fkey(*)
             ),
             renter:profiles!booking_requests_renter_id_fkey(*)
@@ -123,6 +125,7 @@ export const useBookingRequests = (userRole?: "renter" | "owner") => {
             equipment:equipment(
               *,
               category:categories(*),
+              photos:equipment_photos(*),
               owner:profiles!equipment_owner_id_fkey(*)
             ),
             renter:profiles!booking_requests_renter_id_fkey(*)
