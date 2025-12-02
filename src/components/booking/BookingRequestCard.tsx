@@ -3,9 +3,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { useMessaging } from "@/hooks/useMessaging";
 import { usePayment } from "@/hooks/usePayment";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { BookingRequestWithDetails } from "../../types/booking";
 import {
-  formatBookingDate,
   formatBookingDuration,
   getBookingStatusColor,
   getBookingStatusText,
@@ -23,24 +23,26 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Calendar,
   User,
-  DollarSign,
   MessageSquare,
   CheckCircle,
   XCircle,
   Clock,
-  CreditCard,
   Shield,
-  ClipboardCheck,
   AlertTriangle,
   ChevronDown,
   ChevronUp,
-  Package,
   MapPin,
+  Eye,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MessagingInterface from "../messaging/MessagingInterface";
 import PaymentForm from "../payment/PaymentForm";
 import RenterScreening from "../verification/RenterScreening";
+import { 
+  InspectionFlowBanner, 
+  BookingLifecycleStepper,
+  MobileInspectionCard,
+} from "./inspection-flow";
 import { cn } from "@/lib/utils";
 import { format, differenceInDays, isPast, isFuture } from "date-fns";
 
@@ -59,6 +61,8 @@ const BookingRequestCard = ({
   const { getOrCreateConversation } = useMessaging();
   const { processRefund } = usePayment();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
   const [isUpdating, setIsUpdating] = useState(false);
   const [showMessaging, setShowMessaging] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -69,6 +73,7 @@ const BookingRequestCard = ({
   const [pickupInspectionId, setPickupInspectionId] = useState<string | null>(null);
   const [returnInspectionId, setReturnInspectionId] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showLifecycleStepper, setShowLifecycleStepper] = useState(false);
 
   // Check if inspections exist for this booking
   useEffect(() => {
@@ -120,7 +125,6 @@ const BookingRequestCard = ({
           filter: `booking_id=eq.${bookingRequest.id}`,
         },
         (payload) => {
-          // Update inspection status when new inspection is added
           const newInspection = payload.new as { id: string; inspection_type: string };
           if (newInspection.inspection_type === "pickup") {
             setPickupInspectionId(newInspection.id);
@@ -145,7 +149,7 @@ const BookingRequestCard = ({
           .select("id")
           .eq("booking_request_id", bookingRequest.id)
           .eq("payment_status", "succeeded")
-          .maybeSingle(); // Use maybeSingle() instead of single() to handle 0 results
+          .maybeSingle();
 
         if (error) {
           console.error("Error checking payment status:", error);
@@ -174,18 +178,15 @@ const BookingRequestCard = ({
           filter: `booking_request_id=eq.${bookingRequest.id}`,
         },
         (payload) => {
-          // Update payment status if payment succeeded
           if (
             payload.new &&
-            (payload.new as { payment_status: string }).payment_status ===
-              "succeeded"
+            (payload.new as { payment_status: string }).payment_status === "succeeded"
           ) {
             setHasPayment(true);
             onStatusChange?.();
           } else if (
             payload.new &&
-            (payload.new as { payment_status: string }).payment_status ===
-              "failed"
+            (payload.new as { payment_status: string }).payment_status === "failed"
           ) {
             setHasPayment(false);
           }
@@ -205,7 +206,6 @@ const BookingRequestCard = ({
           filter: `id=eq.${bookingRequest.id}`,
         },
         () => {
-          // Refresh booking status when webhook updates it
           onStatusChange?.();
         }
       )
@@ -230,7 +230,6 @@ const BookingRequestCard = ({
     setIsUpdating(true);
 
     try {
-      // If there's a successful payment, process refund
       if (hasPayment) {
         const { data: payment } = await supabase
           .from("payments")
@@ -240,7 +239,6 @@ const BookingRequestCard = ({
           .single();
 
         if (payment) {
-          // Call refund function
           const refundSuccess = await processRefund({
             paymentId: payment.id,
             reason: isOwner
@@ -256,7 +254,6 @@ const BookingRequestCard = ({
         }
       }
 
-      // Update booking status to cancelled
       const { error } = await supabase
         .from("booking_requests")
         .update({
@@ -267,7 +264,6 @@ const BookingRequestCard = ({
 
       if (error) throw error;
 
-      // Send cancellation message
       try {
         const otherUserId = isOwner
           ? bookingRequest.renter_id
@@ -290,7 +286,6 @@ const BookingRequestCard = ({
         }
       } catch (msgError) {
         console.error("Error sending cancellation message:", msgError);
-        // Don't fail the status update if message fails
       }
 
       onStatusChange?.();
@@ -308,12 +303,10 @@ const BookingRequestCard = ({
     setIsLoadingConversation(true);
 
     try {
-      // Determine the other participant (owner or renter)
       const otherUserId = isOwner
         ? bookingRequest.renter_id
         : bookingRequest.owner.id;
 
-      // Get or create conversation for this booking
       const conversation = await getOrCreateConversation(
         [otherUserId],
         bookingRequest.id
@@ -352,7 +345,6 @@ const BookingRequestCard = ({
   const today = new Date();
   const isActive = isPast(startDate) && isFuture(endDate);
   const daysUntilStart = differenceInDays(startDate, today);
-  const daysUntilEnd = differenceInDays(endDate, today);
   const totalDays = differenceInDays(endDate, startDate) + 1;
 
   // Progress indicator for active bookings
@@ -362,27 +354,8 @@ const BookingRequestCard = ({
     return Math.min((elapsed / totalDays) * 100, 100);
   };
 
-  // Status timeline steps
-  const getStatusSteps = () => {
-    const steps = [
-      { label: "Requested", completed: true },
-      {
-        label: "Payment",
-        completed: hasPayment || bookingRequest.status !== "pending",
-      },
-      {
-        label: "Approved",
-        completed: bookingRequest.status === "approved" || bookingRequest.status === "completed",
-      },
-      {
-        label: "Active",
-        completed: isActive || isPast(endDate),
-      },
-    ];
-    return steps;
-  };
-
-  const statusSteps = getStatusSteps();
+  // Determine if we should show the inspection flow banner prominently
+  const shouldShowInspectionBanner = hasPayment && bookingRequest.status === "approved";
 
   return (
     <Card className="w-full overflow-hidden hover:shadow-lg transition-shadow !p-0">
@@ -434,70 +407,119 @@ const BookingRequestCard = ({
                 {bookingRequest.status === "pending" && !hasPayment
                   ? "Awaiting Payment"
                   : bookingRequest.status === "approved" && hasPayment
-                  ? "Booking Confirmed"
+                  ? "Confirmed"
                   : getBookingStatusText(bookingRequest.status || "pending")}
               </Badge>
             </div>
           </CardHeader>
 
           <CardContent className="space-y-4 pb-2">
-            {/* Status Timeline */}
-            {bookingRequest.status !== "cancelled" && (
-              <div className="flex items-start">
-                {statusSteps.map((step, index) => (
-                  <div key={index} className="flex-1 flex flex-col items-center">
-                    {/* Circle and connecting lines row */}
-                    <div className="flex items-center w-full">
-                      {/* Line before circle (except first step) */}
-                      <div
-                        className={cn(
-                          "flex-1 h-0.5 transition-colors",
-                          index === 0 ? "bg-transparent" : step.completed ? "bg-primary" : "bg-muted"
-                        )}
-                      />
-                      {/* Circle */}
-                      <div
-                        className={cn(
-                          "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium border-2 transition-colors shrink-0",
-                          step.completed
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-muted text-muted-foreground border-muted-foreground/20"
-                        )}
-                      >
-                        {step.completed ? (
-                          <CheckCircle className="h-3 w-3" />
-                        ) : (
-                          index + 1
-                        )}
-                      </div>
-                      {/* Line after circle (except last step) */}
-                      <div
-                        className={cn(
-                          "flex-1 h-0.5 transition-colors",
-                          index === statusSteps.length - 1
-                            ? "bg-transparent"
-                            : step.completed
-                            ? "bg-primary"
-                            : "bg-muted"
-                        )}
-                      />
-                    </div>
-                    {/* Label */}
-                    <span
-                      className={cn(
-                        "text-xs mt-1.5 text-center px-1",
-                        step.completed ? "text-foreground font-medium" : "text-muted-foreground"
-                      )}
-                    >
-                      {step.label}
-                    </span>
+            {/* Desktop: Compact Lifecycle Stepper */}
+            {!isMobile && hasPayment && bookingRequest.status !== "cancelled" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <BookingLifecycleStepper
+                    hasPayment={hasPayment}
+                    hasPickupInspection={!!pickupInspectionId}
+                    hasReturnInspection={!!returnInspectionId}
+                    startDate={startDate}
+                    endDate={endDate}
+                    bookingStatus={bookingRequest.status || "pending"}
+                    compact={true}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7 px-2"
+                    onClick={() => setShowLifecycleStepper(!showLifecycleStepper)}
+                  >
+                    {showLifecycleStepper ? "Hide" : "Details"}
+                  </Button>
+                </div>
+                
+                {/* Expanded Lifecycle Stepper */}
+                {showLifecycleStepper && (
+                  <div className="bg-muted/30 rounded-lg p-4 mt-2">
+                    <BookingLifecycleStepper
+                      hasPayment={hasPayment}
+                      hasPickupInspection={!!pickupInspectionId}
+                      hasReturnInspection={!!returnInspectionId}
+                      startDate={startDate}
+                      endDate={endDate}
+                      bookingStatus={bookingRequest.status || "pending"}
+                      compact={false}
+                    />
                   </div>
-                ))}
+                )}
+              </div>
+            )}
+
+            {/* INSPECTION FLOW - Responsive display */}
+            {shouldShowInspectionBanner && (
+              <>
+                {/* Mobile: Compact card with bottom sheet */}
+                {isMobile ? (
+                  <MobileInspectionCard
+                    bookingId={bookingRequest.id}
+                    equipmentTitle={bookingRequest.equipment.title}
+                    startDate={startDate}
+                    endDate={endDate}
+                    hasPickupInspection={!!pickupInspectionId}
+                    hasReturnInspection={!!returnInspectionId}
+                    isOwner={isOwner}
+                  />
+                ) : (
+                  /* Desktop: Full banner */
+                  <InspectionFlowBanner
+                    bookingId={bookingRequest.id}
+                    startDate={startDate}
+                    endDate={endDate}
+                    hasPickupInspection={!!pickupInspectionId}
+                    hasReturnInspection={!!returnInspectionId}
+                    isOwner={isOwner}
+                  />
+                )}
+              </>
+            )}
+
+            {/* View Completed Inspections - Desktop only, mobile uses sheet */}
+            {!isMobile && shouldShowInspectionBanner && (pickupInspectionId || returnInspectionId) && (
+              <div className="flex flex-wrap gap-2">
+                {pickupInspectionId && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate(`/inspection/${bookingRequest.id}/view/pickup`)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    View Pickup Inspection
+                  </Button>
+                )}
+                {returnInspectionId && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate(`/inspection/${bookingRequest.id}/view/return`)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    View Return Inspection
+                  </Button>
+                )}
+                {isOwner && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => navigate(`/claims/file/${bookingRequest.id}`)}
+                  >
+                    <AlertTriangle className="h-4 w-4 mr-1" />
+                    File Damage Claim
+                  </Button>
+                )}
               </div>
             )}
 
             {/* Prominent Date Display */}
-            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+            <div className="bg-muted/50 rounded-lg p-3 md:p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-primary" />
@@ -505,30 +527,30 @@ const BookingRequestCard = ({
                 </div>
                 {isActive && (
                   <Badge variant="default" className="text-xs">
-                    Active Now
+                    Active
                   </Badge>
                 )}
                 {isFuture(startDate) && daysUntilStart <= 7 && (
                   <Badge variant="secondary" className="text-xs">
                     {daysUntilStart === 0
-                      ? "Starts Today"
+                      ? "Today"
                       : daysUntilStart === 1
-                      ? "Starts Tomorrow"
-                      : `Starts in ${daysUntilStart} days`}
+                      ? "Tomorrow"
+                      : `${daysUntilStart}d`}
                   </Badge>
                 )}
               </div>
               <div className="flex items-center justify-between text-sm">
                 <div>
-                  <p className="font-medium">
-                    {format(startDate, "MMM d, yyyy")} - {format(endDate, "MMM d, yyyy")}
+                  <p className="font-medium text-sm md:text-base">
+                    {format(startDate, "MMM d")} - {format(endDate, "MMM d, yyyy")}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {formatBookingDuration(bookingRequest.start_date, bookingRequest.end_date)}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-lg text-primary">
+                  <p className="font-bold text-base md:text-lg text-primary">
                     ${bookingRequest.total_amount.toFixed(2)}
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -550,6 +572,7 @@ const BookingRequestCard = ({
                 </div>
               )}
             </div>
+
             {/* Collapsible Details Section */}
             <Button
               variant="ghost"
@@ -617,95 +640,28 @@ const BookingRequestCard = ({
               </div>
             )}
 
-        {/* Status-specific information */}
-        {bookingRequest.status === "pending" && !hasPayment && (
-          <Alert>
-            <Clock className="h-4 w-4" />
-            <AlertDescription>
-              {isOwner
-                ? "This booking request is awaiting payment from the renter."
-                : "Your booking request is awaiting payment. Complete payment to confirm your booking."}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {bookingRequest.status === "approved" && hasPayment && (
-          <Alert className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800">
-            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-            <AlertDescription className="text-green-800 dark:text-green-200">
-              Payment received! Booking is confirmed.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Inspection Buttons - Show when booking is approved and paid */}
-        {bookingRequest.status === "approved" && hasPayment && (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant={pickupInspectionId ? "secondary" : "outline"}
-              onClick={() =>
-                pickupInspectionId
-                  ? navigate(`/inspection/${bookingRequest.id}/view/pickup`)
-                  : navigate(`/inspection/${bookingRequest.id}/pickup`)
-              }
-            >
-              {pickupInspectionId ? (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
-                  View Pickup Inspection
-                </>
-              ) : (
-                <>
-                  <ClipboardCheck className="h-4 w-4 mr-1" />
-                  Pickup Inspection
-                </>
-              )}
-            </Button>
-            <Button
-              size="sm"
-              variant={returnInspectionId ? "secondary" : "outline"}
-              onClick={() =>
-                returnInspectionId
-                  ? navigate(`/inspection/${bookingRequest.id}/view/return`)
-                  : navigate(`/inspection/${bookingRequest.id}/return`)
-              }
-            >
-              {returnInspectionId ? (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
-                  View Return Inspection
-                </>
-              ) : (
-                <>
-                  <ClipboardCheck className="h-4 w-4 mr-1" />
-                  Return Inspection
-                </>
-              )}
-            </Button>
-            {isOwner && (
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => navigate(`/claims/file/${bookingRequest.id}`)}
-              >
-                <AlertTriangle className="h-4 w-4 mr-1" />
-                File Damage Claim
-              </Button>
+            {/* Status-specific information */}
+            {bookingRequest.status === "pending" && !hasPayment && (
+              <Alert>
+                <Clock className="h-4 w-4" />
+                <AlertDescription className="text-sm">
+                  {isOwner
+                    ? "Awaiting payment from the renter."
+                    : "Complete payment to confirm your booking."}
+                </AlertDescription>
+              </Alert>
             )}
-          </div>
-        )}
 
-        {bookingRequest.status === "cancelled" && (
-          <Alert variant="destructive">
-            <XCircle className="h-4 w-4" />
-            <AlertDescription>
-              {isRenter
-                ? "You have cancelled this booking request."
-                : "This booking request has been cancelled by the renter."}
-            </AlertDescription>
-          </Alert>
-        )}
+            {bookingRequest.status === "cancelled" && (
+              <Alert variant="destructive">
+                <XCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {isRenter
+                    ? "You cancelled this booking."
+                    : "This booking was cancelled."}
+                </AlertDescription>
+              </Alert>
+            )}
 
             {/* Action Buttons */}
             {showActions && (
@@ -717,7 +673,7 @@ const BookingRequestCard = ({
                     onClick={() => setShowRenterScreening(!showRenterScreening)}
                   >
                     <Shield className="h-4 w-4 mr-1" />
-                    {showRenterScreening ? "Hide" : "View"} Renter Info
+                    <span className="hidden sm:inline">{showRenterScreening ? "Hide" : "View"}</span> Renter
                   </Button>
                 )}
 
@@ -730,8 +686,10 @@ const BookingRequestCard = ({
                   }}
                   disabled={isLoadingConversation}
                 >
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  {isLoadingConversation ? "Loading..." : "Message"}
+                  <MessageSquare className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">
+                    {isLoadingConversation ? "Loading..." : "Message"}
+                  </span>
                 </Button>
 
                 {canCancel && (
@@ -744,13 +702,14 @@ const BookingRequestCard = ({
                     disabled={isUpdating}
                     className="ml-auto"
                   >
-                    <XCircle className="h-4 w-4 mr-1" />
-                    {isUpdating ? "Cancelling..." : "Cancel"}
+                    <XCircle className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">
+                      {isUpdating ? "Cancelling..." : "Cancel"}
+                    </span>
                   </Button>
                 )}
               </div>
             )}
-
           </CardContent>
         </div>
       </div>
