@@ -39,6 +39,12 @@
     "collapse_sidebar": "Collapse sidebar",
     "user_menu": "User menu"
   },
+  "role_switcher": {
+    "renter_mode": "Renter",
+    "owner_mode": "Owner",
+    "switch_to_renter": "Switch to renter mode",
+    "switch_to_owner": "Switch to owner mode"
+  },
   "sidebar": {
     "main": "Main",
     "activity": "Activity",

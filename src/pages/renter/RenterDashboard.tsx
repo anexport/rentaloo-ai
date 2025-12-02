@@ -16,11 +16,11 @@ import NotificationsPanel from "@/components/renter/NotificationsPanel";
 import WelcomeHero from "@/components/renter/WelcomeHero";
 import UpcomingCalendar from "@/components/renter/UpcomingCalendar";
 import RecommendationsSection from "@/components/renter/RecommendationsSection";
+import SavedEquipmentTab from "@/components/renter/SavedEquipmentTab";
 import { useVerification } from "@/hooks/useVerification";
 import { getVerificationProgress } from "@/lib/verification";
 import { useToast } from "@/hooks/useToast";
 import PendingClaimsList from "@/components/claims/PendingClaimsList";
-import { cn } from "@/lib/utils";
 
 const RenterDashboard = () => {
   const { user } = useAuth();
@@ -67,6 +67,17 @@ const RenterDashboard = () => {
   }, [renterError, toast]);
 
   const progress = profile ? getVerificationProgress(profile) : 0;
+
+  // Render saved equipment tab
+  if (activeTab === "saved") {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6 animate-in fade-in duration-500">
+          <SavedEquipmentTab />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

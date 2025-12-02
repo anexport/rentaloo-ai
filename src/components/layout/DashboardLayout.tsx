@@ -10,6 +10,7 @@ import {
 import Sidebar from "./Sidebar";
 import UserMenu from "@/components/UserMenu";
 import BreadcrumbNav from "./BreadcrumbNav";
+import RoleSwitcher from "@/components/RoleSwitcher";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -32,7 +33,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
       {/* Mobile Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-30 h-16 border-b border-border bg-card">
-        <div className="flex h-full items-center justify-between px-4">
+        <div className="flex h-full items-center justify-between gap-2 px-4">
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Open menu">
@@ -43,7 +44,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <Sidebar collapsed={false} onToggle={() => setMobileMenuOpen(false)} />
             </SheetContent>
           </Sheet>
-          <UserMenu />
+          <div className="flex items-center gap-2 flex-1 justify-end">
+            <RoleSwitcher variant="header" />
+            <UserMenu />
+          </div>
         </div>
       </header>
 

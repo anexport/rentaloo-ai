@@ -70,9 +70,9 @@ export const useFavorites = () => {
       const isFavorited = favorites.includes(equipmentId);
 
       if (isFavorited) {
-        await removeFavorite({ userId: user.id, equipmentId });
+        await removeFavorite({ user_id: user.id, equipment_id: equipmentId });
       } else {
-        await addFavorite({ userId: user.id, equipmentId });
+        await addFavorite({ user_id: user.id, equipment_id: equipmentId });
       }
 
       return { equipmentId, isFavorited };

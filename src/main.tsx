@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { RoleModeProvider } from "@/contexts/RoleModeContext";
 import "./index.css";
 import App from "./App.tsx";
 import i18n from "@/i18n/config";
@@ -30,7 +31,9 @@ const renderApp = () => {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <AuthProvider>
-            <App />
+            <RoleModeProvider>
+              <App />
+            </RoleModeProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>
