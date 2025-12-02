@@ -64,8 +64,8 @@ export default function MobileInspectionCard({
   // Calculate progress percentage
   const getProgressPercentage = (): number => {
     if (hasPickupInspection && hasReturnInspection) return 100;
-    if (hasPickupInspection) return 66;
-    return 33;
+    if (hasPickupInspection || hasReturnInspection) return 50;
+    return 0;
   };
 
   // Calculate timing

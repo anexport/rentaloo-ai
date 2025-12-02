@@ -25,12 +25,19 @@ import { MobileInspectionCTA } from "@/components/booking/inspection-flow";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { supabase } from "@/lib/supabase";
 import { differenceInDays, isPast, isFuture } from "date-fns";
+import type { BookingRequestWithDetails } from "@/types/booking";
 
 interface InspectionStatus {
   bookingId: string;
   hasPickup: boolean;
   hasReturn: boolean;
 }
+
+type InspectionCandidate = {
+  booking: BookingRequestWithDetails;
+  status: InspectionStatus | undefined;
+  urgencyScore: number;
+};
 
 const RenterDashboard = () => {
   const { user } = useAuth();
@@ -56,6 +63,8 @@ const RenterDashboard = () => {
   // Fetch inspection statuses for all approved bookings (for mobile CTA)
   useEffect(() => {
     const fetchInspectionStatuses = async () => {
+      if (!user) return;
+
       const approvedBookings = renterBookings.filter(b => b.status === "approved");
       if (approvedBookings.length === 0) return;
 
@@ -69,6 +78,14 @@ const RenterDashboard = () => {
 
         if (error) {
           console.error("Error fetching inspection statuses:", error);
+          toast({
+            variant: "destructive",
+            title: "Failed to load inspection statuses",
+            description:
+              error instanceof Error
+                ? error.message
+                : "An error occurred while loading inspection statuses.",
+          });
           return;
         }
 
@@ -94,11 +111,19 @@ const RenterDashboard = () => {
         setInspectionStatuses(statusMap);
       } catch (err) {
         console.error("Error fetching inspection statuses:", err);
+        toast({
+          variant: "destructive",
+          title: "Failed to load inspection statuses",
+          description:
+            err instanceof Error
+              ? err.message
+              : "An error occurred while loading inspection statuses.",
+        });
       }
     };
 
     void fetchInspectionStatuses();
-  }, [renterBookings]);
+  }, [renterBookings, toast, user]);
 
   // Find the most urgent booking that needs inspection (for mobile CTA)
   const urgentInspectionBooking = useMemo(() => {
@@ -111,7 +136,7 @@ const RenterDashboard = () => {
     
     // Find bookings that need inspection, sorted by urgency
     const bookingsNeedingInspection = approvedBookings
-      .map(booking => {
+      .map<InspectionCandidate | null>(booking => {
         const status = inspectionStatuses.get(booking.id);
         const startDate = new Date(booking.start_date);
         const endDate = new Date(booking.end_date);
@@ -144,8 +169,10 @@ const RenterDashboard = () => {
           urgencyScore,
         };
       })
-      .filter(Boolean)
-      .sort((a, b) => a!.urgencyScore - b!.urgencyScore);
+      .filter(
+        (candidate): candidate is InspectionCandidate => candidate !== null
+      )
+      .sort((a, b) => a.urgencyScore - b.urgencyScore);
 
     return bookingsNeedingInspection[0]?.booking || null;
   }, [renterBookings, inspectionStatuses, isMobile]);

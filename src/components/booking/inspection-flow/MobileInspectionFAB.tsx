@@ -1,16 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Camera,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-} from "lucide-react";
+import { Camera, AlertTriangle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { differenceInDays, isPast, isToday, isFuture } from "date-fns";
-import MobileInspectionSheet from "./MobileInspectionSheet";
-import type { InspectionPhase } from "./InspectionFlowBanner";
+import { differenceInDays, isPast, isToday } from "date-fns";
+import MobileInspectionSheet from "@/components/booking/inspection-flow/MobileInspectionSheet";
+import type { InspectionPhase } from "@/components/booking/inspection-flow/InspectionFlowBanner";
 
 interface MobileInspectionFABProps {
   bookingId: string;
@@ -109,6 +104,7 @@ export default function MobileInspectionFAB({
       <div className={cn("fixed bottom-20 right-4 z-40 md:hidden", className)}>
         <Button
           size="lg"
+          aria-label={`${getLabel()} inspection ${urgency === "critical" ? "urgent" : urgency === "warning" ? "approaching deadline" : ""}`}
           className={cn(
             "rounded-full h-14 px-5 shadow-lg gap-2",
             fabStyles[urgency]

@@ -143,7 +143,7 @@ export default function MobileInspectionSheet({
       id: "pickup",
       label: "Pickup Inspection",
       description: hasPickupInspection 
-        ? `Completed ${format(new Date(), "MMM d")}` 
+        ? "Completed" 
         : "Document condition before pickup",
       status: hasPickupInspection ? "complete" : (phase === "awaiting_pickup_inspection" ? "current" : "upcoming"),
       action: hasPickupInspection 

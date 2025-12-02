@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { differenceInDays, isPast, isToday, isFuture } from "date-fns";
-import MobileInspectionSheet from "./MobileInspectionSheet";
+import MobileInspectionSheet from "@/components/booking/inspection-flow/MobileInspectionSheet";
 
 interface MobileInspectionCTAProps {
   bookingId: string;
@@ -141,7 +141,12 @@ export default function MobileInspectionCTA({
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0" onClick={() => setIsSheetOpen(true)}>
+          <button 
+            type="button"
+            className="flex-1 min-w-0 text-left"
+            onClick={() => setIsSheetOpen(true)}
+            aria-label="View inspection details"
+          >
             <div className="flex items-center gap-2">
               <span className={cn("font-semibold text-sm truncate", styles.text)}>
                 {needsPickup ? "Pickup Inspection" : "Return Inspection"}
@@ -153,7 +158,7 @@ export default function MobileInspectionCTA({
             <p className={cn("text-xs truncate", styles.subtext)}>
               {equipmentTitle}
             </p>
-          </div>
+          </button>
 
           {/* Expand button */}
           <Button
@@ -161,6 +166,7 @@ export default function MobileInspectionCTA({
             size="icon"
             className={cn("shrink-0 h-8 w-8", styles.text)}
             onClick={() => setIsSheetOpen(true)}
+            aria-label="Expand inspection details"
           >
             <ChevronUp className="h-5 w-5" />
           </Button>
@@ -170,6 +176,7 @@ export default function MobileInspectionCTA({
             size="sm"
             className={cn("shrink-0 font-semibold", styles.button)}
             onClick={handlePrimaryAction}
+            aria-label={`Start ${needsPickup ? 'pickup' : 'return'} inspection`}
           >
             Start
             <ArrowRight className="h-4 w-4 ml-1" />

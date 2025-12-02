@@ -31,7 +31,6 @@ export default function BookingLifecycleStepper({
   className,
   compact = false,
 }: BookingLifecycleStepperProps) {
-  const today = new Date();
   const isActive = isPast(startDate) && isFuture(endDate);
   const isCompleted = isPast(endDate);
   const isCancelled = bookingStatus === "cancelled";
@@ -119,10 +118,6 @@ export default function BookingLifecycleStepper({
   };
 
   const steps = getSteps();
-
-  if (isCancelled) {
-    return null;
-  }
 
   const getStepIcon = (step: BookingLifecycleStep) => {
     switch (step.status) {

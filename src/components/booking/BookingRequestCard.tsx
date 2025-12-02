@@ -5,6 +5,7 @@ import { useMessaging } from "@/hooks/useMessaging";
 import { usePayment } from "@/hooks/usePayment";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { BookingRequestWithDetails } from "../../types/booking";
+import type { Database } from "@/lib/database.types";
 import {
   formatBookingDuration,
   getBookingStatusColor,
@@ -45,6 +46,8 @@ import {
 } from "./inspection-flow";
 import { cn } from "@/lib/utils";
 import { format, differenceInDays, isPast, isFuture } from "date-fns";
+
+type Payment = Database["public"]["Tables"]["payments"]["Row"];
 
 interface BookingRequestCardProps {
   bookingRequest: BookingRequestWithDetails;
@@ -178,16 +181,12 @@ const BookingRequestCard = ({
           filter: `booking_request_id=eq.${bookingRequest.id}`,
         },
         (payload) => {
-          if (
-            payload.new &&
-            (payload.new as { payment_status: string }).payment_status === "succeeded"
-          ) {
+          const newPayment = payload.new as Payment | null;
+
+          if (newPayment?.payment_status === "succeeded") {
             setHasPayment(true);
             onStatusChange?.();
-          } else if (
-            payload.new &&
-            (payload.new as { payment_status: string }).payment_status === "failed"
-          ) {
+          } else if (newPayment?.payment_status === "failed") {
             setHasPayment(false);
           }
         }
