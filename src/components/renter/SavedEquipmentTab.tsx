@@ -15,7 +15,7 @@ const SavedEquipmentTab = () => {
 
   const loading = isLoading || favoritesLoading;
 
-  if (loading || favoritesLoading) {
+  if (loading) {
     return (
       <div className="space-y-6">
         <div>

@@ -89,7 +89,6 @@ const UserMenu = () => {
 
   const initials = getInitials(user.email);
   const displayName = user.user_metadata?.fullName || user.email;
-  const userRole = user.user_metadata?.role as "owner" | "renter" | null;
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -117,11 +116,9 @@ const UserMenu = () => {
             {displayName}
           </p>
           <p className="text-xs text-gray-500 truncate mt-0.5">
-            {userRole == null
-              ? t("user_role.loading")
-              : userRole === "owner"
-                ? t("user_role.equipment_owner")
-                : t("user_role.renter")}
+            {activeMode === "owner"
+              ? t("user_role.equipment_owner")
+              : t("user_role.renter")}
           </p>
         </div>
 

@@ -52,7 +52,9 @@ export const useSavedEquipment = () => {
           .select("rating, reviewee_id")
           .in("reviewee_id", ownerIds);
 
-        if (!reviewsError && reviews) {
+        if (reviewsError) {
+          console.error("Failed to fetch reviews for saved equipment:", reviewsError);
+        } else if (reviews) {
           reviews.forEach((review) => {
             const existing = reviewsMap.get(review.reviewee_id) || [];
             existing.push({ rating: review.rating });
