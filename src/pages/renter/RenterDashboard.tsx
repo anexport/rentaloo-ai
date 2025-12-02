@@ -1,27 +1,26 @@
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, Star, AlertTriangle } from "lucide-react";
+import { Calendar, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Link, useSearchParams } from "react-router-dom";
 import { useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import ReviewList from "@/components/reviews/ReviewList";
 import BookingRequestCard from "@/components/booking/BookingRequestCard";
 import { useBookingRequests } from "@/hooks/useBookingRequests";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import PageHeader from "@/components/layout/PageHeader";
 import StatsOverview from "@/components/renter/StatsOverview";
 import NotificationsPanel from "@/components/renter/NotificationsPanel";
+import WelcomeHero from "@/components/renter/WelcomeHero";
+import UpcomingCalendar from "@/components/renter/UpcomingCalendar";
+import RecommendationsSection from "@/components/renter/RecommendationsSection";
 import { useVerification } from "@/hooks/useVerification";
 import { getVerificationProgress } from "@/lib/verification";
 import { useToast } from "@/hooks/useToast";
 import PendingClaimsList from "@/components/claims/PendingClaimsList";
+import { cn } from "@/lib/utils";
 
 const RenterDashboard = () => {
   const { user } = useAuth();
@@ -71,20 +70,15 @@ const RenterDashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header Section */}
-        <div>
-          <PageHeader
-            title={t("renter.header.title")}
-            description={t("renter.header.description")}
-          />
-        </div>
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/* Welcome Hero Section */}
+        <WelcomeHero />
 
         {/* High-Emphasis Banner for unverified identity */}
         {!verificationLoading &&
           profile &&
           !profile.identityVerified && (
-            <Card className="border-destructive/40 bg-destructive/5 ring-1 ring-destructive/20">
+            <Card className="border-destructive/40 bg-destructive/5 ring-1 ring-destructive/20 animate-in slide-in-from-top-4 duration-500">
               <CardContent className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-4">
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-full bg-destructive/10">
@@ -115,13 +109,17 @@ const RenterDashboard = () => {
           )}
 
         {/* Notifications Panel */}
-        <NotificationsPanel />
+        <div className="animate-in slide-in-from-top-4 duration-500 delay-100">
+          <NotificationsPanel />
+        </div>
 
         {/* Pending Damage Claims */}
-        <PendingClaimsList />
+        <div className="animate-in slide-in-from-top-4 duration-500 delay-150">
+          <PendingClaimsList />
+        </div>
 
         {/* Stats Overview Section */}
-        <div className="space-y-4">
+        <div className="space-y-4 animate-in slide-in-from-top-4 duration-500 delay-200">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground">
               {t("renter.overview.section_title")}
@@ -133,8 +131,8 @@ const RenterDashboard = () => {
           <StatsOverview />
         </div>
 
-        {/* Main Content Grid - Two Column Layout on Large Screens */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        {/* Main Content Grid - Calendar + Bookings */}
+        <div className="grid gap-6 lg:grid-cols-3 animate-in slide-in-from-top-4 duration-500 delay-300">
           {/* Left Column - Bookings (takes 2 columns on large screens) */}
           <div className="lg:col-span-2 space-y-6">
             {/* My Rental Bookings Section */}
@@ -188,43 +186,40 @@ const RenterDashboard = () => {
                   {(activeTab === "bookings"
                     ? renterBookings
                     : renterBookings.slice(0, 3)
-                  ).map((booking) => (
-                    <BookingRequestCard
+                  ).map((booking, index) => (
+                    <div
                       key={booking.id}
-                      bookingRequest={booking}
-                      onStatusChange={handleBookingStatusChange}
-                      showActions={true}
-                    />
+                      className="animate-in slide-in-from-left-4 duration-500"
+                      style={{
+                        animationDelay: `${300 + index * 100}ms`,
+                      }}
+                    >
+                      <BookingRequestCard
+                        bookingRequest={booking}
+                        onStatusChange={handleBookingStatusChange}
+                        showActions={true}
+                      />
+                    </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Right Column - Reviews Sidebar */}
-          {activeTab !== "bookings" && user && (
-            <div className="lg:col-span-1 space-y-6">
-              <Card className="h-fit">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Star className="h-5 w-5 text-primary" />
-                    <span>{t("renter.reviews.card_title")}</span>
-                  </CardTitle>
-                  <CardDescription>
-                    {t("renter.reviews.card_description")}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ReviewList
-                    reviewerId={user.id}
-                    showSummary={false}
-                    showEquipment={true}
-                  />
-                </CardContent>
-              </Card>
+          {/* Right Column - Calendar Sidebar */}
+          {activeTab !== "bookings" && (
+            <div className="lg:col-span-1 animate-in slide-in-from-right-4 duration-500 delay-300">
+              <UpcomingCalendar />
             </div>
           )}
         </div>
+
+        {/* Recommendations Section */}
+        {activeTab !== "bookings" && (
+          <div className="animate-in slide-in-from-bottom-4 duration-500 delay-400">
+            <RecommendationsSection />
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

@@ -32,11 +32,17 @@ import {
   Shield,
   ClipboardCheck,
   AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Package,
+  MapPin,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MessagingInterface from "../messaging/MessagingInterface";
 import PaymentForm from "../payment/PaymentForm";
 import RenterScreening from "../verification/RenterScreening";
+import { cn } from "@/lib/utils";
+import { format, differenceInDays, isPast, isFuture } from "date-fns";
 
 interface BookingRequestCardProps {
   bookingRequest: BookingRequestWithDetails;
@@ -62,6 +68,7 @@ const BookingRequestCard = ({
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [pickupInspectionId, setPickupInspectionId] = useState<string | null>(null);
   const [returnInspectionId, setReturnInspectionId] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Check if inspections exist for this booking
   useEffect(() => {
@@ -332,88 +339,271 @@ const BookingRequestCard = ({
     (isOwner || isRenter) &&
     ["pending", "approved"].includes(bookingRequest.status || "");
 
+  // Get equipment image
+  const equipmentImage =
+    bookingRequest.equipment.photos && bookingRequest.equipment.photos.length > 0
+      ? bookingRequest.equipment.photos.find((p) => p.is_primary)?.photo_url ||
+        bookingRequest.equipment.photos[0]?.photo_url
+      : null;
+
+  // Calculate booking timeline
+  const startDate = new Date(bookingRequest.start_date);
+  const endDate = new Date(bookingRequest.end_date);
+  const today = new Date();
+  const isActive = isPast(startDate) && isFuture(endDate);
+  const daysUntilStart = differenceInDays(startDate, today);
+  const daysUntilEnd = differenceInDays(endDate, today);
+  const totalDays = differenceInDays(endDate, startDate) + 1;
+
+  // Progress indicator for active bookings
+  const getProgressPercentage = () => {
+    if (!isActive) return 0;
+    const elapsed = differenceInDays(today, startDate);
+    return Math.min((elapsed / totalDays) * 100, 100);
+  };
+
+  // Status timeline steps
+  const getStatusSteps = () => {
+    const steps = [
+      { label: "Requested", completed: true },
+      {
+        label: "Payment",
+        completed: hasPayment || bookingRequest.status !== "pending",
+      },
+      {
+        label: "Approved",
+        completed: bookingRequest.status === "approved" || bookingRequest.status === "completed",
+      },
+      {
+        label: "Active",
+        completed: isActive || isPast(endDate),
+      },
+    ];
+    return steps;
+  };
+
+  const statusSteps = getStatusSteps();
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg">
-              {bookingRequest.equipment.title}
-            </CardTitle>
-            <CardDescription>
-              {bookingRequest.equipment.category.name}
-            </CardDescription>
-          </div>
-          <Badge
-            className={
-              bookingRequest.status === "pending" && !hasPayment
-                ? "bg-yellow-100 text-yellow-800"
-                : bookingRequest.status === "approved" && hasPayment
-                ? "bg-green-100 text-green-800"
-                : getBookingStatusColor(bookingRequest.status || "pending")
-            }
-          >
-            {bookingRequest.status === "pending" && !hasPayment
-              ? "Awaiting Payment"
-              : bookingRequest.status === "approved" && hasPayment
-              ? "Booking Confirmed"
-              : getBookingStatusText(bookingRequest.status || "pending")}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {/* Rental Period */}
-        <div className="flex items-center space-x-2 text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          <span>
-            {formatBookingDate(bookingRequest.start_date)} -{" "}
-            {formatBookingDate(bookingRequest.end_date)}
-          </span>
-          <span className="text-sm">
-            (
-            {formatBookingDuration(
-              bookingRequest.start_date,
-              bookingRequest.end_date
-            )}
-            )
-          </span>
-        </div>
-
-        {/* User Information */}
-        <div className="flex items-center space-x-2 text-muted-foreground">
-          <User className="h-4 w-4" />
-          <span>
-            {isOwner ? "Renter" : "Owner"}:{" "}
-            {isOwner ? bookingRequest.renter.email : bookingRequest.owner.email}
-          </span>
-        </div>
-
-        {/* Pricing */}
-        <div className="flex items-center space-x-2 text-muted-foreground">
-          <DollarSign className="h-4 w-4" />
-          <span className="font-semibold">
-            ${bookingRequest.total_amount.toFixed(2)}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            (${bookingRequest.equipment.daily_rate}/day)
-          </span>
-        </div>
-
-        {/* Message */}
-        {bookingRequest.message && (
-          <div className="bg-muted p-3 rounded-lg">
-            <div className="flex items-start space-x-2">
-              <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-foreground">Message:</p>
-                <p className="text-sm text-muted-foreground">
-                  {bookingRequest.message}
-                </p>
-              </div>
+    <Card className="w-full overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="flex flex-col md:flex-row">
+        {/* Equipment Image */}
+        {equipmentImage && (
+          <div className="md:w-48 h-48 md:h-auto flex-shrink-0 relative overflow-hidden bg-muted">
+            <img
+              src={equipmentImage}
+              alt={bookingRequest.equipment.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute top-2 left-2">
+              <Badge variant="secondary" className="text-xs">
+                {bookingRequest.equipment.category.name}
+              </Badge>
             </div>
           </div>
         )}
+
+        <div className="flex-1">
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg md:text-xl mb-1 line-clamp-1">
+                  {bookingRequest.equipment.title}
+                </CardTitle>
+                <CardDescription className="flex items-center gap-2 flex-wrap">
+                  {bookingRequest.equipment.location && (
+                    <span className="flex items-center gap-1 text-xs">
+                      <MapPin className="h-3 w-3" />
+                      {bookingRequest.equipment.location}
+                    </span>
+                  )}
+                </CardDescription>
+              </div>
+              <Badge
+                className={cn(
+                  "shrink-0",
+                  bookingRequest.status === "pending" && !hasPayment
+                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                    : bookingRequest.status === "approved" && hasPayment
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                    : getBookingStatusColor(bookingRequest.status || "pending")
+                )}
+              >
+                {bookingRequest.status === "pending" && !hasPayment
+                  ? "Awaiting Payment"
+                  : bookingRequest.status === "approved" && hasPayment
+                  ? "Booking Confirmed"
+                  : getBookingStatusText(bookingRequest.status || "pending")}
+              </Badge>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            {/* Status Timeline */}
+            {bookingRequest.status !== "cancelled" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                  {statusSteps.map((step, index) => (
+                    <div
+                      key={index}
+                      className={cn(
+                        "flex-1 flex items-center",
+                        index < statusSteps.length - 1 && "mr-2"
+                      )}
+                    >
+                      <div className="flex items-center flex-1">
+                        <div
+                          className={cn(
+                            "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium border-2 transition-colors",
+                            step.completed
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-muted text-muted-foreground border-muted-foreground/20"
+                          )}
+                        >
+                          {step.completed ? (
+                            <CheckCircle className="h-3 w-3" />
+                          ) : (
+                            index + 1
+                          )}
+                        </div>
+                        {index < statusSteps.length - 1 && (
+                          <div
+                            className={cn(
+                              "flex-1 h-0.5 mx-1 transition-colors",
+                              step.completed ? "bg-primary" : "bg-muted"
+                            )}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  {statusSteps.map((step, index) => (
+                    <span
+                      key={index}
+                      className={cn(
+                        "text-center",
+                        step.completed ? "text-foreground font-medium" : "text-muted-foreground"
+                      )}
+                    >
+                      {step.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Prominent Date Display */}
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <span className="font-semibold text-sm">Rental Period</span>
+                </div>
+                {isActive && (
+                  <Badge variant="default" className="text-xs">
+                    Active Now
+                  </Badge>
+                )}
+                {isFuture(startDate) && daysUntilStart <= 7 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {daysUntilStart === 0
+                      ? "Starts Today"
+                      : daysUntilStart === 1
+                      ? "Starts Tomorrow"
+                      : `Starts in ${daysUntilStart} days`}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <div>
+                  <p className="font-medium">
+                    {format(startDate, "MMM d, yyyy")} - {format(endDate, "MMM d, yyyy")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatBookingDuration(bookingRequest.start_date, bookingRequest.end_date)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-lg text-primary">
+                    ${bookingRequest.total_amount.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    ${bookingRequest.equipment.daily_rate}/day
+                  </p>
+                </div>
+              </div>
+              {isActive && (
+                <div className="pt-2">
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{ width: `${getProgressPercentage()}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {Math.round(getProgressPercentage())}% complete
+                  </p>
+                </div>
+              )}
+            </div>
+            {/* Collapsible Details Section */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="w-full justify-between text-xs text-muted-foreground"
+            >
+              <span>{isExpanded ? "Hide" : "Show"} Details</span>
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+
+            {isExpanded && (
+              <div className="space-y-3 pt-2 border-t">
+                {/* User Information */}
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  <span>
+                    {isOwner ? "Renter" : "Owner"}:{" "}
+                    <span className="font-medium text-foreground">
+                      {isOwner ? bookingRequest.renter.email : bookingRequest.owner.email}
+                    </span>
+                  </span>
+                </div>
+
+                {/* Message */}
+                {bookingRequest.message && (
+                  <div className="bg-muted/50 p-3 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground mb-1">Message:</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                          {bookingRequest.message}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Timestamps */}
+                <div className="text-xs text-muted-foreground pt-2 border-t space-y-1">
+                  <div>
+                    Requested: {format(new Date(bookingRequest.created_at || ""), "MMM d, yyyy 'at' h:mm a")}
+                  </div>
+                  {bookingRequest.updated_at !== bookingRequest.created_at && (
+                    <div>
+                      Updated: {format(new Date(bookingRequest.updated_at || ""), "MMM d, yyyy 'at' h:mm a")}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
         {/* Status-specific information */}
         {bookingRequest.status === "pending" && !hasPayment && (
@@ -505,67 +695,58 @@ const BookingRequestCard = ({
           </Alert>
         )}
 
-        {/* Action Buttons */}
-        {showActions && (
-          <div className="flex space-x-2 pt-2">
-            {isOwner && bookingRequest.status === "pending" && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowRenterScreening(!showRenterScreening)}
-              >
-                <Shield className="h-4 w-4 mr-1" />
-                {showRenterScreening ? "Hide" : "View"} Renter Info
-              </Button>
+            {/* Action Buttons */}
+            {showActions && (
+              <div className="flex flex-wrap gap-2 pt-4 border-t">
+                {isOwner && bookingRequest.status === "pending" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowRenterScreening(!showRenterScreening)}
+                  >
+                    <Shield className="h-4 w-4 mr-1" />
+                    {showRenterScreening ? "Hide" : "View"} Renter Info
+                  </Button>
+                )}
+
+                {/* Message Button */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    void handleOpenMessaging();
+                  }}
+                  disabled={isLoadingConversation}
+                >
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  {isLoadingConversation ? "Loading..." : "Message"}
+                </Button>
+
+                {canCancel && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => {
+                      void handleStatusUpdate("cancelled");
+                    }}
+                    disabled={isUpdating}
+                    className="ml-auto"
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    {isUpdating ? "Cancelling..." : "Cancel"}
+                  </Button>
+                )}
+              </div>
             )}
 
-            {canCancel && (
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => {
-                  void handleStatusUpdate("cancelled");
-                }}
-                disabled={isUpdating}
-              >
-                <XCircle className="h-4 w-4 mr-1" />
-                {isUpdating ? "Cancelling..." : "Cancel Booking"}
-              </Button>
-            )}
-
-            {/* Message Button */}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                void handleOpenMessaging();
-              }}
-              disabled={isLoadingConversation}
-              className="ml-auto"
-            >
-              <MessageSquare className="h-4 w-4 mr-1" />
-              {isLoadingConversation ? "Loading..." : "Message"}
-            </Button>
-          </div>
-        )}
-
-        {/* Timestamps */}
-        <div className="text-xs text-muted-foreground pt-2 border-t border-border">
-          <div>
-            Requested: {formatBookingDate(bookingRequest.created_at || "")}
-          </div>
-          {bookingRequest.updated_at !== bookingRequest.created_at && (
-            <div>
-              Updated: {formatBookingDate(bookingRequest.updated_at || "")}
-            </div>
-          )}
+          </CardContent>
         </div>
-      </CardContent>
+      </div>
 
       {/* Messaging Modal */}
       {showMessaging && conversationId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-xl border">
             <MessagingInterface
               initialConversationId={conversationId}
               onClose={() => {
@@ -579,14 +760,15 @@ const BookingRequestCard = ({
 
       {/* Payment Modal */}
       {showPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border shadow-lg">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 border shadow-xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Complete Payment</h2>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowPayment(false)}
+                aria-label="Close payment modal"
               >
                 ✕
               </Button>
@@ -608,8 +790,8 @@ const BookingRequestCard = ({
 
       {/* Renter Screening Modal */}
       {showRenterScreening && isOwner && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 border border-border shadow-lg">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 border shadow-xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">
                 Renter Verification Profile
@@ -618,6 +800,7 @@ const BookingRequestCard = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowRenterScreening(false)}
+                aria-label="Close renter screening modal"
               >
                 ✕
               </Button>
