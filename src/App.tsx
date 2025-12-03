@@ -23,6 +23,7 @@ import EquipmentInspectionPage from "@/pages/inspection/EquipmentInspectionPage"
 import InspectionView from "@/components/inspection/InspectionView";
 import FileClaimPage from "@/pages/claims/FileClaimPage";
 import ReviewClaimPage from "@/pages/claims/ReviewClaimPage";
+import ActiveRentalPage from "@/pages/rental/ActiveRentalPage";
 import { Analytics } from "@vercel/analytics/react";
 import OwnerUpgrade from "@/pages/owner/OwnerUpgrade";
 
@@ -71,6 +72,7 @@ function App() {
                 <Route path="/renter" element={<RenterDashboard />} />
                 <Route path="/renter/dashboard" element={<RenterDashboard />} />
                 <Route path="/renter/payments" element={<PaymentsPage />} />
+                <Route path="/rental/:bookingId" element={<ActiveRentalPage />} />
                 <Route path="/owner" element={<OwnerDashboard />} />
                 <Route path="/owner/dashboard" element={<OwnerDashboard />} />
                 <Route path="/owner/become-owner" element={<OwnerUpgrade />} />
