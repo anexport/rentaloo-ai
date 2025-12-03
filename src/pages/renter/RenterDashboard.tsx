@@ -6,7 +6,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Link, useSearchParams } from "react-router-dom";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import BookingRequestCard from "@/components/booking/BookingRequestCard";
 import { useBookingRequests } from "@/hooks/useBookingRequests";
@@ -21,6 +21,23 @@ import { useVerification } from "@/hooks/useVerification";
 import { getVerificationProgress } from "@/lib/verification";
 import { useToast } from "@/hooks/useToast";
 import PendingClaimsList from "@/components/claims/PendingClaimsList";
+import { MobileInspectionCTA } from "@/components/booking/inspection-flow";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { supabase } from "@/lib/supabase";
+import { differenceInDays, isPast, isFuture } from "date-fns";
+import type { BookingRequestWithDetails } from "@/types/booking";
+
+interface InspectionStatus {
+  bookingId: string;
+  hasPickup: boolean;
+  hasReturn: boolean;
+}
+
+type InspectionCandidate = {
+  booking: BookingRequestWithDetails;
+  status: InspectionStatus | undefined;
+  urgencyScore: number;
+};
 
 const RenterDashboard = () => {
   const { user } = useAuth();
@@ -28,6 +45,10 @@ const RenterDashboard = () => {
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "overview";
   const { t } = useTranslation("dashboard");
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  // Track inspection status for finding urgent bookings
+  const [inspectionStatuses, setInspectionStatuses] = useState<Map<string, InspectionStatus>>(new Map());
 
   // Fetch renter bookings
   const {
@@ -38,6 +59,128 @@ const RenterDashboard = () => {
   } = useBookingRequests("renter");
 
   const { toast } = useToast();
+
+  // Fetch inspection statuses for all approved bookings (for mobile CTA)
+  useEffect(() => {
+    const fetchInspectionStatuses = async () => {
+      if (!user) return;
+
+      const approvedBookings = renterBookings.filter(b => b.status === "approved");
+      if (approvedBookings.length === 0) return;
+
+      const bookingIds = approvedBookings.map(b => b.id);
+      
+      try {
+        const { data, error } = await supabase
+          .from("equipment_inspections")
+          .select("booking_id, inspection_type")
+          .in("booking_id", bookingIds);
+
+        if (error) {
+          console.error("Error fetching inspection statuses:", error);
+          toast({
+            variant: "destructive",
+            title: "Failed to load inspection statuses",
+            description:
+              error instanceof Error
+                ? error.message
+                : "An error occurred while loading inspection statuses.",
+          });
+          return;
+        }
+
+        const statusMap = new Map<string, InspectionStatus>();
+        
+        // Initialize all bookings
+        bookingIds.forEach(id => {
+          statusMap.set(id, { bookingId: id, hasPickup: false, hasReturn: false });
+        });
+
+        // Update with actual inspection data
+        data?.forEach(inspection => {
+          const current = statusMap.get(inspection.booking_id);
+          if (current) {
+            if (inspection.inspection_type === "pickup") {
+              current.hasPickup = true;
+            } else if (inspection.inspection_type === "return") {
+              current.hasReturn = true;
+            }
+          }
+        });
+
+        setInspectionStatuses(statusMap);
+      } catch (err) {
+        console.error("Error fetching inspection statuses:", err);
+        toast({
+          variant: "destructive",
+          title: "Failed to load inspection statuses",
+          description:
+            err instanceof Error
+              ? err.message
+              : "An error occurred while loading inspection statuses.",
+        });
+      }
+    };
+
+    void fetchInspectionStatuses();
+  }, [renterBookings, toast, user]);
+
+  // Find the most urgent booking that needs inspection (for mobile CTA)
+  const urgentInspectionBooking = useMemo(() => {
+    if (!isMobile) return null;
+    
+    const today = new Date();
+    
+    // Filter to approved bookings only
+    const approvedBookings = renterBookings.filter(b => b.status === "approved");
+    
+    // Find bookings that need inspection, sorted by urgency
+    const bookingsNeedingInspection = approvedBookings
+      .map<InspectionCandidate | null>(booking => {
+        const status = inspectionStatuses.get(booking.id);
+        const startDate = new Date(booking.start_date);
+        const endDate = new Date(booking.end_date);
+        const daysUntilStart = differenceInDays(startDate, today);
+        const daysUntilEnd = differenceInDays(endDate, today);
+
+        // Determine what inspection is needed
+        const needsPickup = !status?.hasPickup;
+        const needsReturn = status?.hasPickup && !status?.hasReturn && (daysUntilEnd <= 2 || isPast(endDate));
+
+        if (!needsPickup && !needsReturn) return null;
+
+        // Calculate urgency score (lower = more urgent)
+        let urgencyScore = 100;
+        if (needsPickup) {
+          if (isPast(startDate)) urgencyScore = 0;
+          else if (daysUntilStart === 0) urgencyScore = 1;
+          else if (daysUntilStart <= 2) urgencyScore = 2 + daysUntilStart;
+          else urgencyScore = 10 + daysUntilStart;
+        } else if (needsReturn) {
+          if (isPast(endDate)) urgencyScore = 0;
+          else if (daysUntilEnd === 0) urgencyScore = 1;
+          else if (daysUntilEnd <= 2) urgencyScore = 2 + daysUntilEnd;
+          else urgencyScore = 10 + daysUntilEnd;
+        }
+
+        return {
+          booking,
+          status,
+          urgencyScore,
+        };
+      })
+      .filter(
+        (candidate): candidate is InspectionCandidate => candidate !== null
+      )
+      .sort((a, b) => a.urgencyScore - b.urgencyScore);
+
+    return bookingsNeedingInspection[0]?.booking || null;
+  }, [renterBookings, inspectionStatuses, isMobile]);
+
+  // Get inspection status for urgent booking
+  const urgentBookingStatus = urgentInspectionBooking 
+    ? inspectionStatuses.get(urgentInspectionBooking.id)
+    : null;
 
   // Memoize the status change callback to prevent effect re-runs
   const handleBookingStatusChange = useCallback(async () => {
@@ -81,7 +224,8 @@ const RenterDashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Add bottom padding on mobile when CTA is visible */}
+      <div className={`space-y-6 animate-in fade-in duration-500 ${isMobile && urgentInspectionBooking ? "pb-24" : ""}`}>
         {/* Welcome Hero Section */}
         <WelcomeHero />
 
@@ -224,6 +368,20 @@ const RenterDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Mobile Inspection CTA - Sticky bottom bar */}
+      {isMobile && urgentInspectionBooking && (
+        <MobileInspectionCTA
+          bookingId={urgentInspectionBooking.id}
+          equipmentTitle={urgentInspectionBooking.equipment.title}
+          equipmentLocation={urgentInspectionBooking.equipment.location}
+          startDate={new Date(urgentInspectionBooking.start_date)}
+          endDate={new Date(urgentInspectionBooking.end_date)}
+          hasPickupInspection={urgentBookingStatus?.hasPickup || false}
+          hasReturnInspection={urgentBookingStatus?.hasReturn || false}
+          isOwner={false}
+        />
+      )}
     </DashboardLayout>
   );
 };

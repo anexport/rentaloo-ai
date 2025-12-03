@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
-import InspectionForm from "@/components/inspection/InspectionForm";
+import InspectionWizard from "@/components/inspection/InspectionWizard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
 import type { InspectionType } from "@/types/inspection";
@@ -122,23 +121,30 @@ export default function EquipmentInspectionPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-muted-foreground">Loading inspection...</p>
       </div>
     );
   }
 
   if (error || !booking) {
     return (
-      <div className="container max-w-2xl mx-auto py-8 px-4">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error || "Something went wrong"}</AlertDescription>
-        </Alert>
-        <Button variant="outline" className="mt-4" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Go Back
-        </Button>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="max-w-md w-full space-y-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error || "Something went wrong"}</AlertDescription>
+          </Alert>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleCancel}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Go Back
+          </Button>
+        </div>
       </div>
     );
   }
@@ -146,36 +152,14 @@ export default function EquipmentInspectionPage() {
   const isOwner = booking.equipment?.owner_id === user?.id;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-2xl mx-auto py-8 px-4">
-        <Button
-          variant="ghost"
-          className="mb-4"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{booking.equipment?.title}</CardTitle>
-            <p className="text-sm text-muted-foreground capitalize">
-              {inspectionType} Inspection
-            </p>
-          </CardHeader>
-          <CardContent>
-            <InspectionForm
-              bookingId={booking.id}
-              categorySlug={booking.equipment?.category?.sport_type}
-              inspectionType={inspectionType}
-              isOwner={isOwner}
-              onSuccess={handleSuccess}
-              onCancel={handleCancel}
-            />
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <InspectionWizard
+      bookingId={booking.id}
+      equipmentTitle={booking.equipment?.title || "Equipment"}
+      categorySlug={booking.equipment?.category?.sport_type}
+      inspectionType={inspectionType}
+      isOwner={isOwner}
+      onSuccess={handleSuccess}
+      onCancel={handleCancel}
+    />
   );
 }

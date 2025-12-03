@@ -65,6 +65,55 @@
     "request_declined": "Booking request declined",
     "booking_cancelled": "Booking cancelled successfully"
   },
+  "inspection_flow": {
+    "banner": {
+      "all_complete_title": "All Inspections Complete",
+      "all_complete_description": "Both pickup and return inspections have been documented. Your rental is fully processed.",
+      "rental_active_title": "Rental Active",
+      "rental_active_description": "Pickup inspection complete. Enjoy your rental!",
+      "return_needed_hint": "Return inspection will be needed when your rental period ends on {{date}}.",
+      "pickup_required_title": "Pickup Inspection Required",
+      "pickup_required_urgent_title": "Pickup Inspection Required Now!",
+      "return_required_title": "Return Inspection Required",
+      "return_required_urgent_title": "Return Inspection Required Now!",
+      "pickup_description_owner": "As the owner, you must document the equipment condition before pickup. This protects both parties and is required to proceed with the rental.",
+      "pickup_description_renter": "As the renter, you must document the equipment condition before pickup. This protects both parties and is required to proceed with the rental.",
+      "return_description_owner": "As the owner, you must document the equipment condition upon return. This is required to complete the rental and release the security deposit.",
+      "return_description_renter": "As the renter, you must document the equipment condition upon return. This is required to complete the rental and release the security deposit.",
+      "complete_pickup_button": "Complete Pickup Inspection",
+      "complete_return_button": "Complete Return Inspection"
+    },
+    "timing": {
+      "rental_started_overdue": "Rental has started - inspection overdue!",
+      "rental_starts_today": "Rental starts today!",
+      "rental_starts_hours": "Rental starts in {{hours}} hours",
+      "rental_starts_tomorrow": "Rental starts tomorrow",
+      "rental_starts_days": "Rental starts in {{days}} days",
+      "rental_ended_overdue": "Rental period ended - inspection overdue!",
+      "rental_ends_today": "Rental ends today!",
+      "rental_ends_hours": "Rental ends in {{hours}} hours",
+      "rental_ends_tomorrow": "Rental ends tomorrow",
+      "rental_ends_days": "Rental ends in {{days}} days"
+    },
+    "stepper": {
+      "payment": "Payment",
+      "payment_confirmed": "Confirmed",
+      "payment_awaiting": "Awaiting payment",
+      "pickup": "Pickup",
+      "pickup_documented": "Documented",
+      "pickup_required": "Inspection required",
+      "active": "Active",
+      "active_in_progress": "In progress",
+      "active_completed": "Completed",
+      "active_upcoming": "Upcoming",
+      "return": "Return",
+      "return_documented": "Documented",
+      "return_required": "Inspection required",
+      "complete": "Complete",
+      "complete_finished": "Finished",
+      "complete_pending": "Pending"
+    }
+  },
   "card": {
     "status": {
       "awaiting_payment": "Awaiting Payment",

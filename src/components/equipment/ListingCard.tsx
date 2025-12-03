@@ -141,7 +141,7 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
                         onClick={handlePrevImage}
                         size="icon-sm"
                         variant="ghost"
-                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white shadow-md max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 dark:bg-gray-900/90 hover:bg-white dark:hover:bg-gray-800 shadow-md backdrop-blur-sm max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground dark:text-foreground"
                         aria-label={t("listing_card.previous_image")}
                       >
                         <ChevronLeft className="h-5 w-5" />
@@ -155,7 +155,7 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
                         onClick={handleNextImage}
                         size="icon-sm"
                         variant="ghost"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white shadow-md max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 dark:bg-gray-900/90 hover:bg-white dark:hover:bg-gray-800 shadow-md backdrop-blur-sm max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground dark:text-foreground"
                         aria-label={t("listing_card.next_image")}
                       >
                         <ChevronRight className="h-5 w-5" />
@@ -175,8 +175,8 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
                         }}
                         className={`h-1.5 rounded-full transition-all ${
                           idx === currentImageIndex
-                            ? "w-6 bg-white"
-                            : "w-1.5 bg-white/60 hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-white/80"
+                            ? "w-6 bg-white dark:bg-white/90"
+                            : "w-1.5 bg-white/60 dark:bg-white/40 hover:bg-white/80 dark:hover:bg-white/60 focus:outline-none focus:ring-2 focus:ring-white/80 dark:focus:ring-white/60"
                         }`}
                         aria-label={t("listing_card.go_to_image", { number: idx + 1 })}
                       />
@@ -200,17 +200,17 @@ const ListingCard = ({ listing, onOpen, className }: Props) => {
               <button
                 onClick={handleWishlist}
                 disabled={isTogglingFavorite}
-                className="absolute top-2 right-2 h-9 w-9 rounded-full bg-white hover:bg-white border border-gray-200 shadow-lg opacity-80 group-hover:opacity-100 transition-all flex items-center justify-center z-10 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute top-2 right-2 h-9 w-9 rounded-full bg-white dark:bg-gray-900 hover:bg-white dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg backdrop-blur-sm opacity-80 group-hover:opacity-100 transition-all flex items-center justify-center z-10 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label={
                   isWishlisted ? t("listing_card.wishlist_remove") : t("listing_card.wishlist_add")
                 }
               >
                 {isTogglingFavorite ? (
-                  <Loader2 className="h-4 w-4 text-gray-700 animate-spin" />
+                  <Loader2 className="h-4 w-4 text-gray-700 dark:text-gray-200 animate-spin" />
                 ) : (
                   <Heart
                     className={`h-4 w-4 transition-colors ${
-                      isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700"
+                      isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700 dark:text-gray-200"
                     }`}
                   />
                 )}

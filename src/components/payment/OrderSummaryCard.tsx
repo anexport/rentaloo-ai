@@ -67,7 +67,7 @@ const OrderSummaryCard = ({
             {listing.title}
           </h3>
           {listing.category?.name && (
-            <Badge variant="secondary" className="mt-1 text-xs bg-white/90">
+            <Badge variant="secondary" className="mt-1 text-xs bg-background/90 backdrop-blur-sm border-border/50">
               {listing.category.name}
             </Badge>
           )}
