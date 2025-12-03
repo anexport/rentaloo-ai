@@ -73,7 +73,7 @@ export function InspectionStepIndicator({
                   <div
                     className={cn(
                       "h-0.5 flex-1 mx-2 transition-colors duration-300 self-start mt-5",
-                      index < currentStep ? "bg-primary" : "bg-muted-foreground/20"
+                      index < clampedStep ? "bg-primary" : "bg-muted-foreground/20"
                     )}
                   />
                 )}

@@ -188,12 +188,14 @@ const StatsOverview = () => {
           paymentsResult,
           reviewsResult,
         ] = await Promise.all([
-          // Active bookings (currently in progress - status: "active")
+          // Active bookings (bookings active during current month period)
           supabase
             .from("booking_requests")
             .select("*", { count: "exact", head: true })
             .eq("renter_id", user.id)
-            .eq("status", "active"),
+            .lt("start_date", now.toISOString())
+            .gte("end_date", currentMonthStart.toISOString())
+            .in("status", ["active", "completed"]),
           // Saved items (favorites, all-time)
           supabase
             .from("user_favorites")

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import type { BookingRequestWithDetails } from "@/types/booking";
@@ -26,22 +27,18 @@ export function useActiveRental(bookingId: string | undefined): ActiveRentalData
   refetch: () => Promise<void>;
 } {
   const { user } = useAuth();
-  const [booking, setBooking] = useState<BookingRequestWithDetails | null>(null);
-  const [pickupInspection, setPickupInspection] = useState<InspectionData | null>(null);
-  const [returnInspection, setReturnInspection] = useState<InspectionData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchRental = useCallback(async () => {
-    if (!bookingId || !user) {
-      setIsLoading(false);
-      return;
-    }
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['active-rental', bookingId, user?.id],
+    queryFn: async () => {
+      if (!bookingId || !user) {
+        return {
+          booking: null,
+          pickupInspection: null,
+          returnInspection: null,
+        };
+      }
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
       // Fetch booking with equipment and owner details
       const { data: bookingData, error: bookingError } = await supabase
         .from("booking_requests")
@@ -68,8 +65,6 @@ export function useActiveRental(bookingId: string | undefined): ActiveRentalData
         throw new Error("You don't have access to this rental");
       }
 
-      setBooking(bookingData as BookingRequestWithDetails);
-
       // Fetch inspections
       const { data: inspections, error: inspectionsError } = await supabase
         .from("equipment_inspections")
@@ -88,42 +83,44 @@ export function useActiveRental(bookingId: string | undefined): ActiveRentalData
       const pickup = inspections?.find((i) => i.inspection_type === "pickup");
       const returnInsp = inspections?.find((i) => i.inspection_type === "return");
 
+      let pickupInspection: InspectionData | null = null;
+      let returnInspection: InspectionData | null = null;
+
       if (pickup) {
-        const checklistItems = Array.isArray(pickup.checklist_items) 
-          ? pickup.checklist_items 
+        const checklistItems = Array.isArray(pickup.checklist_items)
+          ? pickup.checklist_items
           : [];
-        setPickupInspection({
+        pickupInspection = {
           id: pickup.id,
           inspection_type: "pickup",
           completed_at: pickup.timestamp,
           photos_count: pickup.photos?.length || 0,
           checklist_count: checklistItems.length,
-        });
+        };
       }
 
       if (returnInsp) {
-        const checklistItems = Array.isArray(returnInsp.checklist_items) 
-          ? returnInsp.checklist_items 
+        const checklistItems = Array.isArray(returnInsp.checklist_items)
+          ? returnInsp.checklist_items
           : [];
-        setReturnInspection({
+        returnInspection = {
           id: returnInsp.id,
           inspection_type: "return",
           completed_at: returnInsp.timestamp,
           photos_count: returnInsp.photos?.length || 0,
           checklist_count: checklistItems.length,
-        });
+        };
       }
-    } catch (err) {
-      console.error("Error fetching active rental:", err);
-      setError(err instanceof Error ? err.message : "Failed to load rental");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [bookingId, user]);
 
-  useEffect(() => {
-    void fetchRental();
-  }, [fetchRental]);
+      return {
+        booking: bookingData as BookingRequestWithDetails,
+        pickupInspection,
+        returnInspection,
+      };
+    },
+    enabled: !!bookingId && !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -140,7 +137,7 @@ export function useActiveRental(bookingId: string | undefined): ActiveRentalData
           filter: `id=eq.${bookingId}`,
         },
         () => {
-          void fetchRental();
+          void refetch();
         }
       )
       .on(
@@ -152,23 +149,29 @@ export function useActiveRental(bookingId: string | undefined): ActiveRentalData
           filter: `booking_id=eq.${bookingId}`,
         },
         () => {
-          void fetchRental();
+          void refetch();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIPTION_ERROR') {
+          console.error('Failed to subscribe to rental updates');
+        }
+      });
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [bookingId, fetchRental]);
+  }, [bookingId, refetch]);
 
   return {
-    booking,
-    pickupInspection,
-    returnInspection,
+    booking: data?.booking ?? null,
+    pickupInspection: data?.pickupInspection ?? null,
+    returnInspection: data?.returnInspection ?? null,
     isLoading,
-    error,
-    refetch: fetchRental,
+    error: error?.message ?? null,
+    refetch: async () => {
+      await refetch();
+    },
   };
 }
 
@@ -182,20 +185,14 @@ export function useActiveRentals(role: "renter" | "owner" | "both" = "both"): {
   refetch: () => Promise<void>;
 } {
   const { user } = useAuth();
-  const [rentals, setRentals] = useState<BookingRequestWithDetails[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchRentals = useCallback(async () => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
+  const { data: rentals = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['active-rentals', user?.id, role],
+    queryFn: async () => {
+      if (!user) {
+        return [];
+      }
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
       // Fetch rentals where user is renter
       let renterRentals: BookingRequestWithDetails[] = [];
       if (role === "renter" || role === "both") {
@@ -232,7 +229,7 @@ export function useActiveRentals(role: "renter" | "owner" | "both" = "both"): {
 
         if (userEquipment && userEquipment.length > 0) {
           const equipmentIds = userEquipment.map((e) => e.id);
-          
+
           const { data, error: ownerError } = await supabase
             .from("booking_requests")
             .select(`
@@ -261,19 +258,19 @@ export function useActiveRentals(role: "renter" | "owner" | "both" = "both"): {
           index === self.findIndex((r) => r.id === rental.id)
       );
 
-      setRentals(uniqueRentals);
-    } catch (err) {
-      console.error("Error fetching active rentals:", err);
-      setError(err instanceof Error ? err.message : "Failed to load rentals");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, role]);
+      return uniqueRentals;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  useEffect(() => {
-    void fetchRentals();
-  }, [fetchRentals]);
-
-  return { rentals, isLoading, error, refetch: fetchRentals };
+  return {
+    rentals,
+    isLoading,
+    error: error?.message ?? null,
+    refetch: async () => {
+      await refetch();
+    },
+  };
 }
 

@@ -364,6 +364,7 @@ const RecommendationsSection = ({ onOpenListing }: RecommendationsSectionProps) 
                     variant="ghost"
                     onClick={handleViewAll}
                     className="hidden sm:flex items-center gap-2"
+                    aria-label={`View all ${section.title.toLowerCase()}`}
                   >
                     View all
                     <ChevronRight className="h-4 w-4" />
@@ -411,6 +412,7 @@ const RecommendationsSection = ({ onOpenListing }: RecommendationsSectionProps) 
                     variant="ghost"
                     onClick={handleViewAll}
                     className="flex items-center gap-2"
+                    aria-label={`View all ${section.title.toLowerCase()}`}
                   >
                     View all
                     <ChevronRight className="h-4 w-4" />

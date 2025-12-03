@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useActiveRental } from "@/hooks/useActiveRental";
 import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
 import RentalCountdown from "@/components/rental/RentalCountdown";
 import RentalQuickActions from "@/components/rental/RentalQuickActions";
 import { calculateRentalCountdown } from "@/types/rental";

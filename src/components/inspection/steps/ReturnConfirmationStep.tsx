@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   CheckCircle2,
   Camera,
@@ -140,6 +140,18 @@ export default function ReturnConfirmationStep({
   const [isCompleting, setIsCompleting] = useState(false);
   const [error, setError] = useState("");
   const [isComplete, setIsComplete] = useState(false);
+  const isMountedRef = useRef(true);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const { pickupInspection, returnInspection, pickupChecklistItems, returnChecklistItems } =
     conditionComparison;
@@ -208,8 +220,10 @@ export default function ReturnConfirmationStep({
       }
 
       setIsComplete(true);
-      setTimeout(() => {
-        onSuccess();
+      timeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          onSuccess();
+        }
       }, 2500);
     } catch (err) {
       console.error("Error completing rental:", err);

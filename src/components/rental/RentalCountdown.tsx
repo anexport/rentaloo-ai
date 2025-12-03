@@ -22,6 +22,11 @@ export default function RentalCountdown({
   showProgress = true,
   compact = false,
 }: RentalCountdownProps) {
+  // Validate dates
+  if (!startDate || !endDate) {
+    return null;
+  }
+
   const [countdown, setCountdown] = useState<RentalCountdownData>(() =>
     calculateRentalCountdown(startDate, endDate)
   );
@@ -138,7 +143,6 @@ export default function RentalCountdown({
               aria-valuemax={100}
               aria-valuenow={countdown.progressPercentage}
               aria-label={`Rental return progress: ${countdown.progressPercentage}% complete`}
-              tabIndex={0}
               className={cn(
                 "h-full rounded-full transition-all duration-500",
                 styles.progress

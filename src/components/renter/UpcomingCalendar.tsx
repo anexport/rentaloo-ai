@@ -221,31 +221,33 @@ const UpcomingCalendar = () => {
         {selectedDate && getBookingsForDate(selectedDate).length > 0 && (
           <div className="pt-3 border-t">
             {getBookingsForDate(selectedDate).slice(0, 1).map((booking) => (
-              <Link
-                key={booking.id}
-                to={`/renter/dashboard?tab=bookings`}
-                className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium line-clamp-1">{booking.equipment.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(booking.start_date), "MMM d")} - {format(new Date(booking.end_date), "MMM d")}
-                  </p>
-                </div>
-                <Badge variant="secondary" className="shrink-0">
-                  {differenceInDays(new Date(booking.start_date), new Date()) === 0
-                    ? "Today"
-                    : differenceInDays(new Date(booking.start_date), new Date()) === 1
-                    ? "Tomorrow"
-                    : `${differenceInDays(new Date(booking.start_date), new Date())}d`}
-                </Badge>
-              </Link>
+              booking.equipment ? (
+                <Link
+                  key={booking.id}
+                  to={`/renter/dashboard?tab=bookings`}
+                  className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium line-clamp-1">{booking.equipment.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(booking.start_date), "MMM d")} - {format(new Date(booking.end_date), "MMM d")}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="shrink-0">
+                    {differenceInDays(new Date(booking.start_date), new Date()) === 0
+                      ? "Today"
+                      : differenceInDays(new Date(booking.start_date), new Date()) === 1
+                      ? "Tomorrow"
+                      : `${differenceInDays(new Date(booking.start_date), new Date())}d`}
+                  </Badge>
+                </Link>
+              ) : null
             ))}
           </div>
         )}
 
         {/* Next rental (when no date selected) */}
-        {!selectedDate && upcomingBookings.length > 0 && (
+        {!selectedDate && upcomingBookings.length > 0 && upcomingBookings[0].equipment && (
           <div className="pt-3 border-t">
             <Link
               to={`/renter/dashboard?tab=bookings`}
