@@ -621,8 +621,17 @@ const BookingRequestCard = ({
 
       {/* Messaging Modal */}
       {showMessaging && conversationId && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-xl border">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            // Close modal when clicking the backdrop
+            if (e.target === e.currentTarget) {
+              setShowMessaging(false);
+              setConversationId(null);
+            }
+          }}
+        >
+          <div className="max-w-4xl w-full flex flex-col" style={{ height: 'min(90vh, 800px)' }}>
             <MessagingInterface
               initialConversationId={conversationId}
               onClose={() => {

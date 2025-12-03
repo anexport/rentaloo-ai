@@ -534,7 +534,7 @@ const MessagingInterface = ({
   return (
     <div
       className={cn(
-        "grid w-full gap-0 overflow-hidden rounded-2xl border border-border/80 bg-card/40 shadow-sm",
+        "grid w-full h-full gap-0 overflow-hidden rounded-2xl border border-border/80 bg-card/40 shadow-sm",
         "min-h-[520px]"
       )}
     >
