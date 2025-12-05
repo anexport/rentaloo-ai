@@ -5,9 +5,10 @@ import {
   ArrowLeft,
   Phone,
   Info,
-  AlertTriangle,
   Sparkles,
   Lock,
+  ChevronRight,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Link } from "react-router-dom";
 import DocumentUpload from "@/components/verification/DocumentUpload";
 import VerificationStatusGrid from "@/components/verification/VerificationStatusGrid";
 import TrustScore from "@/components/verification/TrustScore";
@@ -157,51 +157,54 @@ const VerifyIdentity = () => {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6 pb-8">
-        {/* Back Button */}
-        <Link
-          to="/renter/dashboard"
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to Dashboard
-        </Link>
 
-        {/* Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 mb-2">
-            <Shield className="h-8 w-8 text-primary" />
+        {/* Header with gradient animation */}
+        <div className="relative text-center space-y-3 py-6 px-4 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-primary/5 border border-primary/10 overflow-hidden">
+          {/* Animated gradient orb */}
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-primary/20 to-purple-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-tr from-blue-500/10 to-primary/20 rounded-full blur-2xl animate-pulse delay-700" />
+          
+          <div className="relative">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 shadow-lg shadow-primary/20 mb-3">
+              <Shield className="h-8 w-8 text-primary drop-shadow-sm" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text">
+              Verify Your Identity
+            </h1>
+            <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base mt-2">
+              Build trust and unlock premium rental opportunities
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Verify Your Identity
-          </h1>
-          <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base">
-            Build trust and unlock more rental opportunities by completing verification
-          </p>
         </div>
 
         {/* Urgent CTA for unverified users */}
         {progress === 0 && !hasAnyVerification && (
-          <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20">
-            <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/50">
-                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          <Card className="border-amber-200/50 bg-gradient-to-r from-amber-50/80 to-orange-50/50 dark:border-amber-900/50 dark:from-amber-950/30 dark:to-orange-950/20 overflow-hidden">
+            <CardContent className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-5">
+              {/* Decorative element */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-200/30 to-orange-200/20 dark:from-amber-800/20 dark:to-orange-800/10 rounded-full blur-2xl -mr-10 -mt-10" />
+              
+              <div className="relative flex items-start gap-4">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/60 dark:to-amber-900/30 shadow-sm">
+                  <Zap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-amber-900 dark:text-amber-200">
-                    Complete your verification
+                  <p className="font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                    Unlock Your Full Potential
+                    <span className="text-xs font-normal bg-amber-200/50 dark:bg-amber-800/50 px-2 py-0.5 rounded-full">+40 points available</span>
                   </p>
-                  <p className="text-sm text-amber-700 dark:text-amber-300">
-                    Your account is unverified. Verify now to start renting safely.
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-0.5">
+                    Complete verification to access premium features and build trust
                   </p>
                 </div>
               </div>
               <Button
                 onClick={() => setActiveStep("identity")}
-                className="w-full sm:w-auto"
+                className="relative w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
                 Get Started
+                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </CardContent>
           </Card>

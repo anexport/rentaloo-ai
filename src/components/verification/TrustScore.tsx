@@ -14,6 +14,9 @@ import {
   CheckCircle,
   TrendingUp,
   Sparkles,
+  Award,
+  Target,
+  Zap,
 } from "lucide-react";
 import type { TrustScore as TrustScoreType } from "@/types/verification";
 import {
@@ -33,7 +36,7 @@ type TrustScoreProps = {
 const SCORE_COMPONENTS = [
   {
     key: "verification" as const,
-    label: "Verification",
+    label: "Verifications",
     icon: Shield,
     max: 30,
     description: "Identity, email, phone verification",
@@ -47,14 +50,14 @@ const SCORE_COMPONENTS = [
   },
   {
     key: "completedBookings" as const,
-    label: "Completed Bookings",
+    label: "Completed",
     icon: CheckCircle,
     max: 20,
     description: "Successfully completed rentals",
   },
   {
     key: "responseTime" as const,
-    label: "Response Time",
+    label: "Response",
     icon: Clock,
     max: 15,
     description: "Average response to messages",
@@ -68,14 +71,27 @@ const SCORE_COMPONENTS = [
   },
 ];
 
+// Badge configurations based on score
+const BADGES = [
+  { min: 0, max: 24, label: "Newcomer", color: "text-slate-500", bg: "bg-slate-100 dark:bg-slate-800", icon: "🌱" },
+  { min: 25, max: 49, label: "Bronze", color: "text-amber-700", bg: "bg-amber-100 dark:bg-amber-900/30", icon: "🥉" },
+  { min: 50, max: 74, label: "Silver", color: "text-slate-600", bg: "bg-slate-200 dark:bg-slate-700", icon: "🥈" },
+  { min: 75, max: 89, label: "Gold", color: "text-yellow-600", bg: "bg-yellow-100 dark:bg-yellow-900/30", icon: "🥇" },
+  { min: 90, max: 100, label: "Platinum", color: "text-purple-600", bg: "bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30", icon: "💎" },
+];
+
+const getBadge = (score: number) => BADGES.find(b => score >= b.min && score <= b.max) || BADGES[0];
+
 // Circular progress component
 const CircularProgress = ({
   value,
+  potentialValue,
   size = 160,
   strokeWidth = 12,
   className,
 }: {
   value: number;
+  potentialValue?: number;
   size?: number;
   strokeWidth?: number;
   className?: string;
@@ -83,14 +99,16 @@ const CircularProgress = ({
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (value / 100) * circumference;
+  const potentialOffset = potentialValue ? circumference - (potentialValue / 100) * circumference : offset;
   const prefersReducedMotion = usePrefersReducedMotion();
 
   // Color based on score
   const getProgressColor = (score: number) => {
-    if (score >= 80) return "stroke-green-500 dark:stroke-green-400";
-    if (score >= 60) return "stroke-blue-500 dark:stroke-blue-400";
-    if (score >= 40) return "stroke-amber-500 dark:stroke-amber-400";
-    return "stroke-red-500 dark:stroke-red-400";
+    if (score >= 90) return "stroke-purple-500 dark:stroke-purple-400";
+    if (score >= 75) return "stroke-yellow-500 dark:stroke-yellow-400";
+    if (score >= 50) return "stroke-blue-500 dark:stroke-blue-400";
+    if (score >= 25) return "stroke-amber-500 dark:stroke-amber-400";
+    return "stroke-slate-400 dark:stroke-slate-500";
   };
 
   return (
@@ -108,7 +126,25 @@ const CircularProgress = ({
         strokeWidth={strokeWidth}
         className="stroke-muted"
       />
-      {/* Progress circle */}
+      {/* Potential progress circle (faded) */}
+      {potentialValue && potentialValue > value && (
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={potentialOffset}
+          className={cn(
+            getProgressColor(potentialValue),
+            "opacity-20",
+            !prefersReducedMotion && "transition-all duration-700 ease-out"
+          )}
+        />
+      )}
+      {/* Current progress circle */}
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -135,14 +171,17 @@ const TrustScore = ({
 }: TrustScoreProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isZeroScore = score.overall === 0;
-  const isExcellent = score.overall >= 80;
+  const badge = getBadge(score.overall);
 
-  const getScoreBackground = () => {
-    if (score.overall >= 80) return "bg-green-50 dark:bg-green-950/30";
-    if (score.overall >= 60) return "bg-blue-50 dark:bg-blue-950/30";
-    if (score.overall >= 40) return "bg-amber-50 dark:bg-amber-950/30";
-    return "bg-red-50 dark:bg-red-950/30";
-  };
+  // Calculate potential score (if all verifications were complete)
+  const verificationMax = 30;
+  const currentVerification = score.components.verification;
+  const potentialBoost = verificationMax - currentVerification;
+  const potentialScore = Math.min(100, score.overall + potentialBoost);
+
+  // Next milestone
+  const nextBadge = BADGES.find(b => b.min > score.overall);
+  const pointsToNext = nextBadge ? nextBadge.min - score.overall : 0;
 
   if (compact) {
     return (
@@ -156,9 +195,12 @@ const TrustScore = ({
           </div>
         </div>
         <div>
-          <p className="text-sm font-medium text-foreground">Trust Score</p>
-          <p className={cn("text-xs font-medium", getTrustScoreColor(score.overall))}>
-            {getTrustScoreLabel(score.overall)}
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-medium text-foreground">Trust Score</p>
+            <span className="text-xs">{badge.icon}</span>
+          </div>
+          <p className={cn("text-xs font-medium", badge.color)}>
+            {badge.label}
           </p>
         </div>
       </div>
@@ -170,8 +212,8 @@ const TrustScore = ({
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/10">
-              <Shield className="h-5 w-5 text-primary" />
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
+              <Award className="h-5 w-5 text-primary" />
             </div>
             <div>
               <CardTitle className="text-lg">Trust Score</CardTitle>
@@ -180,28 +222,34 @@ const TrustScore = ({
               </CardDescription>
             </div>
           </div>
-          {isExcellent && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30">
-              <Sparkles className="h-3 w-3 text-green-600 dark:text-green-400" />
-              <span className="text-[10px] font-semibold text-green-700 dark:text-green-400">
-                TOP RATED
-              </span>
-            </div>
-          )}
+          {/* Badge Display */}
+          <div className={cn(
+            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold",
+            badge.bg,
+            badge.color
+          )}>
+            <span className="text-sm">{badge.icon}</span>
+            {badge.label}
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-5">
         {/* Circular Score Display */}
         <div
           className={cn(
             "relative flex flex-col items-center justify-center py-6 rounded-2xl transition-colors",
-            getScoreBackground(),
+            "bg-gradient-to-br from-muted/50 to-muted/20",
             isZeroScore && !prefersReducedMotion && "animate-pulse"
           )}
         >
           <div className="relative">
-            <CircularProgress value={score.overall} size={140} strokeWidth={10} />
+            <CircularProgress 
+              value={score.overall} 
+              potentialValue={potentialScore}
+              size={140} 
+              strokeWidth={10} 
+            />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span
                 className={cn(
@@ -217,34 +265,56 @@ const TrustScore = ({
             </div>
           </div>
 
-          <div className="mt-4 text-center">
+          {/* Status and Next Milestone */}
+          <div className="mt-4 flex flex-col items-center gap-2">
             <span
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold",
                 getTrustScoreColor(score.overall),
-                getScoreBackground()
+                "bg-background border"
               )}
             >
               <TrendingUp className="h-3.5 w-3.5" />
               {getTrustScoreLabel(score.overall)}
             </span>
+            
+            {/* Next milestone indicator */}
+            {nextBadge && pointsToNext > 0 && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Target className="h-3 w-3" />
+                <span>
+                  <strong className="text-foreground">{pointsToNext}</strong> points to {nextBadge.icon} {nextBadge.label}
+                </span>
+              </div>
+            )}
           </div>
+
+          {/* Potential Score Indicator */}
+          {potentialBoost > 0 && (
+            <div className="mt-3 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10 flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-xs text-muted-foreground">
+                Complete verification for up to <strong className="text-primary">{potentialScore}</strong> points
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Score Breakdown */}
         {showBreakdown && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-foreground">
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
                 Score Breakdown
               </h4>
               <span className="text-xs text-muted-foreground tabular-nums">
                 {SCORE_COMPONENTS.reduce((acc, c) => acc + score.components[c.key], 0)}/
-                {SCORE_COMPONENTS.reduce((acc, c) => acc + c.max, 0)} points
+                {SCORE_COMPONENTS.reduce((acc, c) => acc + c.max, 0)} pts
               </span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {SCORE_COMPONENTS.map((component) => {
                 const Icon = component.icon;
                 const value = score.components[component.key];
@@ -254,26 +324,31 @@ const TrustScore = ({
                   if (pct >= 80) return "[&>div]:bg-green-500 dark:[&>div]:bg-green-400";
                   if (pct >= 60) return "[&>div]:bg-blue-500 dark:[&>div]:bg-blue-400";
                   if (pct >= 40) return "[&>div]:bg-amber-500 dark:[&>div]:bg-amber-400";
-                  return "[&>div]:bg-red-500 dark:[&>div]:bg-red-400";
+                  if (pct > 0) return "[&>div]:bg-orange-500 dark:[&>div]:bg-orange-400";
+                  return "[&>div]:bg-muted-foreground/30";
                 };
 
                 return (
                   <div key={component.key} className="group">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={cn(
-                            "p-1 rounded-md transition-colors",
-                            "bg-muted group-hover:bg-primary/10"
-                          )}
-                        >
-                          <Icon className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </div>
-                        <span className="text-xs font-medium text-foreground">
-                          {component.label}
-                        </span>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div
+                        className={cn(
+                          "p-1 rounded-md transition-colors",
+                          value > 0 ? "bg-primary/10" : "bg-muted"
+                        )}
+                      >
+                        <Icon className={cn(
+                          "h-3 w-3 transition-colors",
+                          value > 0 ? "text-primary" : "text-muted-foreground/50"
+                        )} />
                       </div>
-                      <span className="text-xs font-semibold text-foreground tabular-nums">
+                      <span className="flex-1 text-xs font-medium text-foreground">
+                        {component.label}
+                      </span>
+                      <span className={cn(
+                        "text-xs font-semibold tabular-nums",
+                        value > 0 ? "text-foreground" : "text-muted-foreground/50"
+                      )}>
                         {value}/{component.max}
                       </span>
                     </div>
@@ -288,21 +363,19 @@ const TrustScore = ({
           </div>
         )}
 
-        {/* Tips Section */}
-        {score.overall < 100 && (
-          <div className="p-3 rounded-xl bg-primary/5 border border-primary/10">
-            <div className="flex items-start gap-2">
-              <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs font-medium text-foreground">
-                  Boost your score
+        {/* Quick Action */}
+        {score.components.verification < 30 && (
+          <div className="p-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+            <div className="flex items-start gap-3">
+              <div className="p-1.5 rounded-lg bg-primary/20">
+                <Zap className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">
+                  Quick boost available!
                 </p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {score.components.verification < 30
-                    ? "Complete identity verification to gain up to +30 points instantly!"
-                    : score.components.reviews < 25
-                    ? "Complete more rentals and get positive reviews to increase your score."
-                    : "Keep up the great work! Maintain fast response times."}
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Complete verification to instantly gain up to <strong className="text-primary">+{30 - score.components.verification}</strong> points.
                 </p>
               </div>
             </div>
