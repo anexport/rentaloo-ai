@@ -162,17 +162,22 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
 
   // Subscribe to trust score updates via Supabase Realtime
   useEffect(() => {
+    let isMounted = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     const setupRealtimeSubscription = async () => {
       let targetUserId = options.userId;
       if (!targetUserId) {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user || !isMounted) return;
         targetUserId = user.id;
       }
 
-      const channel = supabase
+      if (!isMounted) return;
+
+      channel = supabase
         .channel(`profile-trust-${targetUserId}`)
         .on(
           "postgres_changes",
@@ -183,6 +188,7 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
             filter: `id=eq.${targetUserId}`,
           },
           (payload) => {
+            if (!isMounted) return;
             // Trust score was updated, refresh profile
             const newData = payload.new as { trust_score?: number };
             const oldData = payload.old as { trust_score?: number };
@@ -192,16 +198,15 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
           }
         )
         .subscribe();
-
-      return () => {
-        void supabase.removeChannel(channel);
-      };
     };
 
-    const cleanup = setupRealtimeSubscription();
+    void setupRealtimeSubscription();
 
     return () => {
-      cleanup.then((fn) => fn?.());
+      isMounted = false;
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
     };
   }, [options.userId, fetchVerificationProfile]);
 

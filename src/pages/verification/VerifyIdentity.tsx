@@ -80,6 +80,7 @@ const VerifyIdentity = () => {
   } = useVerification();
 
   const [activeStep, setActiveStep] = useState<VerificationStep>("overview");
+  const [isVerifyingPhone, setIsVerifyingPhone] = useState(false);
 
   const hasAnyVerification = useMemo(() => {
     if (!profile) return false;
@@ -113,31 +114,36 @@ const VerifyIdentity = () => {
   };
 
   const handlePhoneVerify = async (_phoneNumber: string, code: string) => {
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        if (code === "123456") {
-          fetchVerificationProfile()
-            .then(() => {
-              toast({
-                title: "Phone verified successfully",
-                description: "Your phone number has been verified.",
+    setIsVerifyingPhone(true);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        setTimeout(() => {
+          if (code === "123456") {
+            fetchVerificationProfile()
+              .then(() => {
+                toast({
+                  title: "Phone verified successfully",
+                  description: "Your phone number has been verified.",
+                });
+                resolve();
+              })
+              .catch((error) => {
+                toast({
+                  title: "Verification incomplete",
+                  description:
+                    "Phone verified but profile refresh failed. Please reload the page.",
+                  variant: "destructive",
+                });
+                reject(error);
               });
-              resolve();
-            })
-            .catch((error) => {
-              toast({
-                title: "Verification incomplete",
-                description:
-                  "Phone verified but profile refresh failed. Please reload the page.",
-                variant: "destructive",
-              });
-              reject(error);
-            });
-        } else {
-          reject(new Error("Invalid verification code. Try 123456 for demo."));
-        }
-      }, 1500);
-    });
+          } else {
+            reject(new Error("Invalid verification code. Try 123456 for demo."));
+          }
+        }, 1500);
+      });
+    } finally {
+      setIsVerifyingPhone(false);
+    }
   };
 
   if (loading) {
@@ -558,7 +564,7 @@ const VerifyIdentity = () => {
                   ) : (
                     <PhoneVerification
                       onVerify={handlePhoneVerify}
-                      isVerifying={uploading}
+                      isVerifying={isVerifyingPhone}
                     />
                   )}
                 </CardContent>
