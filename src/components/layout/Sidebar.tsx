@@ -53,6 +53,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const location = useLocation();
   const { profile } = useVerification();
   const verificationProgress = profile ? getVerificationProgress(profile) : 0;
+  const trustScore = profile?.trustScore?.overall ?? 0;
   const { user } = useAuth();
   const { activeMode } = useRoleMode();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -658,16 +659,16 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                       {t("sidebar.trust_score")}
                     </span>
                     <span className="text-xs font-semibold text-primary">
-                      {verificationProgress}%
+                      {trustScore}
                     </span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-1.5">
                     <div
                       className="bg-primary h-1.5 rounded-full transition-all"
-                      style={{ width: `${verificationProgress}%` }}
+                      style={{ width: `${trustScore}%` }}
                     />
                   </div>
-                  {verificationProgress === 100 && (
+                  {trustScore >= 80 && (
                     <div className="mt-1">
                       <VerificationBadge status="verified" showLabel={false} />
                     </div>

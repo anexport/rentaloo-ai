@@ -18,18 +18,26 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
   const [uploading, setUploading] = useState(false);
 
   const fetchVerificationProfile = useCallback(async () => {
-    // Step 1: Validate and get targetUserId (all validation happens first)
+    // Step 1: Validate and get targetUserId and auth user data
     let targetUserId = options.userId;
+    let authUser: { email_confirmed_at?: string | null } | null = null;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!targetUserId) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) {
         setError("User not authenticated");
         setLoading(false);
         return;
       }
       targetUserId = user.id;
+    }
+
+    // If viewing own profile, use auth user data for email verification status
+    if (user && user.id === targetUserId) {
+      authUser = user;
     }
 
     // Step 2: Validation passed - set up state for the actual fetch
@@ -107,14 +115,21 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
           ? safeReviews.reduce((sum, r) => sum + r.rating, 0) / safeReviews.length
           : 0;
 
+      // Determine email verification status:
+      // - For own profile: use Supabase Auth's email_confirmed_at (source of truth)
+      // - For other profiles: fall back to profiles.email_verified
+      const emailVerified = authUser
+        ? !!authUser.email_confirmed_at
+        : profileData.email_verified || false;
+
       const trustScore: TrustScore = calculateTrustScore({
         identityVerified: profileData.identity_verified || false,
         phoneVerified: profileData.phone_verified || false,
-        emailVerified: profileData.email_verified || false,
+        emailVerified,
         completedBookings: bookingsCount,
         averageRating,
         totalReviews: safeReviews.length,
-        averageResponseTimeHours: 12, // This would come from messaging data
+        averageResponseTimeHours: profileData.average_response_time_hours ?? 12,
         accountAgeDays,
       });
 
@@ -122,7 +137,7 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
         userId: targetUserId,
         identityVerified: profileData.identity_verified || false,
         phoneVerified: profileData.phone_verified || false,
-        emailVerified: profileData.email_verified || false,
+        emailVerified,
         addressVerified: profileData.address_verified || false,
         trustScore,
         verifiedAt: profileData.verified_at,
@@ -144,6 +159,56 @@ export const useVerification = (options: UseVerificationOptions = {}) => {
   useEffect(() => {
     void fetchVerificationProfile();
   }, [fetchVerificationProfile]);
+
+  // Subscribe to trust score updates via Supabase Realtime
+  useEffect(() => {
+    let isMounted = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const setupRealtimeSubscription = async () => {
+      let targetUserId = options.userId;
+      if (!targetUserId) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user || !isMounted) return;
+        targetUserId = user.id;
+      }
+
+      if (!isMounted) return;
+
+      channel = supabase
+        .channel(`profile-trust-${targetUserId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "profiles",
+            filter: `id=eq.${targetUserId}`,
+          },
+          (payload) => {
+            if (!isMounted) return;
+            // Trust score was updated, refresh profile
+            const newData = payload.new as { trust_score?: number };
+            const oldData = payload.old as { trust_score?: number };
+            if (newData.trust_score !== oldData?.trust_score) {
+              void fetchVerificationProfile();
+            }
+          }
+        )
+        .subscribe();
+    };
+
+    void setupRealtimeSubscription();
+
+    return () => {
+      isMounted = false;
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
+    };
+  }, [options.userId, fetchVerificationProfile]);
 
   const uploadVerificationDocument = useCallback(
     async (file: File, type: VerificationType): Promise<void> => {

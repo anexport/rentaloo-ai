@@ -806,6 +806,7 @@ export type Database = {
         Row: {
           address_verified: boolean | null
           avatar_url: string | null
+          average_response_time_hours: number | null
           created_at: string | null
           email: string
           email_verified: boolean | null
@@ -815,6 +816,8 @@ export type Database = {
           last_seen_at: string | null
           phone_verified: boolean | null
           role: Database["public"]["Enums"]["user_role"]
+          trust_score: number | null
+          trust_score_updated_at: string | null
           updated_at: string | null
           username: string | null
           verified_at: string | null
@@ -822,6 +825,7 @@ export type Database = {
         Insert: {
           address_verified?: boolean | null
           avatar_url?: string | null
+          average_response_time_hours?: number | null
           created_at?: string | null
           email: string
           email_verified?: boolean | null
@@ -831,6 +835,8 @@ export type Database = {
           last_seen_at?: string | null
           phone_verified?: boolean | null
           role: Database["public"]["Enums"]["user_role"]
+          trust_score?: number | null
+          trust_score_updated_at?: string | null
           updated_at?: string | null
           username?: string | null
           verified_at?: string | null
@@ -838,6 +844,7 @@ export type Database = {
         Update: {
           address_verified?: boolean | null
           avatar_url?: string | null
+          average_response_time_hours?: number | null
           created_at?: string | null
           email?: string
           email_verified?: boolean | null
@@ -847,6 +854,8 @@ export type Database = {
           last_seen_at?: string | null
           phone_verified?: boolean | null
           role?: Database["public"]["Enums"]["user_role"]
+          trust_score?: number | null
+          trust_score_updated_at?: string | null
           updated_at?: string | null
           username?: string | null
           verified_at?: string | null
@@ -1189,7 +1198,102 @@ export type Database = {
       }
     }
     Functions: {
+      _postgis_deprecate: {
+        Args: { newname: string; oldname: string; version: string }
+        Returns: undefined
+      }
+      _postgis_index_extent: {
+        Args: { col: string; tbl: unknown }
+        Returns: unknown
+      }
+      _postgis_pgsql_version: { Args: never; Returns: string }
+      _postgis_scripts_pgsql_version: { Args: never; Returns: string }
+      _postgis_selectivity: {
+        Args: { att_name: string; geom: unknown; mode?: string; tbl: unknown }
+        Returns: number
+      }
+      _postgis_stats: {
+        Args: { ""?: string; att_name: string; tbl: unknown }
+        Returns: string
+      }
+      _st_3dintersects: {
+        Args: { geom1: unknown; geom2: unknown }
+        Returns: boolean
+      }
+      _st_contains: {
+        Args: { geom1: unknown; geom2: unknown }
+        Returns: boolean
+      }
+      _st_containsproperly: {
+        Args: { geom1: unknown; geom2: unknown }
+        Returns: boolean
+      }
+      _st_coveredby:
+        | { Args: { geog1: unknown; geog2: unknown }; Returns: boolean }
+        | { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      _st_covers:
+        | { Args: { geog1: unknown; geog2: unknown }; Returns: boolean }
+        | { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      _st_crosses: {
+        Args: { geom1: unknown; geom2: unknown }
+        Returns: boolean
+      }
+      _st_dwithin: {
+        Args: {
+          geog1: unknown
+          geog2: unknown
+          tolerance: number
+          use_spheroid?: boolean
+        }
+        Returns: boolean
+      }
+      _st_equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      _st_intersects: {
+        Args: { geom1: unknown; geom2: unknown }
+        Returns: boolean
+      }
+      _st_linecrossingdirection: {
+        Args: { line1: unknown; line2: unknown }
+        Returns: number
+      }
+      _st_longestline: {
+        Args: { geom1: unknown; geom2: unknown }
+        Returns: unknown
+      }
+      _st_maxdistance: {
+        Args: { geom1: unknown; geom2: unknown }
+        Returns: number
+      }
+      _st_orderingequals: {
+        Args: { geom1: unknown; geom2: unknown }
+        Returns: boolean
+      }
+      _st_overlaps: {
+        Args: { geom1: unknown; geom2: unknown }
+        Returns: boolean
+      }
+      _st_sortablehash: { Args: { geom: unknown }; Returns: number }
+      _st_touches: {
+        Args: { geom1: unknown; geom2: unknown }
+        Returns: boolean
+      }
+      _st_voronoi: {
+        Args: {
+          clip?: unknown
+          g1: unknown
+          return_polygons?: boolean
+          tolerance?: number
+        }
+        Returns: unknown
+      }
+      _st_within: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
       activate_rental: { Args: { p_booking_id: string }; Returns: undefined }
+      addauth: { Args: { "": string }; Returns: boolean }
+      calculate_trust_score: { Args: { user_uuid: string }; Returns: number }
+      calculate_user_response_time: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
       check_booking_conflicts: {
         Args: {
           p_end_date: string
@@ -1204,7 +1308,7 @@ export type Database = {
         Returns: number
       }
       complete_rental: { Args: { p_booking_id: string }; Returns: undefined }
-      get_unread_messages_count: { Args: Record<PropertyKey, never>; Returns: number }
+      get_unread_messages_count: { Args: never; Returns: number }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
@@ -1225,7 +1329,16 @@ export type Database = {
         Args: { p_conversation: string }
         Returns: undefined
       }
-      update_last_seen: { Args: Record<PropertyKey, never>; Returns: undefined }
+      sync_existing_profiles_from_auth: { Args: never; Returns: number }
+      update_last_seen: { Args: never; Returns: undefined }
+      update_user_response_time: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
+      update_user_trust_score: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       booking_status:

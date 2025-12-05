@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Card,
   CardHeader,
@@ -6,87 +5,95 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { Info, Shield, Mail, Phone, MapPin } from "lucide-react";
-import VerificationBadge from "./VerificationBadge";
-import type { UserVerificationProfile } from "../../types/verification";
+import { Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import VerificationStatusGrid from "./VerificationStatusGrid";
+import type { UserVerificationProfile } from "@/types/verification";
 import { getVerificationProgress } from "@/lib/verification";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
-interface VerificationProgressCardProps {
+type VerificationProgressCardProps = {
   profile: UserVerificationProfile;
-}
+  onVerificationClick?: (key: string) => void;
+  className?: string;
+};
 
-const VerificationProgressCard: React.FC<VerificationProgressCardProps> = ({
+const VerificationProgressCard = ({
   profile,
-}) => {
+  onVerificationClick,
+  className,
+}: VerificationProgressCardProps) => {
   const progress = getVerificationProgress(profile);
+
   return (
-    <Card>
-      <CardHeader>
+    <Card className={cn(className)}>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Verification Progress</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-base">Verification Progress</CardTitle>
+            <CardDescription className="text-xs">
               Complete all verifications to maximize your trust
             </CardDescription>
           </div>
-          <Info className="h-4 w-4 text-muted-foreground" />
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Info className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Why Verify Your Identity?</DialogTitle>
+                <DialogDescription>
+                  Verification helps build trust in our community
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 text-sm">
+                <div>
+                  <h4 className="font-semibold mb-1">For Renters:</h4>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>Instant booking confirmation</li>
+                    <li>Access to premium equipment</li>
+                    <li>Build credibility with equipment owners</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Privacy & Security:</h4>
+                  <p className="text-muted-foreground">
+                    Your documents are encrypted and only used for verification.
+                    They are never shared with other users.
+                  </p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
           <div className="flex items-center justify-between text-sm mb-2">
             <span className="text-muted-foreground">Overall Progress</span>
-            <span className="font-semibold text-foreground">{progress}%</span>
+            <span className="font-semibold text-foreground tabular-nums">
+              {progress}%
+            </span>
           </div>
-          <Progress value={progress} className="h-3" />
+          <Progress value={progress} className="h-2" />
         </div>
-        <div className="grid md:grid-cols-2 gap-3 mt-6">
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/10">
-                <Shield className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-sm font-medium">Identity</span>
-            </div>
-            <VerificationBadge
-              status={profile.identityVerified ? "verified" : "unverified"}
-            />
-          </div>
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/10">
-                <Mail className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-sm font-medium">Email</span>
-            </div>
-            <VerificationBadge
-              status={profile.emailVerified ? "verified" : "unverified"}
-            />
-          </div>
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/10">
-                <Phone className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-sm font-medium">Phone</span>
-            </div>
-            <VerificationBadge
-              status={profile.phoneVerified ? "verified" : "unverified"}
-            />
-          </div>
-          <div className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/10">
-                <MapPin className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-sm font-medium">Address</span>
-            </div>
-            <VerificationBadge
-              status={profile.addressVerified ? "verified" : "unverified"}
-            />
-          </div>
-        </div>
+
+        <VerificationStatusGrid
+          profile={profile}
+          interactive={!!onVerificationClick}
+          onItemClick={onVerificationClick}
+        />
       </CardContent>
     </Card>
   );
