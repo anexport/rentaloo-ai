@@ -762,7 +762,7 @@ const EquipmentDetailDialog = ({
         <SheetContent
           ref={sheetContentRefCallback}
           side="bottom"
-          className="h-[90vh] max-h-[90vh] w-full overflow-y-auto px-0"
+          className="h-[90vh] max-h-[90vh] w-full overflow-y-auto scrollbar-hide px-0"
         >
           <div className="px-6 pt-6 pb-6">{renderContent()}</div>
         </SheetContent>
@@ -773,7 +773,7 @@ const EquipmentDetailDialog = ({
   // Desktop: Use Dialog component
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto scrollbar-hide">
         <DialogTitle className="sr-only">
           {data?.title || t("details_dialog.equipment_details_fallback")}
         </DialogTitle>
