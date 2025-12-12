@@ -192,6 +192,8 @@ const MapView = ({
     }
   }, [initializeMap, mapState]);
 
+  // Avoid re-running fitBounds on selection changes (map jitter)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const syncMarkers = useCallback(async () => {
     const map = mapInstanceRef.current;
     if (!map || mapState !== "ready") return;
@@ -265,7 +267,6 @@ const MapView = ({
     mapState,
     onSelectListing,
     openInfoWindowForListing,
-    selectedListingId,
   ]);
 
   useEffect(() => {
