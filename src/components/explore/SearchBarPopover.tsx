@@ -108,7 +108,6 @@ const isNavigationKey = (key: string): boolean => {
     key === "ArrowDown" ||
     key === "ArrowUp" ||
     key === "Enter" ||
-    key === " " ||
     key === "Escape"
   );
 };
@@ -161,9 +160,7 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
   const [isLocating, setIsLocating] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [locationInputValue, setLocationInputValue] = useState("");
   const locationInputRef = useRef<HTMLInputElement>(null);
-  const [equipmentInputValue, setEquipmentInputValue] = useState("");
   const equipmentInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const addressAutocomplete = useAddressAutocomplete({
@@ -303,39 +300,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
   const handleLocationSelect = (location: string) => {
     onChange({ ...value, location });
     setLocationOpen(false);
-    setLocationInputValue("");
     addressAutocomplete.setQuery("");
     setActiveSection("when");
     locationInputRef.current?.blur();
   };
-
-  // Sync locationInputValue with value.location when location changes externally
-  useEffect(() => {
-    if (!locationOpen && !addressAutocomplete.query) {
-      setLocationInputValue(value.location || "");
-    }
-  }, [value.location, locationOpen, addressAutocomplete.query]);
-
-  // Update addressAutocomplete when user types in the input
-  useEffect(() => {
-    if (locationOpen) {
-      addressAutocomplete.setQuery(locationInputValue);
-    }
-  }, [locationInputValue, locationOpen]);
-
-  // Sync equipmentInputValue with value.equipmentType when equipment changes externally
-  useEffect(() => {
-    if (!equipmentOpen && !equipmentAutocomplete.query) {
-      setEquipmentInputValue(value.equipmentType || "");
-    }
-  }, [value.equipmentType, equipmentOpen, equipmentAutocomplete.query]);
-
-  // Update equipmentAutocomplete when user types in the input
-  useEffect(() => {
-    if (equipmentOpen) {
-      equipmentAutocomplete.setQuery(equipmentInputValue);
-    }
-  }, [equipmentInputValue, equipmentOpen]);
 
   // Focus Command input when location popover opens
   useEffect(() => {
@@ -528,7 +496,6 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
 
     // Clear input and close popover/sheet
     equipmentAutocomplete.setQuery("");
-    setEquipmentInputValue("");
     setEquipmentOpen(false);
     setSheetOpen(false);
     setActiveSection("where");
@@ -1170,17 +1137,18 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
     <div className="w-full rounded-full border border-input bg-card shadow-md hover:shadow-lg transition-shadow overflow-hidden">
       <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-stretch divide-x divide-border">
         {/* Location Popover */}
-        <Popover
-          open={locationOpen}
-          onOpenChange={(open) => {
-            setLocationOpen(open);
-            if (!open) {
-              // Reset input to show selected location when popover closes
-              setLocationInputValue(value.location || "");
-              addressAutocomplete.setQuery("");
-            }
-          }}
-        >
+          <Popover
+            open={locationOpen}
+            onOpenChange={(open) => {
+              setLocationOpen(open);
+              if (open) {
+                addressAutocomplete.setQuery(value.location || "");
+              }
+              if (!open) {
+                addressAutocomplete.setQuery("");
+              }
+            }}
+          >
           <PopoverTrigger asChild>
             <button
               type="button"
@@ -1198,28 +1166,33 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                   <div className="text-xs font-semibold text-foreground mb-1">
                     Where
                   </div>
-                  <Input
-                    ref={locationInputRef}
-                    type="text"
-                    placeholder="Search destinations"
-                    value={
-                      locationOpen ? locationInputValue : value.location || ""
-                    }
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      setLocationInputValue(e.target.value);
-                      if (!locationOpen) {
-                        setLocationOpen(true);
+                    <Input
+                      ref={locationInputRef}
+                      type="text"
+                      placeholder="Search destinations"
+                      value={
+                        locationOpen
+                          ? addressAutocomplete.query
+                          : value.location || ""
                       }
-                    }}
-                    onFocus={(e) => {
-                      e.stopPropagation();
-                      setLocationOpen(true);
-                      setLocationInputValue(value.location || "");
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        const nextValue = e.target.value;
+                        addressAutocomplete.setQuery(nextValue);
+                        if (!locationOpen) {
+                          setLocationOpen(true);
+                        }
+                      }}
+                      onFocus={(e) => {
+                        e.stopPropagation();
+                        if (!locationOpen) {
+                          setLocationOpen(true);
+                          addressAutocomplete.setQuery(value.location || "");
+                        }
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
                     onKeyDown={(e) => {
                       // Allow navigation keys to work when popover is open
                       if (locationOpen && isNavigationKey(e.key)) {
@@ -1244,16 +1217,16 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                   />
                 </div>
                 {value.location && !locationOpen && (
-                  <X
-                    className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onChange({ ...value, location: "" });
-                      setLocationInputValue("");
-                    }}
-                    aria-label="Clear location"
-                  />
-                )}
+                      <X
+                        className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-pointer shrink-0 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onChange({ ...value, location: "" });
+                          addressAutocomplete.setQuery("");
+                        }}
+                        aria-label="Clear location"
+                      />
+                    )}
               </div>
             </button>
           </PopoverTrigger>
@@ -1365,8 +1338,10 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
           open={equipmentOpen}
           onOpenChange={(open) => {
             setEquipmentOpen(open);
+            if (open) {
+              equipmentAutocomplete.setQuery(value.equipmentType || "");
+            }
             if (!open) {
-              setEquipmentInputValue(value.equipmentType || "");
               equipmentAutocomplete.setQuery("");
             }
           }}
@@ -1397,20 +1372,23 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                     placeholder="What are you looking for?"
                     value={
                       equipmentOpen
-                        ? equipmentInputValue
+                        ? equipmentAutocomplete.query
                         : value.equipmentType || ""
                     }
                     onChange={(e) => {
                       e.stopPropagation();
-                      setEquipmentInputValue(e.target.value);
+                      const nextValue = e.target.value;
+                      equipmentAutocomplete.setQuery(nextValue);
                       if (!equipmentOpen) {
                         setEquipmentOpen(true);
                       }
                     }}
                     onFocus={(e) => {
                       e.stopPropagation();
-                      setEquipmentOpen(true);
-                      setEquipmentInputValue(value.equipmentType || "");
+                      if (!equipmentOpen) {
+                        setEquipmentOpen(true);
+                        equipmentAutocomplete.setQuery(value.equipmentType || "");
+                      }
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1455,7 +1433,6 @@ const SearchBarPopover = ({ value, onChange, onSubmit }: Props) => {
                         equipmentCategoryId: undefined,
                         search: "",
                       });
-                      setEquipmentInputValue("");
                       equipmentAutocomplete.setQuery("");
                     }}
                     aria-label="Clear equipment selection"
