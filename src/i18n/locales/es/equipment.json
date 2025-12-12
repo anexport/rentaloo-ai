@@ -128,7 +128,7 @@
     "items_count_plural": "{{count}} artículos",
     "in_location": "en {{location}}",
     "available_near_you": "Disponible para alquilar cerca de ti",
-    "view_all": "Ver Todo en la Página de Exploración"
+    "view_all": "Ver todo en el mapa"
   },
   "errors": {
     "load_failed": "Error al cargar el equipamiento. Por favor, inténtalo de nuevo.",

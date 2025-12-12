@@ -128,7 +128,7 @@
     "items_count_plural": "{{count}} articles",
     "in_location": "à {{location}}",
     "available_near_you": "Disponible à la location près de chez vous",
-    "view_all": "Tout voir sur la page de navigation"
+    "view_all": "Tout voir sur la carte"
   },
   "errors": {
     "load_failed": "Échec du chargement du matériel. Veuillez réessayer.",

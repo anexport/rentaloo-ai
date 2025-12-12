@@ -128,7 +128,7 @@
     "items_count_plural": "{{count}} articoli",
     "in_location": "a {{location}}",
     "available_near_you": "Disponibile per il noleggio vicino a te",
-    "view_all": "Visualizza tutto nella pagina Sfoglia"
+    "view_all": "Vedi tutto sulla mappa"
   },
   "errors": {
     "load_failed": "Impossibile caricare l'attrezzatura. Riprova.",

@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapPin, Loader2, AlertCircle } from "lucide-react";
 import type { Listing } from "@/components/equipment/services/listings";
-import { loadGoogleMaps, importMarkerLibrary, geocodeAddress } from "@/lib/googleMapsLoader";
+import {
+  loadGoogleMaps,
+  importMarkerLibrary,
+  geocodeAddress,
+} from "@/lib/googleMapsLoader";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -12,7 +16,7 @@ type Props = {
   className?: string;
 };
 
-type MapState = "loading" | "ready" | "error" | "no-api-key" | "no-markers";
+type MapState = "loading" | "ready" | "error" | "no-api-key";
 
 type MarkerEntry = {
   listing: Listing;
@@ -42,6 +46,10 @@ const MapView = ({
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
+  const markerLibraryRef = useRef<{
+    AdvancedMarkerElement: typeof google.maps.marker.AdvancedMarkerElement;
+    PinElement: typeof google.maps.marker.PinElement;
+  } | null>(null);
   const [mapState, setMapState] = useState<MapState>("loading");
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
@@ -55,10 +63,18 @@ const MapView = ({
           Number.isFinite(l.latitude) &&
           Number.isFinite(l.longitude)
       )
-      .map((l) => ({ listing: l, coords: { lat: l.latitude as number, lng: l.longitude as number } }));
+      .map((l) => ({
+        listing: l,
+        coords: { lat: l.latitude as number, lng: l.longitude as number },
+      }));
   }, [listings]);
 
-  const computeInitialCenter = useCallback(async (): Promise<{ lat: number; lng: number }> => {
+  const hasMapMarkers = listingsWithCoords.length > 0;
+
+  const computeInitialCenter = useCallback(async (): Promise<{
+    lat: number;
+    lng: number;
+  }> => {
     if (listingsWithCoords.length > 0) return listingsWithCoords[0].coords;
     const firstLocation = listings[0]?.location;
     if (!firstLocation || !apiKey) return DEFAULT_CENTER;
@@ -66,18 +82,17 @@ const MapView = ({
     return geocoded ?? DEFAULT_CENTER;
   }, [apiKey, listings, listingsWithCoords]);
 
-  const createPinElement = useCallback(
-    async (isSelected: boolean) => {
-      const { PinElement } = await importMarkerLibrary();
-      return new PinElement({
-        background: isSelected ? "#2563eb" : "#ef4444",
-        borderColor: isSelected ? "#1d4ed8" : "#b91c1c",
-        glyphColor: "#ffffff",
-        scale: isSelected ? 1.3 : 1.1,
-      });
-    },
-    []
-  );
+  const getMarkerLibrary = useCallback(async () => {
+    if (markerLibraryRef.current) return markerLibraryRef.current;
+    try {
+      const lib = await importMarkerLibrary();
+      markerLibraryRef.current = lib;
+      return lib;
+    } catch (error) {
+      console.error("Failed to import Google Maps marker library:", error);
+      throw error;
+    }
+  }, []);
 
   const createInfoWindowContent = useCallback((listing: Listing) => {
     const safeTitle = escapeHtml(listing.title);
@@ -86,11 +101,21 @@ const MapView = ({
 
     return `
       <div style="max-width: 240px; font-family: system-ui, -apple-system, sans-serif;">
-        ${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${safeTitle}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />` : ""}
+        ${
+          photoUrl
+            ? `<img src="${escapeHtml(
+                photoUrl
+              )}" alt="${safeTitle}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />`
+            : ""
+        }
         <div style="font-weight: 600; font-size: 14px; color: #111; margin-bottom: 4px;">${safeTitle}</div>
         <div style="font-size: 12px; color: #666; margin-bottom: 6px;">${safeLocation}</div>
-        <div style="font-size: 14px; font-weight: 700; color: #111; margin-bottom: 8px;">$${listing.daily_rate}/day</div>
-        <button data-listing-id="${listing.id}" style="width: 100%; padding: 8px 10px; background: #111827; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
+        <div style="font-size: 14px; font-weight: 700; color: #111; margin-bottom: 8px;">$${
+          listing.daily_rate
+        }/day</div>
+        <button data-listing-id="${
+          listing.id
+        }" style="width: 100%; padding: 8px 10px; background: #111827; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;">
           View details / Book
         </button>
       </div>
@@ -110,14 +135,18 @@ const MapView = ({
         map: mapInstanceRef.current,
       });
 
-      google.maps.event.addListenerOnce(infoWindowRef.current, "domready", () => {
-        const button = document.querySelector<HTMLButtonElement>(
-          `button[data-listing-id="${entry.listing.id}"]`
-        );
-        if (button) {
-          button.onclick = () => onOpenListing?.(entry.listing);
+      google.maps.event.addListenerOnce(
+        infoWindowRef.current,
+        "domready",
+        () => {
+          const button = document.querySelector<HTMLButtonElement>(
+            `button[data-listing-id="${entry.listing.id}"]`
+          );
+          if (button) {
+            button.onclick = () => onOpenListing?.(entry.listing);
+          }
         }
-      });
+      );
     },
     [createInfoWindowContent, onOpenListing]
   );
@@ -134,6 +163,7 @@ const MapView = ({
         apiKey,
         libraries: ["places", "marker"],
       });
+      await getMarkerLibrary();
 
       const center = await computeInitialCenter();
       const map = new google.maps.Map(mapRef.current, {
@@ -154,7 +184,7 @@ const MapView = ({
       console.error("Failed to initialize Explore map:", error);
       setMapState("error");
     }
-  }, [apiKey, computeInitialCenter]);
+  }, [apiKey, computeInitialCenter, getMarkerLibrary]);
 
   useEffect(() => {
     if (mapState === "loading") {
@@ -164,7 +194,7 @@ const MapView = ({
 
   const syncMarkers = useCallback(async () => {
     const map = mapInstanceRef.current;
-    if (!map || (mapState !== "ready" && mapState !== "no-markers")) return;
+    if (!map || mapState !== "ready") return;
 
     // Remove markers that no longer exist
     const nextIds = new Set(listingsWithCoords.map((l) => l.listing.id));
@@ -182,11 +212,19 @@ const MapView = ({
       if (existing) {
         existing.coords = coords;
         existing.listing = listing;
+        existing.marker.position = coords;
+        existing.marker.title = listing.title;
         continue;
       }
 
-      const pin = await createPinElement(false);
-      const { AdvancedMarkerElement } = await importMarkerLibrary();
+      const { AdvancedMarkerElement, PinElement } = await getMarkerLibrary();
+      const isSelected = listing.id === selectedListingId;
+      const pin = new PinElement({
+        background: isSelected ? "#2563eb" : "#ef4444",
+        borderColor: isSelected ? "#1d4ed8" : "#b91c1c",
+        glyphColor: "#ffffff",
+        scale: isSelected ? 1.3 : 1.1,
+      });
       const marker = new AdvancedMarkerElement({
         map,
         position: coords,
@@ -196,7 +234,12 @@ const MapView = ({
 
       const clickListener = marker.addListener("click", () => {
         onSelectListing?.(listing);
-        openInfoWindowForListing({ listing, marker, coords, clickListener } as MarkerEntry);
+        openInfoWindowForListing({
+          listing,
+          marker,
+          coords,
+          clickListener,
+        } as MarkerEntry);
       });
 
       markersRef.current.set(listing.id, {
@@ -208,11 +251,8 @@ const MapView = ({
     }
 
     if (listingsWithCoords.length === 0) {
-      setMapState("no-markers");
+      infoWindowRef.current?.close();
       return;
-    }
-    if (mapState === "no-markers") {
-      setMapState("ready");
     }
 
     // Fit bounds to markers when listings change
@@ -220,11 +260,12 @@ const MapView = ({
     listingsWithCoords.forEach(({ coords }) => bounds.extend(coords));
     map.fitBounds(bounds, 64);
   }, [
-    createPinElement,
+    getMarkerLibrary,
     listingsWithCoords,
     mapState,
     onSelectListing,
     openInfoWindowForListing,
+    selectedListingId,
   ]);
 
   useEffect(() => {
@@ -237,9 +278,15 @@ const MapView = ({
     if (!map || mapState !== "ready") return;
 
     const updatePins = async () => {
+      const { PinElement } = await getMarkerLibrary();
       for (const [id, entry] of markersRef.current.entries()) {
         const isSelected = id === selectedListingId;
-        const pin = await createPinElement(isSelected);
+        const pin = new PinElement({
+          background: isSelected ? "#2563eb" : "#ef4444",
+          borderColor: isSelected ? "#1d4ed8" : "#b91c1c",
+          glyphColor: "#ffffff",
+          scale: isSelected ? 1.3 : 1.1,
+        });
         entry.marker.content = pin.element;
       }
 
@@ -254,12 +301,7 @@ const MapView = ({
     };
 
     void updatePins();
-  }, [
-    createPinElement,
-    mapState,
-    openInfoWindowForListing,
-    selectedListingId,
-  ]);
+  }, [getMarkerLibrary, mapState, openInfoWindowForListing, selectedListingId]);
 
   // Cleanup
   useEffect(() => {
@@ -290,8 +332,8 @@ const MapView = ({
       >
         <MapPin className="h-10 w-10 text-muted-foreground mb-3" />
         <p className="text-sm text-muted-foreground max-w-md">
-          Map is unavailable. Set <code>VITE_GOOGLE_MAPS_API_KEY</code> to enable
-          the interactive map.
+          Map is unavailable. Set <code>VITE_GOOGLE_MAPS_API_KEY</code> to
+          enable the interactive map.
         </p>
       </div>
     );
@@ -313,22 +355,18 @@ const MapView = ({
 
   return (
     <div className={cn("relative h-full w-full", className)}>
-      {(mapState === "loading" || mapState === "ready") && (
-        <>
-          {mapState === "loading" && (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          )}
-          <div
-            ref={mapRef}
-            className="h-full w-full"
-            role="application"
-            aria-label="Map showing available equipment"
-          />
-        </>
+      {mapState === "loading" && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       )}
-      {mapState === "no-markers" && (
+      <div
+        ref={mapRef}
+        className="h-full w-full"
+        role="application"
+        aria-label="Map showing available equipment"
+      />
+      {mapState === "ready" && !hasMapMarkers && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/70 z-10">
           <p className="text-sm text-muted-foreground">
             No listings with map coordinates.

@@ -20,6 +20,7 @@ import {
 import {
   Menu,
   Mountain,
+  Map,
   User,
   Settings,
   LogOut,
@@ -109,6 +110,12 @@ const ExploreHeader = ({
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <>
+                <Button variant="ghost" asChild>
+                  <Link to="/explore" className="flex items-center">
+                    <Map className="mr-2 h-4 w-4" />
+                    {t("menu.browse_equipment")}
+                  </Link>
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -170,6 +177,12 @@ const ExploreHeader = ({
               </>
             ) : (
               <>
+                <Button variant="ghost" asChild>
+                  <Link to="/explore" className="flex items-center">
+                    <Map className="mr-2 h-4 w-4" />
+                    {t("menu.browse_equipment")}
+                  </Link>
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -208,6 +221,12 @@ const ExploreHeader = ({
                 <div className="flex flex-col space-y-4 mt-6">
                   {user ? (
                     <>
+                      <Button variant="ghost" className="justify-start" asChild>
+                        <Link to="/explore">
+                          <Map className="mr-2 h-4 w-4" />
+                          {t("menu.browse_equipment")}
+                        </Link>
+                      </Button>
                       <div className="flex items-center space-x-3 pb-4 border-b">
                         <Avatar>
                           <AvatarImage
@@ -263,6 +282,12 @@ const ExploreHeader = ({
                     </>
                   ) : (
                     <>
+                      <Button variant="ghost" className="justify-start" asChild>
+                        <Link to="/explore">
+                          <Map className="mr-2 h-4 w-4" />
+                          {t("menu.browse_equipment")}
+                        </Link>
+                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="justify-start">

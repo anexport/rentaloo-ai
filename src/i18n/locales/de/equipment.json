@@ -128,7 +128,7 @@
     "items_count_plural": "{{count}} Artikel",
     "in_location": "in {{location}}",
     "available_near_you": "Verfügbar zur Miete in Ihrer Nähe",
-    "view_all": "Alle auf der Durchsuchen-Seite anzeigen"
+    "view_all": "Alle auf der Karte ansehen"
   },
   "errors": {
     "load_failed": "Fehler beim Laden des Equipments. Bitte versuchen Sie es erneut.",

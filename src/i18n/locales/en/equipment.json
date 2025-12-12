@@ -129,7 +129,7 @@
     "items_count_plural": "{{count}} items",
     "in_location": "in {{location}}",
     "available_near_you": "Available for rent near you",
-    "view_all": "View All on Browse Page"
+    "view_all": "View all on map"
   },
   "errors": {
     "load_failed": "Failed to load equipment. Please try again.",
