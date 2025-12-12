@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import {
+  useQueryState,
+  parseAsStringEnum,
+  parseAsInteger,
+  parseAsArrayOf,
+  parseAsBoolean,
+} from "nuqs";
+import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
-import { usePrefetchData } from "@/hooks/usePrefetchData";
 import SearchBarPopover from "@/components/explore/SearchBarPopover";
 import type { SearchBarFilters } from "@/types/search";
 import CategoryBar from "@/components/explore/CategoryBar";
@@ -19,14 +27,9 @@ import {
 import FiltersSheet, {
   type FilterValues,
 } from "@/components/explore/FiltersSheet";
-import ExploreHeader from "@/components/layout/ExploreHeader";
 import LoginModal from "@/components/auth/LoginModal";
 import SignupModal from "@/components/auth/SignupModal";
-import HeroSection from "@/components/explore/HeroSection";
-import HowItWorksSection from "@/components/explore/HowItWorksSection";
-import OwnerCTASection from "@/components/explore/OwnerCTASection";
-import SocialProofSection from "@/components/explore/SocialProofSection";
-import FeaturedListingsSection from "@/components/explore/FeaturedListingsSection";
+import ExploreHeader from "@/components/layout/ExploreHeader";
 import EmptyState from "@/components/explore/EmptyState";
 import {
   fetchListings,
@@ -42,20 +45,74 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ChevronRight } from "lucide-react";
+import type { SortOption } from "@/components/explore/ListingsGridHeader";
+import { useDebounce } from "@/hooks/useDebounce";
 
-type SortOption =
-  | "recommended"
-  | "price-low"
-  | "price-high"
-  | "newest"
-  | "rating";
+const CONDITION_VALUES: Array<Listing["condition"]> = [
+  "new",
+  "excellent",
+  "good",
+  "fair",
+];
 
 const ExplorePage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const { t } = useTranslation("equipment");
+  const { t: tNav } = useTranslation("navigation");
   const { user } = useAuth();
-  const [categoryId, setCategoryId] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("recommended");
+
+  // Filter params managed via nuqs
+  const [searchQuery, setSearchQuery] = useQueryState("search", {
+    defaultValue: "",
+  });
+  const [locationQuery, setLocationQuery] = useQueryState("location", {
+    defaultValue: "",
+  });
+  const [dateFromQuery, setDateFromQuery] = useQueryState("dateFrom", {
+    defaultValue: "",
+  });
+  const [dateToQuery, setDateToQuery] = useQueryState("dateTo", {
+    defaultValue: "",
+  });
+  const [equipmentTypeQuery, setEquipmentTypeQuery] = useQueryState(
+    "equipmentType",
+    {
+      defaultValue: "",
+    }
+  );
+  const [equipmentCategoryIdQuery, setEquipmentCategoryIdQuery] = useQueryState(
+    "equipmentCategoryId",
+    {
+      defaultValue: "",
+    }
+  );
+  const [categoryId, setCategoryId] = useQueryState("category", {
+    defaultValue: "all",
+  });
+
+  // Price range params managed via nuqs
+  const [priceMin, setPriceMin] = useQueryState(
+    "priceMin",
+    parseAsInteger.withDefault(DEFAULT_PRICE_MIN)
+  );
+  const [priceMax, setPriceMax] = useQueryState(
+    "priceMax",
+    parseAsInteger.withDefault(DEFAULT_PRICE_MAX)
+  );
+
+  const [conditionsParam, setConditionsParam] = useQueryState(
+    "conditions",
+    parseAsArrayOf(
+      parseAsStringEnum<Listing["condition"]>(CONDITION_VALUES)
+    ).withDefault([])
+  );
+
+  const [verifiedParam, setVerifiedParam] = useQueryState(
+    "verified",
+    parseAsBoolean.withDefault(false)
+  );
+
   const [searchFilters, setSearchFilters] = useState<SearchBarFilters>({
     search: "",
     location: "",
@@ -64,12 +121,12 @@ const ExplorePage = () => {
     priceMax: undefined,
     dateRange: undefined,
     equipmentType: undefined,
+    equipmentCategoryId: undefined,
   });
 
   const [filterValues, setFilterValues] = useState<FilterValues>({
     priceRange: [DEFAULT_PRICE_MIN, DEFAULT_PRICE_MAX],
     conditions: [],
-    equipmentTypes: [],
     verified: false,
   });
 
@@ -78,111 +135,221 @@ const ExplorePage = () => {
     null
   );
 
-  // Prefetch critical data
-  usePrefetchData();
-
-  // Login modal state from URL query param
-  const loginOpen = searchParams.get("login") === "true";
-
-  const handleLoginOpenChange = (open: boolean) => {
-    if (open) {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set("login", "true");
-      setSearchParams(newParams, { replace: true });
-    } else {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("login");
-      setSearchParams(newParams, { replace: true });
-    }
-  };
-
-  // Signup modal state from URL query params
-  const signupOpen = searchParams.get("signup") === "true";
-  const roleParam = searchParams.get("role");
-  const signupRole =
-    roleParam === "renter" || roleParam === "owner" ? roleParam : undefined;
-
-  const handleSignupOpenChange = (open: boolean) => {
-    if (open) {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set("signup", "true");
-      if (signupRole) {
-        newParams.set("role", signupRole);
-      }
-      setSearchParams(newParams, { replace: true });
-    } else {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("signup");
-      newParams.delete("role");
-      setSearchParams(newParams, { replace: true });
-    }
-  };
-
-  // Close modal and redirect authenticated users after OAuth
+  // Sync searchFilters with nuqs URL params (one-way: URL → state)
   useEffect(() => {
-    if (user && (loginOpen || signupOpen)) {
-      // Close modal by removing login/signup params
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("login");
-      newParams.delete("signup");
-      newParams.delete("role");
-      setSearchParams(newParams, { replace: true });
-      // Redirect based on user role
-      const role = user.user_metadata?.role;
-      if (role === "renter") {
-        void navigate("/renter/dashboard");
-      } else if (role === "owner") {
-        void navigate("/owner/dashboard");
+    setSearchFilters((prev) => {
+      // Only update if values actually changed from URL to avoid loops
+      if (
+        prev.search === (searchQuery ?? "") &&
+        prev.location === (locationQuery ?? "") &&
+        prev.equipmentType === (equipmentTypeQuery ?? "") &&
+        prev.equipmentCategoryId === (equipmentCategoryIdQuery ?? "") &&
+        ((!prev.dateRange?.from && !dateFromQuery) ||
+          (prev.dateRange?.from &&
+            dateFromQuery &&
+            format(prev.dateRange.from, "yyyy-MM-dd") === dateFromQuery)) &&
+        ((!prev.dateRange?.to && !dateToQuery) ||
+          (prev.dateRange?.to &&
+            dateToQuery &&
+            format(prev.dateRange.to, "yyyy-MM-dd") === dateToQuery))
+      ) {
+        return prev;
       }
-    }
-  }, [user, loginOpen, signupOpen, navigate, searchParams, setSearchParams]);
 
-  // Debounce filters for querying
-  const [debouncedFilters, setDebouncedFilters] = useState(searchFilters);
+      const parsedFrom =
+        dateFromQuery && !Number.isNaN(Date.parse(dateFromQuery))
+          ? new Date(dateFromQuery)
+          : undefined;
+      const parsedTo =
+        dateToQuery && !Number.isNaN(Date.parse(dateToQuery))
+          ? new Date(dateToQuery)
+          : undefined;
+
+      return {
+        ...prev,
+        search: searchQuery ?? "",
+        location: locationQuery ?? "",
+        dateRange:
+          parsedFrom || parsedTo
+            ? {
+                from: parsedFrom,
+                to: parsedTo,
+              }
+            : undefined,
+        equipmentType: equipmentTypeQuery || undefined,
+        equipmentCategoryId: equipmentCategoryIdQuery || undefined,
+      };
+    });
+  }, [
+    searchQuery,
+    locationQuery,
+    dateFromQuery,
+    dateToQuery,
+    equipmentTypeQuery,
+    equipmentCategoryIdQuery,
+  ]);
+
+  // Note: URL params are only updated via handleSubmitSearch (line 166-171)
+  // This prevents circular dependency issues where debounced values overwrite
+  // incoming URL params from navigation (e.g., from HomePage search)
+
+  // Sync filterValues with nuqs params (price, conditions, verified)
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedFilters(searchFilters), 300);
-    return () => clearTimeout(t);
-  }, [searchFilters]);
+    const nextPriceRange: [number, number] = [
+      priceMin ?? DEFAULT_PRICE_MIN,
+      priceMax ?? DEFAULT_PRICE_MAX,
+    ];
+    const nextConditions = conditionsParam ?? [];
+    const nextVerified = verifiedParam ?? false;
 
-  const effectiveFilters: ListingsFilters = useMemo(
-    () => ({
-      search: debouncedFilters.search,
-      location: debouncedFilters.location,
-      condition:
-        debouncedFilters.condition !== "all"
-          ? debouncedFilters.condition
-          : undefined,
-      priceMin:
-        filterValues.priceRange[0] > 0 ? filterValues.priceRange[0] : undefined,
-      priceMax:
-        filterValues.priceRange[1] < 500
-          ? filterValues.priceRange[1]
-          : undefined,
-      categoryId,
-    }),
-    [debouncedFilters, categoryId, filterValues]
-  );
+    setFilterValues((prev) => {
+      const priceUnchanged =
+        prev.priceRange[0] === nextPriceRange[0] &&
+        prev.priceRange[1] === nextPriceRange[1];
+      const conditionsUnchanged =
+        prev.conditions.length === nextConditions.length &&
+        prev.conditions.every(
+          (condition, index) => condition === nextConditions[index]
+        );
+      if (priceUnchanged && conditionsUnchanged && prev.verified === nextVerified)
+        return prev;
 
-  const { data, isLoading, refetch, isFetching, isError } = useQuery({
-    queryKey: ["listings", effectiveFilters],
-    queryFn: () => fetchListings(effectiveFilters),
+      return {
+        ...prev,
+        priceRange: nextPriceRange,
+        conditions: nextConditions,
+        verified: nextVerified,
+      };
+    });
+  }, [priceMin, priceMax, conditionsParam, verifiedParam]);
+
+  // Login modal state - managed via nuqs
+  const [loginOpen, setLoginOpen] = useQueryState("login", {
+    defaultValue: false,
+    parse: (value) => value === "true",
+    serialize: (value) => (value ? "true" : null),
+    history: "replace",
   });
 
-  const handleSubmitSearch = () => {
-    void refetch();
+  const handleLoginOpenChange = (open: boolean) => {
+    void setLoginOpen(open);
   };
 
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (filterValues.priceRange[0] > 0 || filterValues.priceRange[1] < 500)
-      count++;
-    if (filterValues.conditions.length > 0)
-      count += filterValues.conditions.length;
-    if (filterValues.equipmentTypes.length > 0)
-      count += filterValues.equipmentTypes.length;
-    if (filterValues.verified) count++;
-    return count;
-  }, [filterValues]);
+  // Signup modal state - managed via nuqs
+  const [signupOpen, setSignupOpen] = useQueryState("signup", {
+    defaultValue: false,
+    parse: (value) => value === "true",
+    serialize: (value) => (value ? "true" : null),
+    history: "replace",
+  });
+
+  const [signupRole, setSignupRole] = useQueryState(
+    "role",
+    parseAsStringEnum<"renter" | "owner">(["renter", "owner"]).withOptions({
+      history: "replace",
+    })
+  );
+
+  const handleSignupOpenChange = (open: boolean) => {
+    void setSignupOpen(open);
+    if (!open) {
+      void setSignupRole(null);
+    }
+  };
+
+  const handleSubmitSearch = (filters: SearchBarFilters) => {
+    setSearchFilters(filters);
+    // Update URL params with submitted search filters
+    void setSearchQuery(filters.search || null);
+    void setLocationQuery(filters.location || null);
+    void setEquipmentTypeQuery(filters.equipmentType || null);
+    void setEquipmentCategoryIdQuery(filters.equipmentCategoryId || null);
+    const from = filters.dateRange?.from
+      ? format(filters.dateRange.from, "yyyy-MM-dd")
+      : null;
+    const to = filters.dateRange?.to
+      ? format(filters.dateRange.to, "yyyy-MM-dd")
+      : null;
+    void setDateFromQuery(from);
+    void setDateToQuery(to);
+  };
+
+  // Debounce filters for better performance
+  const debouncedFilters = useDebounce(searchFilters, 300);
+
+  // Build filters for API
+  const effectiveFilters: ListingsFilters = useMemo(() => {
+    const filters: ListingsFilters = {};
+
+    if (debouncedFilters.search && debouncedFilters.search.trim()) {
+      filters.search = debouncedFilters.search.trim();
+    }
+
+    if (debouncedFilters.location && debouncedFilters.location.trim()) {
+      filters.location = debouncedFilters.location.trim();
+    }
+
+    if (debouncedFilters.equipmentCategoryId) {
+      filters.categoryId = debouncedFilters.equipmentCategoryId;
+    }
+    if (debouncedFilters.equipmentType) {
+      filters.equipmentTypeName = debouncedFilters.equipmentType;
+    }
+
+    if (debouncedFilters.dateRange?.from) {
+      filters.dateFrom = format(debouncedFilters.dateRange.from, "yyyy-MM-dd");
+    }
+    if (debouncedFilters.dateRange?.to) {
+      filters.dateTo = format(debouncedFilters.dateRange.to, "yyyy-MM-dd");
+    }
+
+    const mergedConditions = new Set<Listing["condition"]>();
+
+    if (filterValues.conditions.length > 0) {
+      filterValues.conditions.forEach((condition) =>
+        mergedConditions.add(condition)
+      );
+    }
+
+    if (searchFilters.condition && searchFilters.condition !== "all") {
+      mergedConditions.add(searchFilters.condition);
+    }
+
+    if (mergedConditions.size > 0) {
+      filters.conditions = Array.from(mergedConditions).sort();
+    }
+
+    if (categoryId !== "all") {
+      filters.categoryId = categoryId;
+    }
+
+    if (
+      filterValues.priceRange[0] > DEFAULT_PRICE_MIN ||
+      filterValues.priceRange[1] < DEFAULT_PRICE_MAX
+    ) {
+      filters.priceMin = filterValues.priceRange[0];
+      filters.priceMax = filterValues.priceRange[1];
+    }
+
+    if (filterValues.verified) {
+      filters.verified = true;
+    }
+
+    return filters;
+  }, [
+    debouncedFilters,
+    searchFilters.condition,
+    categoryId,
+    filterValues.conditions,
+    filterValues.priceRange,
+    filterValues.verified,
+  ]);
+
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
+    queryKey: ["listings", effectiveFilters],
+    queryFn: ({ signal }) => fetchListings(effectiveFilters, signal),
+    staleTime: 1000 * 60 * 5,
+  });
 
   // Sort listings
   const sortedListings = useMemo(() => {
@@ -204,17 +371,20 @@ const ExplorePage = () => {
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
       case "rating": {
-        return sorted.sort((a, b) => {
-          const reviewsA = a.reviews ?? [];
-          const reviewsB = b.reviews ?? [];
-          const avgA = reviewsA.length
-            ? reviewsA.reduce((sum, r) => sum + r.rating, 0) / reviewsA.length
+        // Precompute ratings once to avoid O(n × m × log n) complexity
+        const listingsWithRatings = sorted.map((listing) => {
+          const reviews = listing.reviews ?? [];
+          const avgRating = reviews.length
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
             : 0;
-          const avgB = reviewsB.length
-            ? reviewsB.reduce((sum, r) => sum + r.rating, 0) / reviewsB.length
-            : 0;
-          return avgB - avgA;
+          return { listing, avgRating };
         });
+
+        // Sort using precomputed values (O(n log n))
+        listingsWithRatings.sort((a, b) => b.avgRating - a.avgRating);
+
+        // Extract listings
+        return listingsWithRatings.map(({ listing }) => listing);
       }
       default:
         return sorted;
@@ -226,6 +396,29 @@ const ExplorePage = () => {
     setDetailsOpen(true);
   };
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (
+      filterValues.priceRange[0] > DEFAULT_PRICE_MIN ||
+      filterValues.priceRange[1] < DEFAULT_PRICE_MAX
+    ) {
+      count++;
+    }
+    if (filterValues.conditions.length > 0) count++;
+    if (filterValues.verified) count++;
+    return count;
+  }, [filterValues]);
+
+  const handleFilterChange = (newFilters: FilterValues) => {
+    setFilterValues(newFilters);
+    // Sync price range changes to URL
+    const [min, max] = newFilters.priceRange;
+    void setPriceMin(min !== DEFAULT_PRICE_MIN ? min : null);
+    void setPriceMax(max !== DEFAULT_PRICE_MAX ? max : null);
+    void setConditionsParam(newFilters.conditions);
+    void setVerifiedParam(newFilters.verified);
+  };
+
   const handleClearFilters = () => {
     setSearchFilters({
       search: "",
@@ -235,54 +428,68 @@ const ExplorePage = () => {
       priceMax: undefined,
       dateRange: undefined,
       equipmentType: undefined,
+      equipmentCategoryId: undefined,
     });
     setFilterValues({
       priceRange: [DEFAULT_PRICE_MIN, DEFAULT_PRICE_MAX],
       conditions: [],
-      equipmentTypes: [],
       verified: false,
     });
-    setCategoryId("all");
-  };
 
-  const hasSearched =
-    debouncedFilters.search ||
-    debouncedFilters.location ||
-    categoryId !== "all";
+    // Clear all URL params via nuqs
+    void setSearchQuery(null);
+    void setLocationQuery(null);
+    void setDateFromQuery(null);
+    void setDateToQuery(null);
+    void setEquipmentTypeQuery(null);
+    void setEquipmentCategoryIdQuery(null);
+    void setCategoryId("all");
+    void setPriceMin(null);
+    void setPriceMax(null);
+    void setConditionsParam(null);
+    void setVerifiedParam(null);
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <ExploreHeader onLoginClick={() => handleLoginOpenChange(true)} />
+      {/* Header with navbar when logged in */}
+      {user && (
+        <ExploreHeader
+          onLoginClick={() => handleLoginOpenChange(true)}
+          onSignupClick={() => handleSignupOpenChange(true)}
+        />
+      )}
 
-      {/* Hero Section with Search */}
-      {!hasSearched && (
-        <HeroSection>
+      {/* Sticky Header with Search */}
+      <div className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <SearchBarPopover
             value={searchFilters}
             onChange={setSearchFilters}
             onSubmit={handleSubmitSearch}
           />
-        </HeroSection>
-      )}
-
-      {/* How It Works Section */}
-      {!hasSearched && <HowItWorksSection />}
+        </div>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Search bar for when user has searched */}
-        {hasSearched && (
-          <div className="mb-6">
-            <SearchBarPopover
-              value={searchFilters}
-              onChange={setSearchFilters}
-              onSubmit={handleSubmitSearch}
-            />
-          </div>
-        )}
+        {/* Breadcrumbs */}
+        <nav className="mb-4 flex items-center text-sm text-muted-foreground">
+          <Link to="/" className="hover:text-foreground transition-colors">
+            {tNav("pages.home")}
+          </Link>
+          <ChevronRight className="h-4 w-4 mx-2" />
+          <span className="text-foreground">{tNav("menu.browse_equipment")}</span>
+          {categoryId !== "all" && (
+            <>
+              <ChevronRight className="h-4 w-4 mx-2" />
+              <span className="text-foreground capitalize">{categoryId}</span>
+            </>
+          )}
+        </nav>
 
-        {/* Categories */}
-        <div className="sticky top-16 z-10 bg-background py-3 -mx-4 px-4 sm:px-6 lg:px-8 border-b border-border">
-          {isLoading ? (
+        {/* Categories - Sticky */}
+        <div className="sticky top-[73px] z-40 bg-background py-3 -mx-4 px-4 sm:px-6 lg:px-8 border-b border-border">
+          {isLoading && !data ? (
             <CategoryBarSkeleton />
           ) : (
             <CategoryBar
@@ -296,22 +503,22 @@ const ExplorePage = () => {
         <div className="flex items-center justify-between gap-4 mt-4 mb-4">
           <div className="flex-1">
             <h3 className="text-lg font-semibold">
-              {data?.length ?? 0} {(data?.length ?? 0) === 1 ? "item" : "items"}
+              {t("browse.items_count", { count: data?.length ?? 0 })}
               {debouncedFilters.location && (
                 <span className="text-muted-foreground font-normal">
                   {" "}
-                  in {debouncedFilters.location}
+                  {t("browse.in_location", { location: debouncedFilters.location })}
                 </span>
               )}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Available for rent near you
+              {t("browse.available_near_you")}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <FiltersSheet
               value={filterValues}
-              onChange={setFilterValues}
+              onChange={handleFilterChange}
               resultCount={data?.length ?? 0}
               activeFilterCount={activeFilterCount}
             />
@@ -319,15 +526,15 @@ const ExplorePage = () => {
               value={sortBy}
               onValueChange={(value) => setSortBy(value as SortOption)}
             >
-              <SelectTrigger className="min-w-[180px]" aria-label="Sort by">
-                <SelectValue placeholder="Sort by" />
+              <SelectTrigger className="min-w-[180px]" aria-label={t("filters.sort_by")}>
+                <SelectValue placeholder={t("filters.sort_by")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recommended">Recommended</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="rating">Highest Rated</SelectItem>
+                <SelectItem value="recommended">{t("filters.recommended")}</SelectItem>
+                <SelectItem value="price-low">{t("filters.price_low_high")}</SelectItem>
+                <SelectItem value="price-high">{t("filters.price_high_low")}</SelectItem>
+                <SelectItem value="newest">{t("filters.newest_first")}</SelectItem>
+                <SelectItem value="rating">{t("filters.highest_rated")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -339,15 +546,15 @@ const ExplorePage = () => {
           {isError ? (
             <div className="text-center py-10">
               <div className="text-muted-foreground mb-4">
-                Failed to load equipment. Please try again.
+                {t("errors.load_failed")}
               </div>
               <Button
                 onClick={() => {
                   void refetch();
                 }}
-                aria-label="Retry"
+                aria-label={t("errors.retry")}
               >
-                Retry
+                {t("errors.retry")}
               </Button>
             </div>
           ) : isLoading ? (
@@ -394,17 +601,6 @@ const ExplorePage = () => {
           initialRole={signupRole}
         />
       </main>
-
-      {/* Featured Listings Section */}
-      {!hasSearched && (
-        <FeaturedListingsSection onOpenListing={handleOpenListing} />
-      )}
-
-      {/* Owner CTA Section */}
-      {!hasSearched && <OwnerCTASection />}
-
-      {/* Social Proof Section */}
-      {!hasSearched && <SocialProofSection />}
     </div>
   );
 };

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation, type TFunction } from "react-i18next";
 import * as z from "zod";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,17 +20,18 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Star } from "lucide-react";
 import StarRating from "./StarRating";
 
-const reviewSchema = z.object({
-  rating: z
-    .number()
-    .min(1, "Rating must be at least 1 star")
-    .max(5, "Rating cannot exceed 5 stars")
-    .int("Rating must be a whole number"),
-  comment: z
-    .string()
-    .min(10, "Review must be at least 10 characters")
-    .max(1000, "Review cannot exceed 1000 characters"),
-});
+const createReviewSchema = (t: TFunction) =>
+  z.object({
+    rating: z
+      .number()
+      .min(1, t("form.validation_errors.min_rating"))
+      .max(5, t("form.validation_errors.max_rating"))
+      .int(t("form.validation_errors.rating_whole_number")),
+    comment: z
+      .string()
+      .min(10, t("form.validation_errors.min_length"))
+      .max(1000, t("form.validation_errors.max_length")),
+  });
 
 interface ReviewFormProps {
   bookingId: string;
@@ -48,10 +50,12 @@ const ReviewForm = ({
   onSuccess,
   onCancel,
 }: ReviewFormProps) => {
+  const { t } = useTranslation("reviews");
   const { user } = useAuth();
   const [rating, setRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const reviewSchema = useMemo(() => createReviewSchema(t), [t]);
 
   const {
     register,
@@ -73,12 +77,12 @@ const ReviewForm = ({
 
   const onSubmit = async (data: ReviewFormData) => {
     if (!user) {
-      setError("You must be logged in to submit a review");
+      setError(t("errors.not_logged_in"));
       return;
     }
 
     if (rating === 0) {
-      setError("Please select a rating");
+      setError(t("form.validation_errors.rating_required"));
       return;
     }
 
@@ -100,9 +104,7 @@ const ReviewForm = ({
     } catch (err) {
       console.error("Error submitting review:", err);
       setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to submit review. Please try again."
+        err instanceof Error ? err.message : t("errors.submit_failed")
       );
     } finally {
       setIsSubmitting(false);
@@ -114,10 +116,10 @@ const ReviewForm = ({
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Star className="h-5 w-5 text-primary" />
-          <span>Leave a Review</span>
+          <span>{t("form.title")}</span>
         </CardTitle>
         <CardDescription>
-          Share your experience renting "{equipmentTitle}" from {revieweeName}
+          {t("form.description", { equipmentTitle, revieweeName })}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -138,7 +140,7 @@ const ReviewForm = ({
           {/* Rating */}
           <div className="space-y-3">
             <Label htmlFor="rating" className="text-base font-medium">
-              Overall Rating *
+              {t("form.rating_required")}
             </Label>
             <div className="flex items-center space-x-4">
               <StarRating
@@ -149,7 +151,7 @@ const ReviewForm = ({
               />
               {rating > 0 && (
                 <span className="text-lg font-semibold text-gray-700">
-                  {rating} out of 5
+                  {t("form.rating_display", { rating })}
                 </span>
               )}
             </div>
@@ -161,35 +163,30 @@ const ReviewForm = ({
           {/* Comment */}
           <div className="space-y-2">
             <Label htmlFor="comment" className="text-base font-medium">
-              Your Review *
+              {t("form.comment_required")}
             </Label>
             <Textarea
               id="comment"
-              placeholder="Tell others about your experience... (minimum 10 characters)"
+              placeholder={t("form.comment_placeholder")}
               rows={6}
               {...register("comment")}
             />
             {errors.comment && (
               <p className="text-sm text-red-600">{errors.comment.message}</p>
             )}
-            <p className="text-xs text-gray-500">
-              Be honest and constructive. Your review will help others make
-              informed decisions.
-            </p>
+            <p className="text-xs text-gray-500">{t("form.comment_hint")}</p>
           </div>
 
           {/* Guidelines */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-medium text-blue-900 text-sm mb-2">
-              Review Guidelines
+              {t("form.guidelines_title")}
             </h4>
             <ul className="text-xs text-blue-700 space-y-1">
-              <li>
-                • Be specific about your experience with the equipment and owner
-              </li>
-              <li>• Keep it respectful and constructive</li>
-              <li>• Focus on facts rather than emotions</li>
-              <li>• Mention both positives and areas for improvement</li>
+              <li>• {t("form.guideline_specific")}</li>
+              <li>• {t("form.guideline_respectful")}</li>
+              <li>• {t("form.guideline_facts")}</li>
+              <li>• {t("form.guideline_improvements")}</li>
             </ul>
           </div>
 
@@ -203,11 +200,13 @@ const ReviewForm = ({
                 onClick={onCancel}
                 disabled={isSubmitting}
               >
-                Cancel
+                {t("form.cancel_button")}
               </Button>
             )}
             <Button type="submit" className="flex-1" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit Review"}
+              {isSubmitting
+                ? t("form.submitting_button")
+                : t("form.submit_button")}
             </Button>
           </div>
         </form>

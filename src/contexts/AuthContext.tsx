@@ -2,6 +2,7 @@ import React, { createContext, useEffect, useState } from "react";
 import type { User, Session, AuthError, PostgrestError } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
+import i18n from "@/i18n/config";
 
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 type UserMetadata = { role: "renter" | "owner" } & Record<string, unknown>;
@@ -44,6 +45,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const syncLanguagePreference = (session: Session | null) => {
+    if (!session?.user?.user_metadata?.language_preference) return;
+
+    const userLang = session.user.user_metadata.language_preference;
+    if (typeof userLang !== "string") return;
+
+    if (i18n.language === userLang) return;
+
+    try {
+      void i18n.changeLanguage(userLang);
+      localStorage.setItem("userLanguagePreference", userLang);
+    } catch (error) {
+      console.error("Failed to sync language preference:", error);
+    }
+  };
+
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
@@ -61,7 +78,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
+
+        syncLanguagePreference(session);
+
         try {
           supabase.realtime.setAuth(session?.access_token ?? null);
         } catch (realtimeError) {
@@ -84,6 +103,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      syncLanguagePreference(session);
+
       try {
         supabase.realtime.setAuth(session?.access_token ?? null);
       } catch (error) {

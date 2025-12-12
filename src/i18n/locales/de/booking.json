@@ -1,0 +1,117 @@
+{
+  "sidebar": {
+    "title": "Dieses Equipment buchen",
+    "select_dates": "Termine auswählen",
+    "start_date": "Startdatum",
+    "end_date": "Enddatum",
+    "pricing": "Preisdetails",
+    "daily_rate": "Tägliches Mietentgelt",
+    "number_of_days": "Anzahl der Tage",
+    "subtotal": "Zwischensumme",
+    "service_fee": "Servicegebühr",
+    "total": "Gesamtsumme",
+    "request_booking": "Buchungsanfrage einreichen",
+    "requesting": "Wird angefordert...",
+    "dates_required": "Bitte wählen Sie Start- und Enddatum",
+    "unavailable_dates": "Einige Termine in Ihrer Auswahl sind nicht verfügbar",
+    "aria_booking_info": "Buchungsinformationen",
+    "aria_pricing": "Preise",
+    "aria_location_contact": "Standort und Kontakt",
+    "aria_dates": "Termine",
+    "aria_pricing_breakdown": "Preisaufschlüsselung",
+    "aria_insurance": "Versicherungsoptionen"
+  },
+  "status": {
+    "pending": "Ausstehend",
+    "approved": "Genehmigt",
+    "declined": "Abgelehnt",
+    "cancelled": "Abgebrochen",
+    "completed": "Abgeschlossen"
+  },
+  "requests": {
+    "my_requests": "Meine Buchungsanfragen",
+    "incoming_requests": "Eingehende Anfragen",
+    "no_requests": "Noch keine Buchungsanfragen",
+    "view_details": "Details anzeigen",
+    "approve": "Genehmigen",
+    "decline": "Ablehnen",
+    "cancel": "Buchung stornieren",
+    "confirm_cancel": "Möchten Sie diese Buchung wirklich stornieren?"
+  },
+  "details": {
+    "booking_details": "Buchungsdetails",
+    "equipment": "Equipment",
+    "renter": "Mieter",
+    "owner": "Eigentümer",
+    "dates": "Miettermine",
+    "duration": "Dauer",
+    "total_cost": "Gesamtkosten",
+    "booking_status": "Status",
+    "message_from_renter": "Nachricht vom Mieter",
+    "pickup_method": "Abholmethode",
+    "delivery_address": "Lieferadresse"
+  },
+  "calendar": {
+    "available": "Verfügbar",
+    "unavailable": "Nicht verfügbar",
+    "booked": "Gebucht",
+    "select_range": "Wählen Sie Ihre Miettermine",
+    "minimum_rental": "Minimale Miete {{count}} Tag",
+    "minimum_rental_plural": "Minimale Miete {{count}} Tage"
+  },
+  "messages": {
+    "request_sent": "Buchungsanfrage erfolgreich gesendet",
+    "request_approved": "Buchungsanfrage genehmigt",
+    "request_declined": "Buchungsanfrage abgelehnt",
+    "booking_cancelled": "Buchung erfolgreich storniert"
+  },
+  "card": {
+    "status": {
+      "awaiting_payment": "Zahlung Ausstehend",
+      "booking_confirmed": "Buchung Bestätigt"
+    },
+    "labels": {
+      "renter": "Mieter",
+      "owner": "Eigentümer",
+      "message": "Nachricht:",
+      "per_day": "/Tag"
+    },
+    "buttons": {
+      "view_renter_info": "Mietinformationen Anzeigen",
+      "hide_renter_info": "Mietinformationen Verbergen",
+      "pickup_inspection": "Abholinspection",
+      "view_pickup_inspection": "Abholinspection Anzeigen",
+      "return_inspection": "Rückgabeinspection",
+      "view_return_inspection": "Rückgabeinspection Anzeigen",
+      "file_damage_claim": "Schadensersatzanspruch Einreichen",
+      "cancel_booking": "Buchung Stornieren",
+      "cancelling": "Wird Storniert...",
+      "message": "Nachricht",
+      "loading": "Wird Geladen..."
+    },
+    "alerts": {
+      "awaiting_payment_owner": "Diese Buchungsanfrage wartet auf Zahlungsbestätigung vom Mieter.",
+      "awaiting_payment_renter": "Ihre Buchungsanfrage wartet auf Zahlungsbestätigung. Vervollständigen Sie die Zahlung, um Ihre Buchung zu bestätigen.",
+      "payment_confirmed": "Zahlung erhalten! Buchung ist bestätigt.",
+      "cancelled_renter": "Sie haben diese Buchungsanfrage storniert.",
+      "cancelled_owner": "Diese Buchungsanfrage wurde vom Mieter storniert."
+    },
+    "modals": {
+      "complete_payment": "Zahlung Abschließen",
+      "renter_verification": "Mieter-Verifizierungsprofil"
+    },
+    "confirmations": {
+      "cancel_owner": "Sind Sie sicher, dass Sie diese Buchung stornieren möchten? Der Mieter erhält eine vollständige Rückerstattung.",
+      "cancel_renter": "Sind Sie sicher, dass Sie diese Buchung stornieren möchten? Sie erhalten eine vollständige Rückerstattung."
+    },
+    "timestamps": {
+      "requested": "Angefordert:",
+      "updated": "Aktualisiert:"
+    },
+    "errors": {
+      "refund_failed": "Rückerstattungsverarbeitung fehlgeschlagen. Bitte kontaktieren Sie den Support, um diese Buchung zu stornieren.",
+      "conversation_failed": "Konversation konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",
+      "cancel_failed": "Buchung konnte nicht storniert werden. Bitte versuchen Sie es erneut."
+    }
+  }
+}

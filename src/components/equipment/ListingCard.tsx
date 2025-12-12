@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,19 +9,27 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MapPin, ChevronLeft, ChevronRight, Heart, Package } from "lucide-react";
+import { MapPin, ChevronLeft, ChevronRight, Heart, Package, Loader2 } from "lucide-react";
 import StarRating from "@/components/reviews/StarRating";
 import type { Listing } from "@/components/equipment/services/listings";
+import { cn } from "@/lib/utils";
+import { useFavorites } from "@/hooks/useFavorites";
+import { toast } from "sonner";
 
 type Props = {
   listing: Listing;
   onOpen?: (listing: Listing) => void;
+  className?: string;
 };
 
-const ListingCard = ({ listing, onOpen }: Props) => {
+const ListingCard = ({ listing, onOpen, className }: Props) => {
+  const { t } = useTranslation("equipment");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const { isFavorited, toggleFavorite } = useFavorites();
+  
+  const isWishlisted = isFavorited(listing.id);
   const avgRating = (() => {
     if (!listing.reviews || listing.reviews.length === 0) return 0;
     const validRatings = listing.reviews.filter(
@@ -56,9 +65,22 @@ const ListingCard = ({ listing, onOpen }: Props) => {
     if (onOpen) onOpen(listing);
   };
 
-  const handleWishlist = (e: React.MouseEvent) => {
+  const handleWishlist = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    try {
+      setIsTogglingFavorite(true);
+      await toggleFavorite(listing.id);
+      toast.success(
+        isWishlisted
+          ? t("listing_card.removed_from_favorites", { defaultValue: "Removed from favorites" })
+          : t("listing_card.added_to_favorites", { defaultValue: "Added to favorites" })
+      );
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+      toast.error(t("listing_card.favorite_error", { defaultValue: "Failed to update favorites" }));
+    } finally {
+      setIsTogglingFavorite(false);
+    }
   };
 
   const handlePrevImage = (e: React.MouseEvent) => {
@@ -85,13 +107,13 @@ const ListingCard = ({ listing, onOpen }: Props) => {
 
   return (
     <TooltipProvider>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <Card className={cn("overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full", className)}>
         <div
-          className="aspect-video bg-muted relative overflow-hidden cursor-pointer group"
+          className="aspect-video bg-muted relative overflow-hidden cursor-pointer group flex-shrink-0"
           onClick={handleOpen}
           role="button"
           tabIndex={0}
-          aria-label={`View ${listing.title}`}
+          aria-label={t("listing_card.view_listing", { title: listing.title })}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
@@ -115,27 +137,31 @@ const ListingCard = ({ listing, onOpen }: Props) => {
                   {/* Navigation arrows */}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
+                      <Button
                         onClick={handlePrevImage}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                        aria-label="Previous image"
+                        size="icon-sm"
+                        variant="ghost"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 dark:bg-gray-900/90 hover:bg-white dark:hover:bg-gray-800 shadow-md backdrop-blur-sm max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground dark:text-foreground"
+                        aria-label={t("listing_card.previous_image")}
                       >
                         <ChevronLeft className="h-5 w-5" />
-                      </button>
+                      </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Previous photo</TooltipContent>
+                    <TooltipContent>{t("listing_card.previous_photo")}</TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
+                      <Button
                         onClick={handleNextImage}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                        aria-label="Next image"
+                        size="icon-sm"
+                        variant="ghost"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 dark:bg-gray-900/90 hover:bg-white dark:hover:bg-gray-800 shadow-md backdrop-blur-sm max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-foreground dark:text-foreground"
+                        aria-label={t("listing_card.next_image")}
                       >
                         <ChevronRight className="h-5 w-5" />
-                      </button>
+                      </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Next photo</TooltipContent>
+                    <TooltipContent>{t("listing_card.next_photo")}</TooltipContent>
                   </Tooltip>
 
                   {/* Dot indicators */}
@@ -149,10 +175,10 @@ const ListingCard = ({ listing, onOpen }: Props) => {
                         }}
                         className={`h-1.5 rounded-full transition-all ${
                           idx === currentImageIndex
-                            ? "w-6 bg-white"
-                            : "w-1.5 bg-white/60 hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-white/80"
+                            ? "w-6 bg-white dark:bg-white/90"
+                            : "w-1.5 bg-white/60 dark:bg-white/40 hover:bg-white/80 dark:hover:bg-white/60 focus:outline-none focus:ring-2 focus:ring-white/80 dark:focus:ring-white/60"
                         }`}
-                        aria-label={`Go to image ${idx + 1}`}
+                        aria-label={t("listing_card.go_to_image", { number: idx + 1 })}
                       />
                     ))}
                   </div>
@@ -163,7 +189,7 @@ const ListingCard = ({ listing, onOpen }: Props) => {
             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-muted">
               <Package className="h-12 w-12 mb-2 opacity-50" />
               <span className="text-sm">
-                {imageError ? "Image unavailable" : "No image"}
+                {imageError ? t("listing_card.image_unavailable") : t("listing_card.no_image")}
               </span>
             </div>
           )}
@@ -173,20 +199,29 @@ const ListingCard = ({ listing, onOpen }: Props) => {
             <TooltipTrigger asChild>
               <button
                 onClick={handleWishlist}
-                className="absolute top-2 right-2 h-9 w-9 rounded-full bg-white hover:bg-white border border-gray-200 shadow-lg opacity-80 group-hover:opacity-100 transition-all flex items-center justify-center z-10 hover:scale-110"
+                disabled={isTogglingFavorite}
+                className="absolute top-2 right-2 h-9 w-9 rounded-full bg-white dark:bg-gray-900 hover:bg-white dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg backdrop-blur-sm opacity-80 group-hover:opacity-100 transition-all flex items-center justify-center z-10 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label={
-                  isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+                  isWishlisted ? t("listing_card.wishlist_remove") : t("listing_card.wishlist_add")
                 }
               >
-                <Heart
-                  className={`h-4 w-4 transition-colors ${
-                    isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700"
-                  }`}
-                />
+                {isTogglingFavorite ? (
+                  <Loader2 className="h-4 w-4 text-gray-700 dark:text-gray-200 animate-spin" />
+                ) : (
+                  <Heart
+                    className={`h-4 w-4 transition-colors ${
+                      isWishlisted ? "fill-red-500 text-red-500" : "text-gray-700 dark:text-gray-200"
+                    }`}
+                  />
+                )}
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              {isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
+              {isTogglingFavorite
+                ? t("listing_card.loading", { defaultValue: "Loading..." })
+                : isWishlisted
+                ? t("listing_card.wishlist_remove")
+                : t("listing_card.wishlist_save")}
             </TooltipContent>
           </Tooltip>
 
@@ -199,7 +234,7 @@ const ListingCard = ({ listing, onOpen }: Props) => {
             </Badge>
           </div>
         </div>
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col flex-1">
           <div className="flex justify-between items-start mb-2">
             <h3 className="font-semibold text-lg line-clamp-1">
               {listing.title}
@@ -208,50 +243,52 @@ const ListingCard = ({ listing, onOpen }: Props) => {
               <div className="text-xl font-bold text-primary">
                 ${listing.daily_rate}
               </div>
-              <div className="text-sm text-muted-foreground">per day</div>
+              <div className="text-sm text-muted-foreground">{t("listing_card.per_day")}</div>
             </div>
           </div>
-          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-            {listing.description}
-          </p>
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center space-x-1">
-                  <MapPin className="h-4 w-4" />
-                  <span className="truncate max-w-[120px]">
-                    {listing.location}
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>{listing.location}</TooltipContent>
-            </Tooltip>
-            <div className="flex items-center space-x-2">
-              {avgRating > 0 ? (
-                <>
-                  <StarRating rating={avgRating} size="sm" />
-                  <span className="text-xs">{avgRating.toFixed(1)}</span>
-                </>
-              ) : (
-                <span className="text-xs">No reviews</span>
-              )}
+          <div className="flex-1">
+            <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+              {listing.description}
+            </p>
+            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-1">
+                    <MapPin className="h-4 w-4" />
+                    <span className="truncate max-w-[120px]">
+                      {listing.location}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>{listing.location}</TooltipContent>
+              </Tooltip>
+              <div className="flex items-center space-x-2">
+                {avgRating > 0 ? (
+                  <>
+                    <StarRating rating={avgRating} size="sm" />
+                    <span className="text-xs">{avgRating.toFixed(1)}</span>
+                  </>
+                ) : (
+                  <span className="text-xs">{t("listing_card.no_reviews")}</span>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-auto">
             <Button
               variant="outline"
               className="flex-1"
               onClick={handleOpen}
-              aria-label="View details"
+              aria-label={t("listing_card.view_details")}
             >
-              View
+              {t("listing_card.view")}
             </Button>
             <Button
               className="flex-1"
               onClick={handleOpen}
-              aria-label="See availability"
+              aria-label={t("listing_card.see_availability")}
             >
-              See availability
+              {t("listing_card.see_availability")}
             </Button>
           </div>
         </CardContent>

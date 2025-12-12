@@ -9,6 +9,7 @@ export type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 export interface BookingRequestWithDetails extends BookingRequest {
   equipment: Database["public"]["Tables"]["equipment"]["Row"] & {
     category: Database["public"]["Tables"]["categories"]["Row"];
+    photos?: Database["public"]["Tables"]["equipment_photos"]["Row"][];
   };
   renter: Database["public"]["Tables"]["profiles"]["Row"];
   owner: Database["public"]["Tables"]["profiles"]["Row"];
@@ -20,13 +21,31 @@ export interface BookingFormData {
   message?: string;
 }
 
+export type InsuranceType = 'none' | 'basic' | 'premium';
+
+export interface InsuranceOption {
+  type: InsuranceType;
+  label: string;
+  coverage: string;
+  cost_percentage: number;
+  description: string;
+}
+
+export interface BookingWithInsurance extends BookingRequest {
+  insurance_type: InsuranceType;
+  insurance_cost: number;
+  damage_deposit_amount: number;
+}
+
 export interface BookingCalculation {
-  daily_rate: number;
   days: number;
+  dailyRate: number;
   subtotal: number;
-  fees: number;
+  serviceFee: number;
+  tax: number;
+  insurance: number;
+  deposit: number;
   total: number;
-  currency: string;
 }
 
 export interface AvailabilitySlot {

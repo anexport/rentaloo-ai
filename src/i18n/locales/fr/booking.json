@@ -1,0 +1,117 @@
+{
+  "sidebar": {
+    "title": "Réserver ce matériel",
+    "select_dates": "Sélectionnez les dates",
+    "start_date": "Date de début",
+    "end_date": "Date de fin",
+    "pricing": "Détails de tarification",
+    "daily_rate": "Tarif quotidien",
+    "number_of_days": "Nombre de jours",
+    "subtotal": "Sous-total",
+    "service_fee": "Frais de service",
+    "total": "Total",
+    "request_booking": "Demander une réservation",
+    "requesting": "Demande en cours...",
+    "dates_required": "Veuillez sélectionner les dates de début et de fin",
+    "unavailable_dates": "Certaines dates de votre sélection ne sont pas disponibles",
+    "aria_booking_info": "Informations de réservation",
+    "aria_pricing": "Tarification",
+    "aria_location_contact": "Emplacement et contact",
+    "aria_dates": "Dates",
+    "aria_pricing_breakdown": "Détail des prix",
+    "aria_insurance": "Options d'assurance"
+  },
+  "status": {
+    "pending": "En attente",
+    "approved": "Approuvé",
+    "declined": "Décliné",
+    "cancelled": "Annulé",
+    "completed": "Complété"
+  },
+  "requests": {
+    "my_requests": "Mes demandes de réservation",
+    "incoming_requests": "Demandes entrantes",
+    "no_requests": "Aucune demande de réservation pour le moment",
+    "view_details": "Voir les détails",
+    "approve": "Approuver",
+    "decline": "Décliner",
+    "cancel": "Annuler la réservation",
+    "confirm_cancel": "Êtes-vous sûr de vouloir annuler cette réservation?"
+  },
+  "details": {
+    "booking_details": "Détails de la réservation",
+    "equipment": "Matériel",
+    "renter": "Locataire",
+    "owner": "Propriétaire",
+    "dates": "Dates de location",
+    "duration": "Durée",
+    "total_cost": "Coût total",
+    "booking_status": "Statut",
+    "message_from_renter": "Message du locataire",
+    "pickup_method": "Méthode de récupération",
+    "delivery_address": "Adresse de livraison"
+  },
+  "calendar": {
+    "available": "Disponible",
+    "unavailable": "Indisponible",
+    "booked": "Réservé",
+    "select_range": "Sélectionnez vos dates de location",
+    "minimum_rental": "Location minimale de {{count}} jour",
+    "minimum_rental_plural": "Location minimale de {{count}} jours"
+  },
+  "messages": {
+    "request_sent": "Demande de réservation envoyée avec succès",
+    "request_approved": "Demande de réservation approuvée",
+    "request_declined": "Demande de réservation déclinée",
+    "booking_cancelled": "Réservation annulée avec succès"
+  },
+  "card": {
+    "status": {
+      "awaiting_payment": "En Attente de Paiement",
+      "booking_confirmed": "Réservation Confirmée"
+    },
+    "labels": {
+      "renter": "Locataire",
+      "owner": "Propriétaire",
+      "message": "Message :",
+      "per_day": "/jour"
+    },
+    "buttons": {
+      "view_renter_info": "Voir les Informations du Locataire",
+      "hide_renter_info": "Masquer les Informations du Locataire",
+      "pickup_inspection": "Inspection de Récupération",
+      "view_pickup_inspection": "Voir Inspection de Récupération",
+      "return_inspection": "Inspection de Retour",
+      "view_return_inspection": "Voir Inspection de Retour",
+      "file_damage_claim": "Déposer une Réclamation de Dommage",
+      "cancel_booking": "Annuler la Réservation",
+      "cancelling": "Annulation en cours...",
+      "message": "Message",
+      "loading": "Chargement..."
+    },
+    "alerts": {
+      "awaiting_payment_owner": "Cette demande de réservation est en attente de paiement du locataire.",
+      "awaiting_payment_renter": "Votre demande de réservation est en attente de paiement. Complétez le paiement pour confirmer votre réservation.",
+      "payment_confirmed": "Paiement reçu ! La réservation est confirmée.",
+      "cancelled_renter": "Vous avez annulé cette demande de réservation.",
+      "cancelled_owner": "Cette demande de réservation a été annulée par le locataire."
+    },
+    "modals": {
+      "complete_payment": "Compléter le Paiement",
+      "renter_verification": "Profil de Vérification du Locataire"
+    },
+    "confirmations": {
+      "cancel_owner": "Êtes-vous sûr de vouloir annuler cette réservation ? Le locataire recevra un remboursement complet.",
+      "cancel_renter": "Êtes-vous sûr de vouloir annuler cette réservation ? Vous recevrez un remboursement complet."
+    },
+    "timestamps": {
+      "requested": "Demandé :",
+      "updated": "Mis à jour :"
+    },
+    "errors": {
+      "refund_failed": "Le traitement du remboursement a échoué. Veuillez contacter le support pour annuler cette réservation.",
+      "conversation_failed": "Impossible de démarrer la conversation. Veuillez réessayer.",
+      "cancel_failed": "Impossible d'annuler la réservation. Veuillez réessayer."
+    }
+  }
+}

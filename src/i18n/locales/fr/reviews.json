@@ -1,0 +1,99 @@
+{
+  "form": {
+    "title": "Laisser un avis",
+    "description": "Partagez votre expérience de location \"{{equipmentTitle}}\" de {{revieweeName}}",
+    "rating_label": "Évaluation générale",
+    "rating_required": "Évaluation générale *",
+    "rating_display": "{{rating}} sur 5",
+    "comment_label": "Votre avis",
+    "comment_required": "Votre avis *",
+    "comment_placeholder": "Dites aux autres ce que vous avez pensé de votre expérience... (minimum 10 caractères)",
+    "comment_hint": "Soyez honnête et constructif. Votre avis aidera les autres à prendre des décisions éclairées.",
+    "guidelines_title": "Directives pour les avis",
+    "guideline_specific": "Soyez précis sur votre expérience avec le matériel et le propriétaire",
+    "guideline_respectful": "Restez respectueux et constructif",
+    "guideline_facts": "Concentrez-vous sur les faits plutôt que sur les émotions",
+    "guideline_improvements": "Mentionnez à la fois les points positifs et les domaines à améliorer",
+    "submit_button": "Soumettre l'avis",
+    "submitting_button": "Soumission en cours...",
+    "cancel_button": "Annuler",
+    "edit_review": "Modifier l'avis",
+    "delete_review": "Supprimer l'avis",
+    "rate_equipment": "Évaluer le matériel",
+    "rate_owner": "Évaluer le propriétaire",
+    "rate_renter": "Évaluer le locataire",
+    "leave_review": "Laisser un avis",
+    "validation_errors": {
+      "min_rating": "L'évaluation doit être au moins 1 étoile",
+      "max_rating": "L'évaluation ne peut pas dépasser 5 étoiles",
+      "rating_required": "Veuillez sélectionner une évaluation",
+      "rating_whole_number": "L'évaluation doit être un nombre entier",
+      "min_length": "L'avis doit contenir au moins 10 caractères",
+      "max_length": "L'avis ne peut pas dépasser 1000 caractères"
+    }
+  },
+  "display": {
+    "verified_badge": "Vérifié",
+    "equipment_label": "Matériel : ",
+    "overall_rating": "Évaluation générale",
+    "average_rating": "Évaluation moyenne",
+    "rating_display": "{{rating}} / 5.0",
+    "verified_rental": "Location vérifiée",
+    "helpful": "Utile",
+    "report": "Signaler",
+    "owner_response": "Réponse du propriétaire",
+    "show_more": "Afficher plus",
+    "show_less": "Afficher moins",
+    "review_photo_alt": "Photo d'avis {{number}}"
+  },
+  "empty_states": {
+    "loading": "Chargement des avis...",
+    "no_reviews": "Aucun avis pour le moment",
+    "be_first": "Soyez le premier à laisser un avis !",
+    "no_matching_filter": "Aucun avis ne correspond à votre filtre",
+    "reviews_count_one": "Avis ({{count}})",
+    "reviews_count_other": "Avis ({{count}})"
+  },
+  "filters": {
+    "all": "Tous",
+    "positive": "Positifs",
+    "negative": "Négatifs",
+    "recent": "Récents",
+    "all_reviews": "Tous les avis",
+    "5_stars": "5 étoiles",
+    "4_stars": "4 étoiles",
+    "3_stars": "3 étoiles",
+    "2_stars": "2 étoiles",
+    "1_star": "1 étoile",
+    "most_recent": "Plus récent",
+    "highest_rated": "Mieux noté",
+    "lowest_rated": "Moins bien noté"
+  },
+  "summary": {
+    "title": "Évaluation générale",
+    "no_reviews": "Aucun avis pour le moment",
+    "be_first": "Soyez le premier à laisser un avis !",
+    "based_on_one": "Basé sur {{count}} avis",
+    "based_on_other": "Basé sur {{count}} avis"
+  },
+  "actions": {
+    "load_more": "Charger plus d'avis"
+  },
+  "star_rating": {
+    "aria_rate_one": "Évaluer {{starNumber}} étoile",
+    "aria_rate_other": "Évaluer {{starNumber}} étoiles"
+  },
+  "errors": {
+    "not_logged_in": "Vous devez être connecté pour soumettre un avis",
+    "submit_failed": "Erreur lors de la soumission de l'avis. Veuillez réessayer.",
+    "auth_required": "Authentification requise"
+  },
+  "success": {
+    "review_submitted": "Avis soumis avec succès",
+    "review_updated": "Avis mis à jour avec succès",
+    "review_deleted": "Avis supprimé avec succès"
+  },
+  "messages": {
+    "already_reviewed": "Vous avez déjà évalué cette réservation"
+  }
+}

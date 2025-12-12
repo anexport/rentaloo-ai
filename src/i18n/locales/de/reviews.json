@@ -1,0 +1,99 @@
+{
+  "form": {
+    "title": "Bewertung hinterlassen",
+    "description": "Teilen Sie Ihre Erfahrung beim Mieten von \"{{equipmentTitle}}\" von {{revieweeName}}",
+    "rating_label": "Gesamtbewertung",
+    "rating_required": "Gesamtbewertung *",
+    "rating_display": "{{rating}} von 5",
+    "comment_label": "Ihre Bewertung",
+    "comment_required": "Ihre Bewertung *",
+    "comment_placeholder": "Erzählen Sie anderen von Ihrer Erfahrung... (mindestens 10 Zeichen)",
+    "comment_hint": "Seien Sie ehrlich und konstruktiv. Ihre Bewertung hilft anderen, fundierte Entscheidungen zu treffen.",
+    "guidelines_title": "Bewertungsrichtlinien",
+    "guideline_specific": "Seien Sie spezifisch über Ihre Erfahrung mit dem Equipment und dem Eigentümer",
+    "guideline_respectful": "Bleiben Sie respektvoll und konstruktiv",
+    "guideline_facts": "Konzentrieren Sie sich auf Fakten statt auf Emotionen",
+    "guideline_improvements": "Erwähnen Sie sowohl positive Aspekte als auch Verbesserungsbereiche",
+    "submit_button": "Bewertung absenden",
+    "submitting_button": "Wird abgesendet...",
+    "cancel_button": "Abbrechen",
+    "edit_review": "Bewertung bearbeiten",
+    "delete_review": "Bewertung löschen",
+    "rate_equipment": "Equipment bewerten",
+    "rate_owner": "Eigentümer bewerten",
+    "rate_renter": "Mieter bewerten",
+    "leave_review": "Bewertung hinterlassen",
+    "validation_errors": {
+      "min_rating": "Die Bewertung muss mindestens 1 Stern sein",
+      "max_rating": "Die Bewertung kann nicht mehr als 5 Sterne betragen",
+      "rating_required": "Bitte wählen Sie eine Bewertung",
+      "rating_whole_number": "Die Bewertung muss eine ganze Zahl sein",
+      "min_length": "Die Bewertung muss mindestens 10 Zeichen lang sein",
+      "max_length": "Die Bewertung darf nicht mehr als 1000 Zeichen lang sein"
+    }
+  },
+  "display": {
+    "verified_badge": "Verifiziert",
+    "equipment_label": "Equipment: ",
+    "overall_rating": "Gesamtbewertung",
+    "average_rating": "Durchschnittliche Bewertung",
+    "rating_display": "{{rating}} / 5.0",
+    "verified_rental": "Verifizierte Miete",
+    "helpful": "Hilfreich",
+    "report": "Melden",
+    "owner_response": "Antwort des Eigentümers",
+    "show_more": "Mehr anzeigen",
+    "show_less": "Weniger anzeigen",
+    "review_photo_alt": "Bewertungsfoto {{number}}"
+  },
+  "empty_states": {
+    "loading": "Bewertungen werden geladen...",
+    "no_reviews": "Noch keine Bewertungen",
+    "be_first": "Seien Sie der Erste, der eine Bewertung hinterlässt!",
+    "no_matching_filter": "Keine Bewertungen entsprechen Ihrem Filter",
+    "reviews_count_single": "Bewertung ({{count}})",
+    "reviews_count_plural": "Bewertungen ({{count}})"
+  },
+  "filters": {
+    "all": "Alle",
+    "positive": "Positiv",
+    "negative": "Negativ",
+    "recent": "Aktuell",
+    "all_reviews": "Alle Bewertungen",
+    "5_stars": "5 Sterne",
+    "4_stars": "4 Sterne",
+    "3_stars": "3 Sterne",
+    "2_stars": "2 Sterne",
+    "1_star": "1 Stern",
+    "most_recent": "Aktuellste",
+    "highest_rated": "Höchste Bewertung",
+    "lowest_rated": "Niedrigste Bewertung"
+  },
+  "summary": {
+    "title": "Gesamtbewertung",
+    "no_reviews": "Noch keine Bewertungen",
+    "be_first": "Seien Sie der Erste, der eine Bewertung hinterlässt!",
+    "based_on_one": "Basierend auf {{count}} Bewertung",
+    "based_on_other": "Basierend auf {{count}} Bewertungen"
+  },
+  "actions": {
+    "load_more": "Mehr Bewertungen laden"
+  },
+  "star_rating": {
+    "aria_rate_one": "{{starNumber}} Stern bewerten",
+    "aria_rate_other": "{{starNumber}} Sterne bewerten"
+  },
+  "errors": {
+    "not_logged_in": "Sie müssen angemeldet sein, um eine Bewertung abzugeben",
+    "submit_failed": "Fehler beim Absenden der Bewertung. Bitte versuchen Sie es erneut.",
+    "auth_required": "Authentifizierung erforderlich"
+  },
+  "success": {
+    "review_submitted": "Bewertung erfolgreich abgesendet",
+    "review_updated": "Bewertung erfolgreich aktualisiert",
+    "review_deleted": "Bewertung erfolgreich gelöscht"
+  },
+  "messages": {
+    "already_reviewed": "Sie haben diese Buchung bereits bewertet"
+  }
+}

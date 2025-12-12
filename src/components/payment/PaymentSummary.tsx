@@ -1,17 +1,24 @@
 import type { PaymentSummary as PaymentSummaryType } from "../../types/payment";
+import type { InsuranceType } from "../../types/booking";
 import { formatCurrency } from "../../lib/payment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Shield, TrendingUp } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DollarSign, Shield, TrendingUp, RefreshCw, AlertCircle } from "lucide-react";
 
 interface PaymentSummaryProps {
   summary: PaymentSummaryType;
   showEscrowInfo?: boolean;
+  insuranceType?: InsuranceType;
 }
 
 const PaymentSummary = ({
   summary,
   showEscrowInfo = false,
+  insuranceType,
 }: PaymentSummaryProps) => {
+  const hasInsurance = summary.insurance > 0;
+  const hasDeposit = summary.deposit > 0;
+
   return (
     <Card>
       <CardHeader>
@@ -37,6 +44,19 @@ const PaymentSummary = ({
           </span>
         </div>
 
+        {/* Insurance */}
+        {hasInsurance && (
+          <div className="flex justify-between items-center">
+            <span className="flex items-center gap-1 text-gray-600">
+              <Shield className="h-3 w-3" />
+              {insuranceType === 'basic' ? 'Basic' : 'Premium'} Protection
+            </span>
+            <span className="font-medium">
+              {formatCurrency(summary.insurance)}
+            </span>
+          </div>
+        )}
+
         {/* Tax */}
         {summary.tax > 0 && (
           <div className="flex justify-between items-center">
@@ -48,9 +68,42 @@ const PaymentSummary = ({
         {/* Divider */}
         <div className="border-t border-gray-200 my-2" />
 
+        {/* Rental Total */}
+        <div className="flex justify-between items-center font-semibold">
+          <span>Rental Total</span>
+          <span>
+            {formatCurrency(summary.subtotal + summary.service_fee + summary.insurance)}
+          </span>
+        </div>
+
+        {/* Damage Deposit */}
+        {hasDeposit && (
+          <>
+            <div className="border-t border-gray-200 my-2" />
+            <div className="flex justify-between items-center">
+              <span className="flex items-center gap-1 text-gray-600">
+                <RefreshCw className="h-3 w-3 text-green-600" />
+                Damage Deposit (Refundable)
+              </span>
+              <span className="font-medium text-green-600">
+                {formatCurrency(summary.deposit)}
+              </span>
+            </div>
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                This deposit will be refunded after successful equipment return
+              </AlertDescription>
+            </Alert>
+          </>
+        )}
+
+        {/* Divider */}
+        <div className="border-t border-gray-200 my-2" />
+
         {/* Total */}
         <div className="flex justify-between items-center">
-          <span className="text-lg font-semibold">Total</span>
+          <span className="text-lg font-semibold">Total Charge</span>
           <span className="text-lg font-bold text-primary">
             {formatCurrency(summary.total)}
           </span>

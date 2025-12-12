@@ -1,4 +1,11 @@
 import { Moon, Sun } from "lucide-react";
+import {
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/contexts/useTheme";
 
 interface ThemeToggleProps {
@@ -10,7 +17,7 @@ const ThemeToggle = ({
   showLabel = false,
   variant = "icon",
 }: ThemeToggleProps) => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, setTheme } = useTheme();
 
   const handleToggle = () => {
     toggleTheme();
@@ -26,21 +33,25 @@ const ThemeToggle = ({
   // Menu item variant (for use in dropdowns)
   if (variant === "menu-item") {
     return (
-      <div
-        onClick={handleToggle}
-        onKeyDown={handleKeyDown}
-        className="flex items-center space-x-3 cursor-pointer"
-        role="button"
-        tabIndex={0}
-        aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-      >
-        {theme === "light" ? (
-          <Moon className="h-4 w-4 text-gray-500" />
-        ) : (
-          <Sun className="h-4 w-4 text-gray-500" />
-        )}
-        <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
-      </div>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger className="gap-3">
+          {theme === "light" ? (
+            <Sun className="h-4 w-4 text-gray-500" />
+          ) : (
+            <Moon className="h-4 w-4 text-gray-500" />
+          )}
+          <span>{theme === "light" ? "Light Mode" : "Dark Mode"}</span>
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent className="w-40">
+          <DropdownMenuRadioGroup
+            value={theme}
+            onValueChange={(value) => setTheme(value as "light" | "dark")}
+          >
+            <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
     );
   }
 

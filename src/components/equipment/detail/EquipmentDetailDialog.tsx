@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -13,31 +14,32 @@ import {
 import { Separator } from "@/components/ui/separator";
 import {
   Info,
-  Package,
   Star,
-  CreditCard,
+  MapPin,
 } from "lucide-react";
 import { fetchListingById } from "@/components/equipment/services/listings";
 import { EquipmentHeader } from "./EquipmentHeader";
 import { EquipmentPhotoGallery } from "./EquipmentPhotoGallery";
-import { EquipmentOverviewTab } from "./EquipmentOverviewTab";
-import { DetailsTab } from "./DetailsTab";
+import { OwnerInformationCard } from "./OwnerInformationCard";
+import { ConditionVisualization } from "./ConditionVisualization";
+import AvailabilityCalendar from "@/components/AvailabilityCalendar";
+import EquipmentLocationMap from "@/components/equipment/EquipmentLocationMap";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import BookingSidebar from "@/components/booking/BookingSidebar";
 import { FloatingBookingCTA } from "@/components/booking/FloatingBookingCTA";
 import { MobileSidebarDrawer } from "@/components/booking/MobileSidebarDrawer";
-import BookingRequestForm from "@/components/booking/BookingRequestForm";
-import PaymentForm from "@/components/payment/PaymentForm";
+import PaymentCheckoutForm from "@/components/payment/PaymentCheckoutForm";
+import OrderSummaryCard from "@/components/payment/OrderSummaryCard";
 import ReviewList from "@/components/reviews/ReviewList";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { createMaxWidthQuery } from "@/config/breakpoints";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/useToast";
 import { supabase } from "@/lib/supabase";
+import type { PaymentBookingData } from "@/lib/stripe";
 import type { Listing } from "@/components/equipment/services/listings";
-import type { BookingCalculation, BookingConflict } from "@/types/booking";
+import type { BookingCalculation, BookingConflict, InsuranceType } from "@/types/booking";
 import { calculateBookingTotal, checkBookingConflicts } from "@/lib/booking";
 import { formatDateForStorage } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
@@ -48,11 +50,21 @@ type EquipmentDetailDialogProps = {
   listingId?: string;
 };
 
-// Type guard to check if listing has category
-const hasCategory = (
-  listing: Listing | undefined
-): listing is Listing & { category: NonNullable<Listing["category"]> } => {
-  return !!listing?.category;
+
+const calculateDamageDeposit = (equipment?: Listing | null): number => {
+  if (!equipment) return 0;
+
+  if (equipment.damage_deposit_amount) {
+    return equipment.damage_deposit_amount;
+  }
+
+  if (equipment.damage_deposit_percentage) {
+    return (
+      equipment.daily_rate * (equipment.damage_deposit_percentage / 100)
+    );
+  }
+
+  return 0;
 };
 
 const EquipmentDetailDialog = ({
@@ -63,25 +75,25 @@ const EquipmentDetailDialog = ({
   const isMobile = useMediaQuery(createMaxWidthQuery("md"));
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation("equipment");
   const [activeTab, setActiveTab] = useState("overview");
   const [calculation, setCalculation] = useState<BookingCalculation | null>(
     null
   );
   const [watchedStartDate, setWatchedStartDate] = useState<string>("");
   const [watchedEndDate, setWatchedEndDate] = useState<string>("");
-  const [bookingRequestId, setBookingRequestId] = useState<string | null>(null);
+  const [showPaymentMode, setShowPaymentMode] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [conflicts, setConflicts] = useState<BookingConflict[]>([]);
   const [loadingConflicts, setLoadingConflicts] = useState(false);
-  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
-  const [isCancellingBooking, setIsCancellingBooking] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [selectedInsurance, setSelectedInsurance] = useState<InsuranceType>("none");
   const requestIdRef = useRef(0);
-  const sheetContentRef = useRef<HTMLElement | null>(null);
-  
+  const [sheetContentEl, setSheetContentEl] = useState<HTMLElement | null>(null);
+
   // Callback ref to attach to the scrollable container
   const sheetContentRefCallback = useCallback((element: HTMLElement | null) => {
-    sheetContentRef.current = element;
+    setSheetContentEl(element);
   }, []);
 
   const handleCalculationChange = useCallback(
@@ -144,10 +156,16 @@ const EquipmentDetailDialog = ({
     (startDate: string, endDate: string) => {
       if (!data) return;
 
+      // Calculate damage deposit from equipment settings
+      const damageDeposit = calculateDamageDeposit(data);
+
       const newCalculation = calculateBookingTotal(
         data.daily_rate,
         startDate,
-        endDate
+        endDate,
+        undefined, // customRates - not used yet
+        selectedInsurance,
+        damageDeposit
       );
       setCalculation(newCalculation);
       handleCalculationChange(newCalculation, startDate, endDate);
@@ -174,7 +192,7 @@ const EquipmentDetailDialog = ({
             setConflicts([
               {
                 type: "unavailable",
-                message: "Could not verify availability — please try again",
+                message: t("toasts.availability_error"),
               },
             ]);
           }
@@ -187,8 +205,15 @@ const EquipmentDetailDialog = ({
 
       void checkConflicts();
     },
-    [data, handleCalculationChange]
+    [data, handleCalculationChange, selectedInsurance, t]
   );
+
+  // Recalculate when insurance selection changes
+  useEffect(() => {
+    if (watchedStartDate && watchedEndDate) {
+      calculateBooking(watchedStartDate, watchedEndDate);
+    }
+  }, [selectedInsurance, watchedStartDate, watchedEndDate, calculateBooking]);
 
   // Handle start date selection
   const handleStartDateSelect = useCallback(
@@ -286,20 +311,64 @@ const EquipmentDetailDialog = ({
     [dateRange, calculateBooking]
   );
 
-  // Handle creating booking request and initializing payment
-  const handleBookAndPay = useCallback(async () => {
-    // Early return if loading conflicts or already creating
-    if (loadingConflicts || isCreatingBooking) {
+  // Handle date selection from the availability calendar
+  const handleCalendarDateSelect = useCallback(
+    (date: Date) => {
+      // If no start date selected, set as start
+      if (!dateRange?.from) {
+        handleStartDateSelect(date);
+        return;
+      }
+
+      // If start date exists but no end date
+      if (!dateRange.to) {
+        // If clicked date is before start date, make it the new start
+        if (date < dateRange.from) {
+          handleStartDateSelect(date);
+        } else {
+          // Set as end date
+          handleEndDateSelect(date);
+        }
+        return;
+      }
+
+      // Both dates are set - start fresh with clicked date as new start
+      handleStartDateSelect(date);
+    },
+    [dateRange, handleStartDateSelect, handleEndDateSelect]
+  );
+
+  // Prepare booking data for payment (NO database record created yet!)
+  const bookingData: PaymentBookingData | null = 
+    data && dateRange?.from && dateRange?.to && calculation
+      ? {
+          equipment_id: data.id,
+          start_date: formatDateForStorage(dateRange.from),
+          end_date: formatDateForStorage(dateRange.to),
+          total_amount: calculation.total,
+          insurance_type: selectedInsurance,
+          insurance_cost: calculation.insurance,
+          damage_deposit_amount: calculateDamageDeposit(data),
+        }
+      : null;
+
+  // Handle transitioning to payment mode (NO booking created in DB)
+  const handleProceedToPayment = useCallback(() => {
+    // Validate before showing payment
+    if (loadingConflicts) {
       return;
     }
 
-    if (
-      !user ||
-      !data ||
-      !dateRange?.from ||
-      !dateRange?.to ||
-      conflicts.length > 0
-    ) {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: t("toasts.login_required_title"),
+        description: t("toasts.login_required_message"),
+      });
+      return;
+    }
+
+    if (!data || !dateRange?.from || !dateRange?.to || conflicts.length > 0) {
       return;
     }
 
@@ -307,64 +376,24 @@ const EquipmentDetailDialog = ({
     if (data.owner?.id === user.id) {
       toast({
         variant: "destructive",
-        title: "Cannot Book Own Equipment",
-        description: "You cannot book your own equipment.",
+        title: t("toasts.cannot_book_own_title"),
+        description: t("toasts.cannot_book_own_message"),
       });
       return;
     }
 
-    if (!data.category) {
+    if (!calculation) {
       toast({
         variant: "destructive",
-        title: "Missing Category Information",
-        description: "Equipment category information is missing.",
+        title: t("toasts.price_not_calculated_title"),
+        description: t("toasts.price_not_calculated_message"),
       });
       return;
     }
 
-    setIsCreatingBooking(true);
-
-    try {
-      const startDate = formatDateForStorage(dateRange.from);
-      const endDate = formatDateForStorage(dateRange.to);
-
-      const bookingData = {
-        equipment_id: data.id,
-        renter_id: user.id,
-        start_date: startDate,
-        end_date: endDate,
-        total_amount: calculation?.total || 0,
-        status: "pending" as const,
-        message: null,
-      };
-
-      const { data: newBooking, error } = await supabase
-        .from("booking_requests")
-        .insert(bookingData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Set booking request ID and switch to book tab for payment
-      if (newBooking) {
-        setBookingRequestId(newBooking.id);
-        setActiveTab("book");
-        // Close mobile drawer on mobile so payment form is visible
-        if (isMobile) {
-          setMobileSidebarOpen(false);
-        }
-      }
-    } catch (error) {
-      console.error("Error creating booking request:", error);
-      toast({
-        variant: "destructive",
-        title: "Booking Failed",
-        description: "Failed to create booking request. Please try again.",
-      });
-    } finally {
-      setIsCreatingBooking(false);
-    }
+    // Just switch to payment mode - NO booking is created here!
+    // The booking will be created by the webhook after payment succeeds
+    setShowPaymentMode(true);
   }, [
     user,
     data,
@@ -373,79 +402,54 @@ const EquipmentDetailDialog = ({
     calculation,
     toast,
     loadingConflicts,
-    isCreatingBooking,
-    isMobile,
+    t,
   ]);
 
-  // Handle booking button click
+  // Handle booking button click - proceeds to payment mode
   const handleBooking = useCallback(() => {
-    if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Login Required",
-        description: "Please log in to book this equipment.",
-      });
-      return;
-    }
-    void handleBookAndPay();
-  }, [user, toast, handleBookAndPay]);
+    handleProceedToPayment();
+  }, [handleProceedToPayment]);
+
+  // Handle payment success - booking is created by webhook, just update UI
+  const handlePaymentSuccess = useCallback(() => {
+    toast({
+      title: t("toasts.payment_success_title"),
+      description: t("toasts.payment_success_message"),
+    });
+    setShowPaymentMode(false);
+    setMobileSidebarOpen(false);
+    // Reset booking state
+    setDateRange(undefined);
+    setCalculation(null);
+    setWatchedStartDate("");
+    setWatchedEndDate("");
+    setSelectedInsurance("none");
+  }, [toast, t]);
+
+  // Handle payment cancellation - just reset UI state (no DB cleanup needed!)
+  const handlePaymentCancel = useCallback(() => {
+    // Simply exit payment mode - no booking was created so nothing to clean up!
+    setShowPaymentMode(false);
+    // Keep the dates and calculation so user can modify and try again
+  }, []);
 
 
-  // Reset calendar and dates when dialog closes
+  // Reset state when dialog closes
+  // No database cleanup needed since bookings are only created after payment!
   useEffect(() => {
     if (!open) {
-      // If there's a pending booking request, clean it up
-      const cleanupBookingRequest = async () => {
-        // Capture the current bookingRequestId before clearing state
-        const currentBookingRequestId = bookingRequestId;
-
-        if (currentBookingRequestId) {
-          try {
-            // Check if booking request still exists and is pending
-            const { data: existingRequest, error: checkError } = await supabase
-              .from("booking_requests")
-              .select("id, status")
-              .eq("id", currentBookingRequestId)
-              .maybeSingle();
-
-            if (checkError && checkError.code !== "PGRST116") {
-              console.error("Error checking booking request:", checkError);
-              return;
-            }
-
-            // If booking request exists and is still pending, delete it
-            if (existingRequest && existingRequest.status === "pending") {
-              const { error: deleteError } = await supabase
-                .from("booking_requests")
-                .delete()
-                .eq("id", currentBookingRequestId)
-                .eq("status", "pending");
-
-              if (deleteError) {
-                console.error("Error deleting booking request:", deleteError);
-              }
-            }
-          } catch (error) {
-            console.error("Error cleaning up booking request:", error);
-          }
-        }
-      };
-
-      void cleanupBookingRequest();
-
       // Clear local state
       setDateRange(undefined);
       setCalculation(null);
       setWatchedStartDate("");
       setWatchedEndDate("");
       setConflicts([]);
-      setBookingRequestId(null);
-      setIsCreatingBooking(false);
-      setIsCancellingBooking(false);
+      setShowPaymentMode(false);
       setMobileSidebarOpen(false);
       setActiveTab("overview");
+      setSelectedInsurance("none");
     }
-  }, [open, bookingRequestId]);
+  }, [open]);
 
   const avgRating = (() => {
     if (!data?.reviews || data.reviews.length === 0) return 0;
@@ -467,7 +471,7 @@ const EquipmentDetailDialog = ({
     if (isLoading) {
       return (
         <div className="py-12 text-center text-muted-foreground">
-          Loading...
+          {t("search.loading")}
         </div>
       );
     }
@@ -475,7 +479,7 @@ const EquipmentDetailDialog = ({
     if (!data) {
       return (
         <div className="py-12 text-center text-muted-foreground">
-          Equipment not found.
+          {t("errors.load_failed")}
         </div>
       );
     }
@@ -502,8 +506,33 @@ const EquipmentDetailDialog = ({
 
         <Separator />
 
-        {/* Main content with tabs and sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+        {/* Payment Mode: Full-width payment form with order summary sidebar */}
+        {showPaymentMode && bookingData && calculation && !isMobile ? (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+            {/* Payment Form - Full Width */}
+            <div>
+              <PaymentCheckoutForm
+                bookingData={bookingData}
+                totalAmount={calculation.total}
+                onSuccess={handlePaymentSuccess}
+                onCancel={handlePaymentCancel}
+              />
+            </div>
+
+            {/* Order Summary Sidebar */}
+            <aside className="lg:sticky lg:top-6 h-fit">
+              <OrderSummaryCard
+                listing={data}
+                calculation={calculation}
+                startDate={watchedStartDate}
+                endDate={watchedEndDate}
+                insuranceType={selectedInsurance}
+              />
+            </aside>
+          </div>
+        ) : (
+          /* Normal Mode: Equipment details with booking sidebar */
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
           {/* Main content tabs */}
           <div className="space-y-6">
             <Tabs
@@ -511,85 +540,129 @@ const EquipmentDetailDialog = ({
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger
                   value="overview"
                   className="flex items-center gap-2"
-                  aria-label="Overview - Description and details"
+                  aria-label={t("details_dialog.aria_overview")}
                 >
                   <Info className="h-4 w-4" />
-                  <span>Overview</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="details"
-                  className="flex items-center gap-2"
-                  aria-label="Details - Availability and location"
-                >
-                  <Package className="h-4 w-4" />
-                  <span>Details</span>
+                  <span>{t("details_dialog.tab_overview")}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="reviews"
                   className="flex items-center gap-2"
-                  aria-label="Reviews - Owner ratings and feedback"
+                  aria-label={t("details_dialog.aria_reviews")}
                 >
                   <Star className="h-4 w-4" />
-                  <span>Reviews</span>
+                  <span>{t("details_dialog.tab_reviews")}</span>
                   {data.reviews && data.reviews.length > 0 && (
                     <Badge variant="secondary" className="ml-1 text-xs">
                       {data.reviews.length}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger
-                  value="book"
-                  className="flex items-center gap-2"
-                  aria-label="Book"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  <span>Book</span>
-                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="space-y-6 mt-6">
-                <EquipmentOverviewTab
-                  description={data.description}
-                  condition={data.condition}
-                  category={data.category}
-                  dailyRate={data.daily_rate}
-                  location={data.location}
-                  owner={data.owner && ownerProfile ? {
-                    id: data.owner.id,
-                    email: data.owner.email,
-                    name: undefined, // Not available in profiles table
-                    avatar_url: undefined, // Not available in profiles table
-                    joinedDate: ownerProfile.created_at 
-                      ? new Date(ownerProfile.created_at).getFullYear().toString()
-                      : undefined,
-                    totalRentals: undefined, // Could be fetched separately if needed
-                    responseRate: undefined, // Could be calculated from messaging data
-                    rating: avgRating,
-                    isVerified: false, // Could be fetched from verification table
-                  } : undefined}
-                  rentalCount={rentalCountData || 0}
-                  averageRating={avgRating}
-                  isVerified={false} // Could be fetched from verification table
-                  lastInspectionDate={
-                    data.created_at 
-                      ? data.created_at
-                      : undefined
-                  }
-                />
-              </TabsContent>
+              <TabsContent value="overview" className="space-y-8 mt-6">
+                {/* 1. Key Details Grid */}
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">{t("details.key_details")}</h2>
+                  <dl className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <dt className="text-muted-foreground mb-1">{t("details.condition")}</dt>
+                      <dd className="font-medium flex items-center gap-2">
+                        <ConditionVisualization
+                          condition={data.condition}
+                          lastInspectionDate={data.created_at}
+                          compact={true}
+                        />
+                      </dd>
+                    </div>
+                    {data.category && (
+                      <div>
+                        <dt className="text-muted-foreground mb-1">{t("details.category")}</dt>
+                        <dd className="font-medium">{data.category.name}</dd>
+                      </div>
+                    )}
+                    <div>
+                      <dt className="text-muted-foreground mb-1">{t("details.daily_rate")}</dt>
+                      <dd className="font-semibold text-lg">${data.daily_rate}</dd>
+                    </div>
+                    {rentalCountData !== undefined && rentalCountData > 0 && (
+                      <div>
+                        <dt className="text-muted-foreground mb-1">{t("details.total_rentals")}</dt>
+                        <dd className="font-medium">{rentalCountData}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
 
-              <TabsContent value="details" className="mt-6">
-                <DetailsTab
-                  equipmentId={data.id}
-                  dailyRate={data.daily_rate}
-                  location={data.location}
-                  latitude={data.latitude}
-                  longitude={data.longitude}
-                />
+                <Separator />
+
+                {/* 2. Owner Information */}
+                {data.owner && ownerProfile && (
+                  <OwnerInformationCard
+                    owner={{
+                      id: data.owner.id,
+                      email: data.owner.email,
+                      name: undefined,
+                      avatar_url: undefined,
+                      joinedDate: ownerProfile.created_at
+                        ? new Date(ownerProfile.created_at).getFullYear().toString()
+                        : undefined,
+                      totalRentals: rentalCountData,
+                      responseRate: undefined,
+                      rating: avgRating,
+                      isVerified: false,
+                    }}
+                  />
+                )}
+
+                <Separator />
+
+                {/* 3. Location Section */}
+                <section>
+                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    {t("details.location")}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {data.location}
+                  </p>
+                  <EquipmentLocationMap
+                    location={data.location}
+                    latitude={data.latitude}
+                    longitude={data.longitude}
+                    equipmentTitle={data.title}
+                  />
+                </section>
+
+                <Separator />
+
+                {/* 4. Availability Section */}
+                <section>
+                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                    {t("details.availability")}
+                  </h2>
+                  <AvailabilityCalendar
+                    equipmentId={data.id}
+                    defaultDailyRate={data.daily_rate}
+                    viewOnly={true}
+                    onDateSelect={handleCalendarDateSelect}
+                    selectedRange={dateRange}
+                  />
+                </section>
+
+                <Separator />
+
+                {/* 5. Description Section */}
+                <div>
+                  <h2 className="text-xl font-semibold mb-3">{t("details.description")}</h2>
+                  <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                    {data.description}
+                  </p>
+                </div>
               </TabsContent>
 
               <TabsContent value="reviews" className="mt-6">
@@ -600,92 +673,15 @@ const EquipmentDetailDialog = ({
                     showEquipment={false}
                   />
                 ) : (
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <Star className="h-12 w-12 text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">
-                          No Reviews Yet
-                        </h3>
-                        <p className="text-muted-foreground max-w-md">
-                          This owner hasn't received any reviews yet. Be the first to rent and share your experience!
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-
-              <TabsContent value="book" className="mt-6">
-                {!hasCategory(data) ? (
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <Package className="h-12 w-12 text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">
-                          Category Information Missing
-                        </h3>
-                        <p className="text-muted-foreground max-w-md">
-                          This equipment is missing category information. Please
-                          contact the owner or try again later.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : bookingRequestId && calculation ? (
-                  <PaymentForm
-                    bookingRequestId={bookingRequestId}
-                    ownerId={data.owner?.id || ""}
-                    totalAmount={calculation.total}
-                    onSuccess={(paymentId) => {
-                      setActiveTab("overview");
-                      toast({
-                        title: "Payment Successful",
-                        description:
-                          "Your booking has been confirmed! The owner has been notified.",
-                      });
-                      setBookingRequestId(null);
-                    }}
-                    onCancel={async () => {
-                      // Delete pending booking request immediately when user cancels
-                      if (bookingRequestId) {
-                        try {
-                          const { error: deleteError } = await supabase
-                            .from("booking_requests")
-                            .delete()
-                            .eq("id", bookingRequestId)
-                            .eq("status", "pending");
-
-                          if (deleteError) {
-                            console.error("Error deleting booking request:", deleteError);
-                          }
-                        } catch (error) {
-                          console.error("Error cleaning up booking request:", error);
-                        }
-                      }
-                      setBookingRequestId(null);
-                    }}
-                  />
-                ) : (
-                  <BookingRequestForm
-                    equipment={{
-                      ...data,
-                      category: data.category,
-                    }}
-                    onSuccess={(id) => {
-                      setBookingRequestId(id);
-                    }}
-                    isEmbedded={true}
-                    initialDates={
-                      watchedStartDate && watchedEndDate
-                        ? {
-                            start_date: watchedStartDate,
-                            end_date: watchedEndDate,
-                          }
-                        : undefined
-                    }
-                    onCalculationChange={handleCalculationChange}
-                  />
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Star className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      {t("details_dialog.no_reviews_title")}
+                    </h3>
+                    <p className="text-muted-foreground max-w-md">
+                      {t("details_dialog.no_reviews_message")}
+                    </p>
+                  </div>
                 )}
               </TabsContent>
             </Tabs>
@@ -706,22 +702,25 @@ const EquipmentDetailDialog = ({
               calculation={calculation}
               watchedStartDate={watchedStartDate}
               watchedEndDate={watchedEndDate}
+              selectedInsurance={selectedInsurance}
+              onInsuranceChange={setSelectedInsurance}
               onBooking={handleBooking}
-              isCreatingBooking={isCreatingBooking}
+              isLoading={loadingConflicts}
               user={user}
               equipmentId={listingId}
             />
           )}
         </div>
+        )}
 
         {/* Mobile-only: Floating CTA and Sidebar Drawer */}
-        {isMobile && (
+        {isMobile && sheetContentEl && (
           <>
             <FloatingBookingCTA
               dailyRate={data.daily_rate}
               onOpenBooking={() => setMobileSidebarOpen(true)}
               isVisible={true}
-              scrollContainerRef={sheetContentRef}
+              scrollContainerRef={{ current: sheetContentEl }}
             />
             
             <MobileSidebarDrawer
@@ -739,10 +738,16 @@ const EquipmentDetailDialog = ({
               calculation={calculation}
               watchedStartDate={watchedStartDate}
               watchedEndDate={watchedEndDate}
+              selectedInsurance={selectedInsurance}
+              onInsuranceChange={setSelectedInsurance}
               onBooking={handleBooking}
-              isCreatingBooking={isCreatingBooking}
+              isLoading={loadingConflicts}
               user={user}
               equipmentId={listingId}
+              showPaymentMode={showPaymentMode}
+              bookingData={bookingData}
+              onPaymentSuccess={handlePaymentSuccess}
+              onPaymentCancel={handlePaymentCancel}
             />
           </>
         )}
@@ -757,7 +762,7 @@ const EquipmentDetailDialog = ({
         <SheetContent
           ref={sheetContentRefCallback}
           side="bottom"
-          className="h-[90vh] max-h-[90vh] w-full overflow-y-auto px-0"
+          className="h-[90vh] max-h-[90vh] w-full overflow-y-auto scrollbar-hide px-0"
         >
           <div className="px-6 pt-6 pb-6">{renderContent()}</div>
         </SheetContent>
@@ -768,14 +773,12 @@ const EquipmentDetailDialog = ({
   // Desktop: Use Dialog component
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-7xl max-h-[90vh] overflow-y-auto scrollbar-hide">
         <DialogTitle className="sr-only">
-          {data?.title || "Equipment Details"}
+          {data?.title || t("details_dialog.equipment_details_fallback")}
         </DialogTitle>
         <DialogDescription className="sr-only">
-          {data?.description 
-            ? `Details for ${data.title || "this equipment"}. ${data.description.substring(0, 150)}...`
-            : "View equipment details, availability, and booking information"}
+          {t("details_dialog.view_details_description")}
         </DialogDescription>
         {renderContent()}
       </DialogContent>

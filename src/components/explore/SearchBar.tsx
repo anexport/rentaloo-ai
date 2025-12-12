@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,7 @@ type Props = {
 };
 
 const SearchBar = ({ value, onChange, onSubmit }: Props) => {
+  const { t } = useTranslation<"equipment">("equipment");
   const [localValue, setLocalValue] = useState<BasicSearchFilters>(value);
 
   useEffect(() => {
@@ -47,8 +49,8 @@ const SearchBar = ({ value, onChange, onSubmit }: Props) => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            aria-label="Search equipment"
-            placeholder="Search equipment"
+            aria-label={t("search_bar.search_equipment_aria")}
+            placeholder={t("search.placeholder")}
             className="h-12 pl-9 rounded-none border-0 focus-visible:ring-0"
             value={localValue.search}
             onChange={(e) =>
@@ -59,8 +61,8 @@ const SearchBar = ({ value, onChange, onSubmit }: Props) => {
         <div className="relative border-t md:border-t-0 md:border-l border-border">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            aria-label="Location"
-            placeholder="Where?"
+            aria-label={t("search_bar.where_placeholder")}
+            placeholder={t("search_bar.where_placeholder")}
             className="h-12 pl-9 rounded-none border-0 focus-visible:ring-0"
             value={localValue.location}
             onChange={(e) =>
@@ -76,17 +78,27 @@ const SearchBar = ({ value, onChange, onSubmit }: Props) => {
             }
           >
             <SelectTrigger
-              aria-label="Condition"
+              aria-label={t("filters_sheet.condition")}
               className="h-12 rounded-none border-0 focus:ring-0"
             >
-              <SelectValue placeholder="Condition" />
+              <SelectValue placeholder={t("filters_sheet.condition")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All conditions</SelectItem>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="excellent">Excellent</SelectItem>
-              <SelectItem value="good">Good</SelectItem>
-              <SelectItem value="fair">Fair</SelectItem>
+              <SelectItem value="all">
+                {t("condition.all", { defaultValue: "All conditions" })}
+              </SelectItem>
+              <SelectItem value="new">
+                {t("condition.new", { defaultValue: "New" })}
+              </SelectItem>
+              <SelectItem value="excellent">
+                {t("condition.excellent", { defaultValue: "Excellent" })}
+              </SelectItem>
+              <SelectItem value="good">
+                {t("condition.good", { defaultValue: "Good" })}
+              </SelectItem>
+              <SelectItem value="fair">
+                {t("condition.fair", { defaultValue: "Fair" })}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -94,21 +106,31 @@ const SearchBar = ({ value, onChange, onSubmit }: Props) => {
           <div className="flex items-center gap-2 px-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" aria-label="Set dates">
-                  <Calendar className="h-4 w-4 mr-2" /> Dates
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={t("search_bar.set_dates_aria")}
+                >
+                  <Calendar className="h-4 w-4 mr-2" /> {t("search_bar.dates")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Select dates (placeholder)</DialogTitle>
+                  <DialogTitle>
+                    {t("search_bar.select_dates_title")}
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="text-sm text-muted-foreground">
-                  Date picker integration can be added later.
+                  {t("search_bar.date_picker_placeholder")}
                 </div>
               </DialogContent>
             </Dialog>
-            <Button onClick={handleApply} aria-label="Search" className="h-9">
-              Search
+            <Button
+              onClick={handleApply}
+              aria-label={t("search_bar.search")}
+              className="h-9"
+            >
+              {t("search_bar.search")}
             </Button>
           </div>
         </div>

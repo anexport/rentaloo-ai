@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./useAuth";
-import type { Payment, PaymentStatus, EscrowStatus } from "../types/payment";
+import type { Payment } from "../types/payment";
+import { PAYMENT_STATUS, ESCROW_STATUS } from "../types/payment";
 import { calculatePaymentSummary } from "../lib/payment";
 
 interface CreatePaymentParams {
@@ -65,8 +66,8 @@ export const usePayment = () => {
             total_amount: paymentSummary.total,
             escrow_amount: paymentSummary.escrow_amount,
             owner_payout_amount: paymentSummary.owner_payout,
-            payment_status: "succeeded" as PaymentStatus,
-            escrow_status: "held" as EscrowStatus,
+            payment_status: PAYMENT_STATUS.SUCCEEDED,
+            escrow_status: ESCROW_STATUS.HELD,
             payment_method_id: paymentMethodId,
             currency: "usd",
             stripe_payment_intent_id: `pi_mock_${Date.now()}`, // Mock Stripe PI ID
@@ -288,7 +289,7 @@ export const usePayment = () => {
         const { error: updateError } = await supabase
           .from("payments")
           .update({
-            escrow_status: "released" as EscrowStatus,
+            escrow_status: ESCROW_STATUS.RELEASED,
             escrow_released_at: new Date().toISOString(),
           })
           .eq("id", paymentId);

@@ -1,0 +1,48 @@
+{
+  "checkout": {
+    "title": "Pago",
+    "payment_details": "Detalles del Pago",
+    "card_number": "Número de Tarjeta",
+    "expiry_date": "Fecha de Vencimiento",
+    "cvc": "CVC",
+    "billing_address": "Dirección de Facturación",
+    "pay_now": "Pagar Ahora",
+    "processing": "Procesando Pago...",
+    "secure_payment": "Pago seguro impulsado por Stripe"
+  },
+  "confirmation": {
+    "title": "Pago Exitoso",
+    "message": "Tu pago ha sido procesado exitosamente",
+    "booking_confirmed": "Tu reserva está confirmada",
+    "receipt_sent": "Se ha enviado un recibo a tu correo electrónico",
+    "view_booking": "Ver Reserva",
+    "back_to_dashboard": "Volver al Panel de Control"
+  },
+  "escrow": {
+    "funds_held": "Fondos Retenidos en Depósito",
+    "release_on_completion": "Los fondos serán liberados al propietario cuando se complete el alquiler",
+    "protection_message": "Tu pago está protegido hasta que se complete el alquiler"
+  },
+  "refund": {
+    "refund_initiated": "Reembolso Iniciado",
+    "refund_processing": "Tu reembolso está siendo procesado",
+    "refund_completed": "Reembolso Completado",
+    "refund_amount": "Monto del Reembolso",
+    "refund_reason": "Razón del Reembolso"
+  },
+  "history": {
+    "payment_history": "Historial de Pagos",
+    "transaction_id": "ID de Transacción",
+    "date": "Fecha",
+    "amount": "Monto",
+    "status": "Estado",
+    "download_receipt": "Descargar Recibo",
+    "no_payments": "Sin historial de pagos aún"
+  },
+  "errors": {
+    "payment_failed": "El pago falló. Por favor intenta de nuevo.",
+    "invalid_card": "Detalles de tarjeta inválidos",
+    "insufficient_funds": "Fondos insuficientes",
+    "card_declined": "Tarjeta rechazada"
+  }
+}

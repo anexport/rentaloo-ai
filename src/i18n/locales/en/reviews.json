@@ -1,0 +1,95 @@
+{
+  "form": {
+    "title": "Leave a Review",
+    "description": "Share your experience renting \"{{equipmentTitle}}\" from {{revieweeName}}",
+    "rating_label": "Overall Rating",
+    "rating_required": "Overall Rating *",
+    "rating_display": "{{rating}} out of 5",
+    "comment_label": "Your Review",
+    "comment_required": "Your Review *",
+    "comment_placeholder": "Tell others about your experience... (minimum 10 characters)",
+    "comment_hint": "Be honest and constructive. Your review will help others make informed decisions.",
+    "guidelines_title": "Review Guidelines",
+    "guideline_specific": "Be specific about your experience with the equipment and owner",
+    "guideline_respectful": "Keep it respectful and constructive",
+    "guideline_facts": "Focus on facts rather than emotions",
+    "guideline_improvements": "Mention both positives and areas for improvement",
+    "submit_button": "Submit Review",
+    "submitting_button": "Submitting...",
+    "cancel_button": "Cancel",
+    "edit_review": "Edit Review",
+    "delete_review": "Delete Review",
+    "validation_errors": {
+      "min_rating": "Rating must be at least 1 star",
+      "max_rating": "Rating cannot exceed 5 stars",
+      "rating_required": "Please select a rating",
+      "rating_whole_number": "Rating must be a whole number",
+      "min_length": "Review must be at least 10 characters",
+      "max_length": "Review cannot exceed 1000 characters"
+    }
+  },
+  "display": {
+    "verified_badge": "Verified",
+    "equipment_label": "Equipment: ",
+    "overall_rating": "Overall Rating",
+    "average_rating": "Average Rating",
+    "rating_display": "{{rating}} / 5.0",
+    "verified_rental": "Verified Rental",
+    "helpful": "Helpful",
+    "report": "Report",
+    "owner_response": "Owner's Response",
+    "show_more": "Show More",
+    "show_less": "Show Less",
+    "review_photo_alt": "Review photo {{number}}"
+  },
+  "empty_states": {
+    "loading": "Loading reviews...",
+    "no_reviews": "No reviews yet",
+    "be_first": "Be the first to leave a review!",
+    "no_matching_filter": "No reviews match your filter",
+    "reviews_count_single": "Reviews ({{count}})",
+    "reviews_count_plural": "Reviews ({{count}})"
+  },
+  "filters": {
+    "all": "All",
+    "positive": "Positive",
+    "negative": "Negative",
+    "recent": "Recent",
+    "all_reviews": "All Reviews",
+    "5_stars": "5 Stars",
+    "4_stars": "4 Stars",
+    "3_stars": "3 Stars",
+    "2_stars": "2 Stars",
+    "1_star": "1 Star",
+    "most_recent": "Most Recent",
+    "highest_rated": "Highest Rated",
+    "lowest_rated": "Lowest Rated"
+  },
+  "summary": {
+    "title": "Overall Rating",
+    "no_reviews": "No reviews yet",
+    "be_first": "Be the first to leave a review!",
+    "based_on_one": "Based on {{count}} review",
+    "based_on_other": "Based on {{count}} reviews"
+  },
+  "actions": {
+    "load_more": "Load More Reviews"
+  },
+  "star_rating": {
+    "aria_rate_one": "Rate {{starNumber}} star",
+    "aria_rate_other": "Rate {{starNumber}} stars"
+  },
+  "errors": {
+    "not_logged_in": "You must be logged in to submit a review",
+    "submit_failed": "Failed to submit review. Please try again.",
+    "auth_required": "Authentication required"
+  },
+  "success": {
+    "review_submitted": "Review submitted successfully",
+    "review_updated": "Review updated successfully",
+    "review_deleted": "Review deleted successfully"
+  },
+  "messages": {
+    "already_reviewed": "You have already reviewed this booking"
+  }
+}

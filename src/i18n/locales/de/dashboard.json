@@ -1,0 +1,120 @@
+{
+  "renter": {
+    "header": {
+      "title": "Dashboard-Übersicht",
+      "description": "Willkommen zurück! Hier ist, was mit deinen Mietangeboten passiert."
+    },
+    "verification": {
+      "incomplete_title": "Schließe deine Verifizierung ab",
+      "incomplete_message": "Dein Konto ist zu {{progress}}% verifiziert. Schließe die Identitätsverifizierung ab, um sicher mieten zu können.",
+      "verify_button": "Jetzt verifizieren"
+    },
+    "overview": {
+      "section_title": "Übersicht",
+      "section_description": "Deine Mietaktivität auf einen Blick"
+    },
+    "bookings": {
+      "section_title": "Meine Mietverträge",
+      "section_description": "Verwalte deine Mietreservierungen",
+      "view_all": "Alle anzeigen",
+      "loading": "Mietverträge werden geladen...",
+      "empty_state": {
+        "title": "Noch keine Mietverträge",
+        "description": "Beginne mit dem Durchsuchen verfügbarer Ausrüstung und tätige deine erste Miete",
+        "button": "Ausrüstung durchsuchen"
+      }
+    },
+    "reviews": {
+      "card_title": "Meine Bewertungen",
+      "card_description": "Bewertungen, die du für Ausrüstungseigentümer geschrieben hast"
+    },
+    "active_rentals": {
+      "title": "Aktive Mietverträge",
+      "description": "Deine derzeit aktiven Ausrüstungsmietverträge"
+    },
+    "tabs": {
+      "overview": "Übersicht",
+      "bookings": "Mietverträge"
+    }
+  },
+  "owner": {
+    "header": {
+      "title": "Eigentümer-Dashboard",
+      "description": "Verwalte deine Ausrüstungsangebote und verfolge deine Einnahmen"
+    },
+    "stats": {
+      "total_listings": {
+        "label": "Insgesamt Angebote",
+        "description": "Aktive Ausrüstung"
+      },
+      "pending_requests": {
+        "label": "Ausstehende Anfragen",
+        "description": "Warten auf Zahlung"
+      },
+      "total_earnings": {
+        "label": "Gesamteinnahmen",
+        "description": "Gesamt"
+      },
+      "average_rating": {
+        "label": "Durchschnittliche Bewertung",
+        "description": "Basierend auf Bewertungen"
+      }
+    },
+    "tabs": {
+      "overview": "Übersicht",
+      "equipment": "Ausrüstungsverwaltung",
+      "bookings": "Mietanfragen",
+      "messages": "Nachrichten",
+      "reviews": "Bewertungen",
+      "payments": "Zahlungen & Treuhandverwaltung"
+    },
+    "overview": {
+      "quick_actions": {
+        "add_equipment": {
+          "title": "Ausrüstung hinzufügen",
+          "description": "Liste neue Ausrüstung zur Vermietung auf",
+          "button": "Ausrüstung hinzufügen"
+        },
+        "manage_listings": {
+          "title": "Angebote verwalten",
+          "description": "Sehe und bearbeite deine Ausrüstungsangebote",
+          "button": "Angebote verwalten"
+        },
+        "analytics": {
+          "title": "Analytik",
+          "description": "Verfolge Leistung und Einnahmen",
+          "button": "Bald verfügbar"
+        }
+      },
+      "recent_activity": {
+        "title": "Aktuelle Aktivität",
+        "description": "Deine neuesten Ausrüstungsangebote und Mietanfragen",
+        "empty_state": {
+          "title": "Keine aktuelle Aktivität",
+          "description": "Beginne mit dem Hinzufügen deiner ersten Ausrüstung"
+        }
+      }
+    },
+    "bookings": {
+      "section_title": "Mietanfragen",
+      "section_description": "Verwalte Mietanfragen für deine Ausrüstung",
+      "loading": "Mietanfragen werden geladen...",
+      "empty_state": {
+        "title": "Noch keine Mietanfragen",
+        "description": "Mietanfragen werden hier angezeigt, wenn Mieter deine Ausrüstung anfragen"
+      }
+    },
+    "messages": {
+      "section_title": "Nachrichten",
+      "section_description": "Kommuniziere mit Mietern über Mietverträge"
+    },
+    "reviews": {
+      "section_title": "Kundenbewertungen",
+      "section_description": "Bewertungen und Bewertungen von Mietern, die deine Ausrüstung verwendet haben"
+    },
+    "payments": {
+      "section_title": "Zahlungen & Treuhandverwaltung",
+      "section_description": "Verwalte deine Einnahmen und Treuhandfonds"
+    }
+  }
+}

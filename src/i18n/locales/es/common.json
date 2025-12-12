@@ -1,0 +1,108 @@
+{
+  "buttons": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "submit": "Enviar",
+    "continue": "Continuar",
+    "back": "Atrás",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "view_details": "Ver Detalles",
+    "load_more": "Cargar Más",
+    "upload": "Subir",
+    "download": "Descargar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "apply": "Aplicar",
+    "reset": "Restablecer",
+    "send": "Enviar",
+    "next": "Siguiente",
+    "previous": "Anterior"
+  },
+  "labels": {
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "name": "Nombre",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "state": "Provincia",
+    "zip": "Código Postal",
+    "country": "País",
+    "date": "Fecha",
+    "time": "Hora",
+    "description": "Descripción",
+    "title": "Título",
+    "price": "Precio",
+    "location": "Ubicación",
+    "category": "Categoría",
+    "status": "Estado"
+  },
+  "status": {
+    "pending": "Pendiente",
+    "approved": "Aprobado",
+    "declined": "Rechazado",
+    "cancelled": "Cancelado",
+    "completed": "Completado",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "time": {
+    "per_day": "por día",
+    "per_week": "por semana",
+    "per_month": "por mes",
+    "days": "días",
+    "hours": "horas",
+    "minutes": "minutos",
+    "seconds": "segundos"
+  },
+  "errors": {
+    "required_field": "Este campo es obligatorio",
+    "invalid_email": "Por favor ingresa un correo electrónico válido",
+    "invalid_phone": "Por favor ingresa un número de teléfono válido",
+    "min_length": "Se requieren mínimo {{count}} caracteres",
+    "max_length": "Se permiten máximo {{count}} caracteres",
+    "generic_error": "Algo salió mal. Por favor, intenta de nuevo.",
+    "network_error": "Error de red. Por favor verifica tu conexión.",
+    "unauthorized": "No estás autorizado para realizar esta acción",
+    "not_found": "El recurso solicitado no fue encontrado"
+  },
+  "success": {
+    "saved": "Guardado exitosamente",
+    "deleted": "Eliminado exitosamente",
+    "updated": "Actualizado exitosamente",
+    "created": "Creado exitosamente",
+    "sent": "Enviado exitosamente"
+  },
+  "loading": {
+    "default": "Cargando...",
+    "saving": "Guardando...",
+    "uploading": "Subiendo...",
+    "processing": "Procesando...",
+    "searching": "Buscando..."
+  },
+  "confirmation": {
+    "delete_title": "¿Estás seguro?",
+    "delete_message": "Esta acción no se puede deshacer.",
+    "cancel_title": "¿Cancelar?",
+    "cancel_message": "¿Estás seguro de que deseas cancelar?"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema",
+    "toggle": "Cambiar tema"
+  },
+  "language": {
+    "select": "Seleccionar Idioma",
+    "english": "Inglés",
+    "spanish": "Español",
+    "french": "Francés",
+    "german": "Alemán"
+  },
+  "navigation": {
+    "menu": "Menú"
+  }
+}

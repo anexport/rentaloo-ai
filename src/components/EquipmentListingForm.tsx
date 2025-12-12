@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Database } from "../lib/database.types";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 
@@ -30,31 +31,14 @@ const equipmentFormSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
   category_id: z.string().min(1, "Category is required"),
   daily_rate: z
-    .any()
-    .transform((val) => {
-      if (val === "" || val === null || val === undefined) {
-        return Number.NaN;
-      }
-
-      if (typeof val === "number") {
-        return Number.isFinite(val) ? val : Number.NaN;
-      }
-
-      if (typeof val === "string") {
-        const trimmed = val.trim();
-        if (trimmed === "") {
-          return Number.NaN;
-        }
-        const parsed = Number(trimmed);
-        return Number.isFinite(parsed) ? parsed : Number.NaN;
-      }
-
-      return Number.NaN;
-    })
-    .refine((n) => Number.isFinite(n), {
-      message: "Daily rate is required",
-    })
-    .refine((n) => n >= 1, {
+    .union([z.number(), z.string()])
+    .pipe(
+      z.coerce.number({
+        required_error: "Daily rate is required",
+        invalid_type_error: "Daily rate must be a valid number",
+      })
+    )
+    .refine((n) => Number.isFinite(n) && n >= 1, {
       message: "Daily rate must be at least $1",
     }),
   condition: z.enum(["new", "excellent", "good", "fair"]),
@@ -83,6 +67,39 @@ const equipmentFormSchema = z.object({
     const num = typeof val === "number" ? val : Number(val);
     return isNaN(num) ? undefined : num;
   }, z.number().optional()),
+  damage_deposit_amount: z.preprocess((val) => {
+    if (
+      val === "" ||
+      val === null ||
+      val === undefined ||
+      (typeof val === "number" && isNaN(val))
+    )
+      return undefined;
+    const num = typeof val === "number" ? val : Number(val);
+    return isNaN(num) ? undefined : num;
+  }, z.number().min(0, "Deposit amount must be at least 0").optional()),
+  damage_deposit_percentage: z.preprocess((val) => {
+    if (
+      val === "" ||
+      val === null ||
+      val === undefined ||
+      (typeof val === "number" && isNaN(val))
+    )
+      return undefined;
+    const num = typeof val === "number" ? val : Number(val);
+    return isNaN(num) ? undefined : num;
+  }, z.number().min(0).max(100, "Percentage must be between 0 and 100").optional()),
+  deposit_refund_timeline_hours: z.number().min(1).default(48),
+})
+.refine((data) => {
+  // If percentage is set, amount should not be set
+  if (data.damage_deposit_percentage !== undefined && data.damage_deposit_percentage > 0) {
+    return data.damage_deposit_amount === undefined || data.damage_deposit_amount === 0;
+  }
+  return true;
+}, {
+  message: "Cannot set both fixed amount and percentage deposit",
+  path: ["damage_deposit_amount"],
 });
 
 export type EquipmentFormData = z.infer<typeof equipmentFormSchema>;
@@ -106,6 +123,7 @@ const EquipmentListingForm = ({
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
+  const [depositType, setDepositType] = useState<'none' | 'fixed' | 'percentage'>('none');
 
   const {
     register,
@@ -125,9 +143,13 @@ const EquipmentListingForm = ({
           location: equipment.location,
           latitude: equipment.latitude || undefined,
           longitude: equipment.longitude || undefined,
+          damage_deposit_amount: equipment.damage_deposit_amount || undefined,
+          damage_deposit_percentage: equipment.damage_deposit_percentage || undefined,
+          deposit_refund_timeline_hours: equipment.deposit_refund_timeline_hours || 48,
         }
       : {
           condition: "good",
+          deposit_refund_timeline_hours: 48,
         },
   });
 
@@ -171,6 +193,19 @@ const EquipmentListingForm = ({
     void fetchExistingPhotos();
   }, [equipment]);
 
+  // Initialize deposit type from equipment data
+  useEffect(() => {
+    if (equipment) {
+      if (equipment.damage_deposit_amount && equipment.damage_deposit_amount > 0) {
+        setDepositType('fixed');
+      } else if (equipment.damage_deposit_percentage && equipment.damage_deposit_percentage > 0) {
+        setDepositType('percentage');
+      } else {
+        setDepositType('none');
+      }
+    }
+  }, [equipment]);
+
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -183,7 +218,10 @@ const EquipmentListingForm = ({
     newPhotos.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPhotoPreviews((prev) => [...prev, reader.result as string]);
+        // Validate that result is a string (readAsDataURL returns string or null)
+        if (typeof reader.result === "string") {
+          setPhotoPreviews((prev) => [...prev, reader.result]);
+        }
       };
       reader.readAsDataURL(file);
     });
@@ -292,6 +330,9 @@ const EquipmentListingForm = ({
         location: data.location,
         latitude: data.latitude || null,
         longitude: data.longitude || null,
+        damage_deposit_amount: depositType === 'fixed' ? (data.damage_deposit_amount || null) : null,
+        damage_deposit_percentage: depositType === 'percentage' ? (data.damage_deposit_percentage || null) : null,
+        deposit_refund_timeline_hours: depositType !== 'none' ? data.deposit_refund_timeline_hours : 48,
       };
 
       let equipmentId: string;
@@ -356,6 +397,8 @@ const EquipmentListingForm = ({
               <Label htmlFor="title">Equipment Title *</Label>
               <Input
                 id="title"
+                type="text"
+                autoComplete="off"
                 {...register("title")}
                 placeholder="e.g., Professional Mountain Bike"
               />
@@ -393,6 +436,7 @@ const EquipmentListingForm = ({
             <Label htmlFor="description">Description *</Label>
             <Textarea
               id="description"
+              autoComplete="off"
               {...register("description")}
               placeholder="Describe your equipment, its features, and any important details..."
               rows={4}
@@ -410,6 +454,7 @@ const EquipmentListingForm = ({
               <Input
                 id="daily_rate"
                 type="number"
+                inputMode="decimal"
                 step="0.01"
                 min="1"
                 {...register("daily_rate", { valueAsNumber: true })}
@@ -454,6 +499,8 @@ const EquipmentListingForm = ({
               <Label htmlFor="location">Location *</Label>
               <Input
                 id="location"
+                type="text"
+                autoComplete="address-level2"
                 {...register("location")}
                 placeholder="City, State"
               />
@@ -471,6 +518,7 @@ const EquipmentListingForm = ({
               <Input
                 id="latitude"
                 type="number"
+                inputMode="decimal"
                 step="any"
                 {...register("latitude", { valueAsNumber: true })}
                 placeholder="40.7128"
@@ -482,11 +530,117 @@ const EquipmentListingForm = ({
               <Input
                 id="longitude"
                 type="number"
+                inputMode="decimal"
                 step="any"
                 {...register("longitude", { valueAsNumber: true })}
                 placeholder="-74.0060"
               />
             </div>
+          </div>
+
+          {/* Damage Deposit Configuration Section */}
+          <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/20">
+            <div>
+              <Label className="text-base font-semibold">Damage Deposit (Optional)</Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Protect your equipment by requiring a refundable damage deposit
+              </p>
+            </div>
+
+            <RadioGroup
+              value={depositType}
+              onValueChange={(value) => {
+                setDepositType(value as 'none' | 'fixed' | 'percentage');
+                // Clear values when switching types
+                if (value === 'none') {
+                  setValue('damage_deposit_amount', undefined);
+                  setValue('damage_deposit_percentage', undefined);
+                } else if (value === 'fixed') {
+                  setValue('damage_deposit_percentage', undefined);
+                } else if (value === 'percentage') {
+                  setValue('damage_deposit_amount', undefined);
+                }
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="none" id="deposit-none" />
+                <Label htmlFor="deposit-none" className="font-normal cursor-pointer">No deposit required</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="fixed" id="deposit-fixed" />
+                <Label htmlFor="deposit-fixed" className="font-normal cursor-pointer">Fixed amount</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="percentage" id="deposit-percentage" />
+                <Label htmlFor="deposit-percentage" className="font-normal cursor-pointer">Percentage of daily rate</Label>
+              </div>
+            </RadioGroup>
+
+            {depositType === 'fixed' && (
+              <div className="space-y-2">
+                <Label htmlFor="damage_deposit_amount">Deposit Amount ($)</Label>
+                <Input
+                  id="damage_deposit_amount"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  {...register('damage_deposit_amount', { valueAsNumber: true })}
+                  placeholder="e.g., 100.00"
+                />
+                {errors.damage_deposit_amount && (
+                  <p className="text-sm text-red-600">{errors.damage_deposit_amount.message}</p>
+                )}
+              </div>
+            )}
+
+            {depositType === 'percentage' && (
+              <div className="space-y-2">
+                <Label htmlFor="damage_deposit_percentage">Deposit Percentage (%)</Label>
+                <Input
+                  id="damage_deposit_percentage"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  max="100"
+                  {...register('damage_deposit_percentage', { valueAsNumber: true })}
+                  placeholder="e.g., 50"
+                />
+                {watch('damage_deposit_percentage') !== undefined &&
+                 watch('damage_deposit_percentage') > 0 &&
+                 watch('daily_rate') && (
+                  <p className="text-sm text-muted-foreground">
+                    Deposit will be ${(Number(watch('daily_rate')) * Number(watch('damage_deposit_percentage')) / 100).toFixed(2)}
+                  </p>
+                )}
+                {errors.damage_deposit_percentage && (
+                  <p className="text-sm text-red-600">{errors.damage_deposit_percentage.message}</p>
+                )}
+              </div>
+            )}
+
+            {depositType !== 'none' && (
+              <div className="space-y-2">
+                <Label htmlFor="deposit_refund_timeline_hours">Refund Timeline</Label>
+                <Select
+                  value={watch('deposit_refund_timeline_hours')?.toString()}
+                  onValueChange={(value) => setValue('deposit_refund_timeline_hours', parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select timeline" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="24">Within 24 hours</SelectItem>
+                    <SelectItem value="48">Within 48 hours (recommended)</SelectItem>
+                    <SelectItem value="72">Within 72 hours</SelectItem>
+                    <SelectItem value="168">Within 1 week</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">
+                  How long after return before deposit is automatically released
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Photo Upload Section */}
@@ -503,15 +657,18 @@ const EquipmentListingForm = ({
                       alt={`Existing ${index + 1}`}
                       className="w-full h-32 object-cover rounded-lg border border-border"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="destructive"
+                      size="icon-sm"
                       onClick={() => {
                         void removeExistingPhoto(url);
                       }}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 rounded-full max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                      aria-label="Delete photo"
                     >
                       <X className="h-4 w-4" />
-                    </button>
+                    </Button>
                     {index === 0 && (
                       <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
                         Primary
@@ -532,13 +689,16 @@ const EquipmentListingForm = ({
                       alt={`Preview ${index + 1}`}
                       className="w-full h-32 object-cover rounded-lg border border-border"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="destructive"
+                      size="icon-sm"
                       onClick={() => removePhoto(index)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 rounded-full max-md:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                      aria-label="Delete photo"
                     >
                       <X className="h-4 w-4" />
-                    </button>
+                    </Button>
                     {index === 0 && existingPhotos.length === 0 && (
                       <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
                         Primary

@@ -1,0 +1,84 @@
+{
+  "conversation_list": {
+    "title": "Nachrichten",
+    "subtitle": "Bleiben Sie mit Ihren Mietern in Kontakt",
+    "all_conversations": "Alle Konversationen",
+    "unread": "Ungelesen",
+    "bookings": "Buchungen",
+    "conversations": "Unterhaltungen",
+    "no_conversations": "Noch keine Nachrichten",
+    "start_conversation": "Starten Sie eine Konversation durch die Buchung von Equipment",
+    "unread_count": "{{count}} ungelesen",
+    "search_placeholder": "Konversationen durchsuchen...",
+    "filter_placeholder": "Filtern",
+    "unknown_user": "Unbekannter Benutzer",
+    "empty_title": "Noch keine Konversationen",
+    "empty_description": "Hier werden Buchungsnachrichten und Mieter-Chats angezeigt, sobald sie beginnen."
+  },
+  "empty_states": {
+    "select_conversation_title": "Wählen Sie eine Konversation",
+    "select_conversation_message": "Wählen Sie eine Konversation aus der Liste, um Nachrichten anzuzeigen.",
+    "no_conversations_yet": "Konversationen werden hier angezeigt, sobald Sie sich mit Mietern verbinden.",
+    "no_messages_title": "Noch keine Nachrichten",
+    "no_messages_message": "Starten Sie die Konversation, um die Mietdetails zu planen.",
+    "regarding": "Bezüglich"
+  },
+  "chat": {
+    "type_message": "Nachricht eingeben...",
+    "send": "Senden",
+    "sending": "Wird gesendet...",
+    "online": "Online",
+    "offline": "Offline",
+    "typing": "{{name}} schreibt gerade...",
+    "last_seen": "Zuletzt gesehen {{time}}",
+    "just_now": "Gerade eben",
+    "minutes_ago": "vor {{count}} Minute",
+    "minutes_ago_plural": "vor {{count}} Minuten",
+    "hours_ago": "vor {{count}} Stunde",
+    "hours_ago_plural": "vor {{count}} Stunden",
+    "days_ago": "vor {{count}} Tag",
+    "days_ago_plural": "vor {{count}} Tagen"
+  },
+  "system_messages": {
+    "booking_created": "Buchungsanfrage erstellt",
+    "booking_approved": "Buchung genehmigt",
+    "booking_declined": "Buchung abgelehnt",
+    "booking_cancelled": "Buchung storniert",
+    "payment_completed": "Zahlung abgeschlossen"
+  },
+  "actions": {
+    "view_booking": "Buchung anzeigen",
+    "view_equipment": "Equipment anzeigen",
+    "delete_conversation": "Konversation löschen",
+    "mark_as_read": "Als gelesen markieren",
+    "mark_as_unread": "Als ungelesen markieren",
+    "retry": "Erneut versuchen"
+  },
+  "aria_labels": {
+    "close_panel": "Nachrichten-Panel schließen",
+    "filter_conversations": "Konversationen filtern",
+    "search_conversations": "Konversationen durchsuchen",
+    "open_conversations": "Konversationsliste öffnen",
+    "search_messages": "Nachrichten durchsuchen",
+    "close_messaging": "Nachrichten schließen"
+  },
+  "errors": {
+    "load_failed_title": "Fehler beim Laden der Nachrichten",
+    "load_failed_message": "Wir konnten die Nachrichten für diese Konversation nicht laden. Bitte versuchen Sie es erneut.",
+    "conversation_failed_title": "Fehler beim Laden der Konversation",
+    "conversation_failed_message": "Wir konnten die Nachrichten für diese Konversation nicht laden. Bitte versuchen Sie es erneut."
+  },
+  "input": {
+    "placeholder": "Schreiben Sie eine Nachricht...",
+    "send": "Nachricht senden",
+    "attach_file": "Datei anhängen",
+    "insert_emoji": "Emoji einfügen",
+    "quick_replies": "Schnellantworten",
+    "send_error": "Wir konnten Ihre Nachricht nicht senden. Versuchen Sie es in einem Moment erneut.",
+    "templates": {
+      "availability": "Vielen Dank, dass Sie sich gemeldet haben! Ich kann die Verfügbarkeit für diese Daten bestätigen.",
+      "help": "Gerne helfe ich dir weiter. Könntest du mir mehr darüber erzählen, wie du die Ausrüstung nutzen möchtest?",
+      "pickup": "Lassen Sie uns die Abhollogistik koordinieren. Bevorzugen Sie morgens oder nachmittags?"
+    }
+  }
+}

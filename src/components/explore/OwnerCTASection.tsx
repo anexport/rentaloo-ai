@@ -2,27 +2,34 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Calendar, Shield, TrendingUp } from "lucide-react";
-
-const benefits = [
-  {
-    icon: DollarSign,
-    text: "Earn $500+ per month",
-  },
-  {
-    icon: Calendar,
-    text: "List in under 5 minutes",
-  },
-  {
-    icon: Shield,
-    text: "$1M insurance included",
-  },
-  {
-    icon: TrendingUp,
-    text: "Set your own prices",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 const OwnerCTASection = () => {
+  const { t } = useTranslation("marketing");
+
+  const benefits = [
+    {
+      id: "benefit_1",
+      icon: DollarSign,
+      text: t("owner_cta.benefit_1"),
+    },
+    {
+      id: "benefit_2",
+      icon: Calendar,
+      text: t("owner_cta.benefit_2"),
+    },
+    {
+      id: "benefit_3",
+      icon: Shield,
+      text: t("owner_cta.benefit_3"),
+    },
+    {
+      id: "benefit_4",
+      icon: TrendingUp,
+      text: t("owner_cta.benefit_4"),
+    },
+  ];
+
   return (
     <section className="py-16 sm:py-20 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,15 +38,14 @@ const OwnerCTASection = () => {
           <div className="space-y-6">
             <div className="space-y-4">
               <Badge variant="secondary" className="w-fit">
-                For Equipment Owners
+                {t("owner_cta.badge_text")}
               </Badge>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold">
-                Have gear collecting dust?{" "}
-                <span className="text-primary">Start earning today</span>
+                {t("owner_cta.headline_part_1")}{" "}
+                <span className="text-primary">{t("owner_cta.headline_part_2")}</span>
               </h2>
               <p className="text-lg text-muted-foreground">
-                Turn your unused equipment into a steady income stream. Join
-                thousands of owners making money from gear they already own.
+                {t("owner_cta.subheading")}
               </p>
             </div>
 
@@ -49,7 +55,7 @@ const OwnerCTASection = () => {
                 const Icon = benefit.icon;
                 return (
                   <div
-                    key={benefit.text}
+                    key={benefit.id}
                     className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border"
                   >
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -64,10 +70,10 @@ const OwnerCTASection = () => {
             {/* CTA */}
             <div className="flex flex-wrap gap-4 pt-2">
               <Button size="lg" asChild>
-                <Link to="/register/owner">Start earning now</Link>
+                <Link to="/register/owner">{t("owner_cta.cta_primary")}</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/owner/dashboard">Learn more</Link>
+                <Link to="/owner/dashboard">{t("owner_cta.cta_secondary")}</Link>
               </Button>
             </div>
 
@@ -84,8 +90,9 @@ const OwnerCTASection = () => {
                 ))}
               </div>
               <span>
-                Join <strong className="text-foreground">4,000+ owners</strong>{" "}
-                earning on RentAloo
+                {t("owner_cta.social_proof_prefix")}{" "}
+                <strong className="text-foreground">{t("owner_cta.social_proof_count")}</strong>{" "}
+                {t("owner_cta.social_proof_suffix")}
               </span>
             </div>
           </div>
@@ -97,22 +104,22 @@ const OwnerCTASection = () => {
               <div className="text-center p-8">
                 <div className="text-6xl mb-4">🎿⛺🚴🏔️</div>
                 <p className="text-lg font-semibold text-muted-foreground">
-                  Your equipment could be earning right now
+                  {t("owner_cta.placeholder_title")}
                 </p>
               </div>
             </div>
 
             {/* Floating stat cards */}
             <div className="absolute -bottom-4 -left-4 bg-background border border-border rounded-lg p-4 shadow-lg">
-              <div className="text-2xl font-bold text-primary">$847</div>
+              <div className="text-2xl font-bold text-primary">{t("owner_cta.stat_earnings_value")}</div>
               <div className="text-xs text-muted-foreground">
-                Avg. monthly earnings
+                {t("owner_cta.stat_earnings_label")}
               </div>
             </div>
             <div className="absolute -top-4 -right-4 bg-background border border-border rounded-lg p-4 shadow-lg">
-              <div className="text-2xl font-bold text-primary">92%</div>
+              <div className="text-2xl font-bold text-primary">{t("owner_cta.stat_booking_value")}</div>
               <div className="text-xs text-muted-foreground">
-                Booking rate
+                {t("owner_cta.stat_booking_label")}
               </div>
             </div>
           </div>

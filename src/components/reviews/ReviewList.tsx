@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { ReviewFilter } from "../../types/review";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ const ReviewList = ({
   showSummary = true,
   showEquipment = false,
 }: ReviewListProps) => {
+  const { t } = useTranslation("reviews");
   const { reviews, summary, loading } = useReviews({
     revieweeId,
     reviewerId,
@@ -48,7 +50,7 @@ const ReviewList = ({
     return (
       <Card>
         <CardContent className="py-8 text-center text-gray-500">
-          Loading reviews...
+          {t("empty_states.loading")}
         </CardContent>
       </Card>
     );
@@ -65,7 +67,12 @@ const ReviewList = ({
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center space-x-2">
               <MessageSquare className="h-5 w-5 text-primary" />
-              <span>Reviews ({reviews.length})</span>
+              <span>
+                {t("empty_states.reviews_count_single", {
+                  count: reviews.length,
+                  defaultValue: `Reviews (${reviews.length})`,
+                })}
+              </span>
             </CardTitle>
 
             {/* Filter Buttons */}
@@ -76,28 +83,28 @@ const ReviewList = ({
                   size="sm"
                   onClick={() => setFilter("all")}
                 >
-                  All
+                  {t("filters.all")}
                 </Button>
                 <Button
                   variant={filter === "positive" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setFilter("positive")}
                 >
-                  Positive
+                  {t("filters.positive")}
                 </Button>
                 <Button
                   variant={filter === "negative" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setFilter("negative")}
                 >
-                  Negative
+                  {t("filters.negative")}
                 </Button>
                 <Button
                   variant={filter === "recent" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setFilter("recent")}
                 >
-                  Recent
+                  {t("filters.recent")}
                 </Button>
               </div>
             )}
@@ -109,8 +116,8 @@ const ReviewList = ({
               <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
               <p>
                 {reviews.length === 0
-                  ? "No reviews yet"
-                  : "No reviews match your filter"}
+                  ? t("empty_states.no_reviews")
+                  : t("empty_states.no_matching_filter")}
               </p>
             </div>
           ) : (
@@ -132,7 +139,7 @@ const ReviewList = ({
                     variant="outline"
                     onClick={() => setDisplayCount((prev) => prev + 5)}
                   >
-                    Load More Reviews
+                    {t("actions.load_more")}
                   </Button>
                 </div>
               )}

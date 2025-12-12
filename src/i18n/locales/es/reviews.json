@@ -1,0 +1,98 @@
+{
+  "form": {
+    "title": "Dejar una Reseña",
+    "description": "Comparte tu experiencia alquilando \"{{equipmentTitle}}\" de {{revieweeName}}",
+    "rating_label": "Calificación General",
+    "rating_required": "Calificación General *",
+    "rating_display": "{{rating}} de 5",
+    "comment_label": "Tu Reseña",
+    "comment_required": "Tu Reseña *",
+    "comment_placeholder": "Cuéntales a otros sobre tu experiencia... (mínimo 10 caracteres)",
+    "comment_hint": "Sé honesto y constructivo. Tu reseña ayudará a otros a tomar decisiones informadas.",
+    "guidelines_title": "Pautas de Reseña",
+    "guideline_specific": "Sé específico sobre tu experiencia con el equipamiento y el propietario",
+    "guideline_respectful": "Mantén un tono respetuoso y constructivo",
+    "guideline_facts": "Enfócate en hechos en lugar de emociones",
+    "guideline_improvements": "Menciona tanto los puntos positivos como las áreas de mejora",
+    "submit_button": "Enviar Reseña",
+    "submitting_button": "Enviando...",
+    "cancel_button": "Cancelar",
+    "edit_review": "Editar Reseña",
+    "delete_review": "Eliminar Reseña",
+    "rate_equipment": "Califica el Equipamiento",
+    "rate_owner": "Califica al Propietario",
+    "rate_renter": "Califica al Arrendatario",
+    "validation_errors": {
+      "min_rating": "La calificación debe ser al menos 1 estrella",
+      "max_rating": "La calificación no puede exceder 5 estrellas",
+      "rating_required": "Por favor selecciona una calificación",
+      "rating_whole_number": "La calificación debe ser un número entero",
+      "min_length": "La reseña debe tener al menos 10 caracteres",
+      "max_length": "La reseña no puede exceder 1000 caracteres"
+    }
+  },
+  "display": {
+    "verified_badge": "Verificado",
+    "equipment_label": "Equipamiento: ",
+    "overall_rating": "Calificación General",
+    "average_rating": "Calificación Promedio",
+    "rating_display": "{{rating}} / 5.0",
+    "verified_rental": "Alquiler Verificado",
+    "helpful": "Útil",
+    "report": "Reportar",
+    "owner_response": "Respuesta del Propietario",
+    "show_more": "Mostrar Más",
+    "show_less": "Mostrar Menos",
+    "review_photo_alt": "Foto de reseña {{number}}"
+  },
+  "empty_states": {
+    "loading": "Cargando reseñas...",
+    "no_reviews": "Sin reseñas aún",
+    "be_first": "¡Sé el primero en dejar una reseña!",
+    "no_matching_filter": "No hay reseñas que coincidan con tu filtro",
+    "reviews_count_single": "Reseñas ({{count}})",
+    "reviews_count_plural": "Reseñas ({{count}})"
+  },
+  "filters": {
+    "all": "Todas",
+    "positive": "Positivas",
+    "negative": "Negativas",
+    "recent": "Recientes",
+    "all_reviews": "Todas las Reseñas",
+    "5_stars": "5 Estrellas",
+    "4_stars": "4 Estrellas",
+    "3_stars": "3 Estrellas",
+    "2_stars": "2 Estrellas",
+    "1_star": "1 Estrella",
+    "most_recent": "Más Reciente",
+    "highest_rated": "Mejor Calificado",
+    "lowest_rated": "Menor Calificado"
+  },
+  "summary": {
+    "title": "Calificación General",
+    "no_reviews": "Sin reseñas aún",
+    "be_first": "¡Sé el primero en dejar una reseña!",
+    "based_on_one": "Basado en {{count}} reseña",
+    "based_on_other": "Basado en {{count}} reseñas"
+  },
+  "actions": {
+    "load_more": "Cargar Más Reseñas"
+  },
+  "star_rating": {
+    "aria_rate_one": "Calificar {{starNumber}} estrella",
+    "aria_rate_other": "Calificar {{starNumber}} estrellas"
+  },
+  "errors": {
+    "not_logged_in": "Debes iniciar sesión para enviar una reseña",
+    "submit_failed": "Error al enviar la reseña. Por favor intenta de nuevo.",
+    "auth_required": "Se requiere autenticación"
+  },
+  "success": {
+    "review_submitted": "Reseña enviada exitosamente",
+    "review_updated": "Reseña actualizada exitosamente",
+    "review_deleted": "Reseña eliminada exitosamente"
+  },
+  "messages": {
+    "already_reviewed": "Ya has reseñado esta reserva"
+  }
+}

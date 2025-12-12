@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { ReviewWithDetails } from "../../types/review";
 import { formatReviewDate } from "../../lib/reviews";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +12,8 @@ interface ReviewCardProps {
 }
 
 const ReviewCard = ({ review, showEquipment = false }: ReviewCardProps) => {
+  const { t } = useTranslation("reviews");
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -30,7 +33,7 @@ const ReviewCard = ({ review, showEquipment = false }: ReviewCardProps) => {
                   className="bg-green-100 text-green-800"
                 >
                   <CheckCircle className="h-3 w-3 mr-1" />
-                  Verified
+                  {t("display.verified_badge")}
                 </Badge>
               </div>
               <span className="text-sm text-gray-500">
@@ -43,7 +46,7 @@ const ReviewCard = ({ review, showEquipment = false }: ReviewCardProps) => {
           <div className="text-right">
             <StarRating rating={review.rating} size="sm" />
             <span className="text-sm text-gray-600 mt-1 block">
-              {review.rating.toFixed(1)} / 5.0
+              {t("display.rating_display", { rating: review.rating.toFixed(1) })}
             </span>
           </div>
         </div>
@@ -51,7 +54,9 @@ const ReviewCard = ({ review, showEquipment = false }: ReviewCardProps) => {
         {/* Equipment Info (if showing) */}
         {showEquipment && review.booking?.equipment && (
           <div className="mb-3 pb-3 border-b border-gray-200">
-            <span className="text-sm text-gray-600">Equipment: </span>
+            <span className="text-sm text-gray-600">
+              {t("display.equipment_label")}
+            </span>
             <span className="text-sm font-medium text-gray-900">
               {review.booking.equipment.title}
             </span>
@@ -74,7 +79,7 @@ const ReviewCard = ({ review, showEquipment = false }: ReviewCardProps) => {
                 <img
                   key={index}
                   src={photo}
-                  alt={`Review photo ${index + 1}`}
+                  alt={t("display.review_photo_alt", { number: index + 1 })}
                   className="w-full h-20 object-cover rounded-lg"
                 />
               ))}

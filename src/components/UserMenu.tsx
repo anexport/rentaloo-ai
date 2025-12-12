@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoleMode } from "@/contexts/RoleModeContext";
 import { useToast } from "@/hooks/useToast";
 import {
   LayoutDashboard,
@@ -19,38 +21,45 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSelector from "@/components/LanguageSelector";
 
 const UserMenu = () => {
+  const { t } = useTranslation("navigation");
   const { user, signOut } = useAuth();
+  const { activeMode } = useRoleMode();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
-  const [userRole, setUserRole] = useState<"owner" | "renter" | null>(null);
-
-  useEffect(() => {
-    if (user?.user_metadata?.role) {
-      setUserRole(user.user_metadata.role as "owner" | "renter");
-    } else {
-      setUserRole(null);
-    }
-  }, [user]);
 
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
-      console.error("Sign out error:", error);
+    try {
+      const { error } = await signOut();
+      if (error) {
+        console.error("Sign out error:", error);
+        toast({
+          variant: "destructive",
+          title: t("errors.signout_failed_title"),
+          description:
+            error instanceof Error
+              ? error.message
+              : t("errors.signout_failed_message"),
+        });
+        return;
+      }
+      setIsOpen(false);
+      void navigate("/");
+    } catch (error) {
+      console.error("Unexpected sign out error:", error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : t("errors.signout_failed_message");
       toast({
         variant: "destructive",
-        title: "Sign out failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to sign out. Please try again.",
+        title: t("errors.signout_failed_title"),
+        description: message,
       });
-      return;
     }
-    setIsOpen(false);
-    void navigate("/");
   };
 
   const handleNavigation = (path: string) => {
@@ -73,7 +82,7 @@ const UserMenu = () => {
   };
 
   const getDashboardPath = () => {
-    return userRole === "owner" ? "/owner/dashboard" : "/renter/dashboard";
+    return activeMode === "owner" ? "/owner/dashboard" : "/renter/dashboard";
   };
 
   if (!user) return null;
@@ -85,7 +94,7 @@ const UserMenu = () => {
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger
         className="flex items-center space-x-2 focus:outline-none"
-        aria-label="User menu"
+        aria-label={t("aria.user_menu")}
       >
         {/* User Avatar with Initials */}
         <div className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
@@ -107,11 +116,9 @@ const UserMenu = () => {
             {displayName}
           </p>
           <p className="text-xs text-gray-500 truncate mt-0.5">
-            {userRole == null
-              ? "Loading..."
-              : userRole === "owner"
-                ? "Equipment Owner"
-                : "Renter"}
+            {activeMode === "owner"
+              ? t("user_role.equipment_owner")
+              : t("user_role.renter")}
           </p>
         </div>
 
@@ -120,34 +127,34 @@ const UserMenu = () => {
           onClick={() => handleNavigation(getDashboardPath())}
         >
           <LayoutDashboard className="h-4 w-4 text-gray-500" />
-          <span>Dashboard</span>
+          <span>{t("menu.dashboard")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => handleNavigation("/equipment")}>
           <Search className="h-4 w-4 text-gray-500" />
-          <span>Browse Equipment</span>
+          <span>{t("menu.browse_equipment")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => handleNavigation("/messages")}>
           <MessageSquare className="h-4 w-4 text-gray-500" />
-          <span>Messages</span>
+          <span>{t("menu.messages")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => handleNavigation("/verification")}>
           <Shield className="h-4 w-4 text-gray-500" />
-          <span>Verification</span>
+          <span>{t("menu.verification")}</span>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
         <DropdownMenuItem onClick={() => handleNavigation("/settings")}>
           <Settings className="h-4 w-4 text-gray-500" />
-          <span>Settings</span>
+          <span>{t("menu.settings")}</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem>
-          <ThemeToggle variant="menu-item" />
-        </DropdownMenuItem>
+        <ThemeToggle variant="menu-item" />
+
+        <LanguageSelector variant="menu-item" />
 
         <DropdownMenuSeparator />
 
@@ -158,7 +165,7 @@ const UserMenu = () => {
           className="text-red-600 hover:bg-red-50"
         >
           <LogOut className="h-4 w-4" />
-          <span>Sign Out</span>
+          <span>{t("menu.sign_out")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

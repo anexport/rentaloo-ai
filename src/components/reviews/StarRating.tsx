@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Star } from "lucide-react";
 
 interface StarRatingProps {
@@ -15,6 +16,8 @@ const StarRating = ({
   interactive = false,
   onChange,
 }: StarRatingProps) => {
+  const { t } = useTranslation("reviews");
+
   const sizeClasses = {
     sm: "h-4 w-4",
     md: "h-5 w-5",
@@ -45,7 +48,10 @@ const StarRating = ({
             } disabled:opacity-50`}
             onClick={() => handleClick(starNumber)}
             disabled={!interactive}
-            aria-label={`Rate ${starNumber} star${starNumber > 1 ? "s" : ""}`}
+            aria-label={t("star_rating.aria_rate", {
+              count: starNumber,
+              starNumber,
+            })}
           >
             {isFilled ? (
               <Star
@@ -74,4 +80,3 @@ const StarRating = ({
 };
 
 export default StarRating;
-

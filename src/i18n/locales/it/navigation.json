@@ -1,0 +1,74 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "browse_equipment": "Sfoglia attrezzature",
+    "messages": "Messaggi",
+    "verification": "Verifica",
+    "settings": "Impostazioni",
+    "sign_out": "Esci",
+    "explore": "Esplora",
+    "my_rentals": "I miei noleggi",
+    "my_listings": "Le mie inserzioni",
+    "payments": "Pagamenti"
+  },
+  "auth": {
+    "sign_in": "Accedi",
+    "get_started": "Inizia"
+  },
+  "user_role": {
+    "loading": "Caricamento...",
+    "equipment_owner": "Proprietario attrezzatura",
+    "renter": "Noleggiatore"
+  },
+  "pages": {
+    "home": "Home",
+    "explore": "Esplora attrezzature",
+    "dashboard": "Dashboard",
+    "messages": "Messaggi",
+    "settings": "Impostazioni",
+    "verification": "Verifica identità",
+    "payment_confirmation": "Conferma pagamento"
+  },
+  "errors": {
+    "signout_failed_title": "Uscita fallita",
+    "signout_failed_message": "Impossibile uscire. Riprova."
+  },
+  "aria": {
+    "open_menu": "Apri menu",
+    "expand_sidebar": "Espandi barra laterale",
+    "collapse_sidebar": "Comprimi barra laterale",
+    "user_menu": "Menu utente"
+  },
+  "sidebar": {
+    "main": "Principale",
+    "activity": "Attività",
+    "account": "Account",
+    "dashboard": "Dashboard",
+    "browse_equipment": "Sfoglia attrezzature",
+    "my_bookings": "Le mie prenotazioni",
+    "messages": "Messaggi",
+    "payments": "Pagamenti",
+    "settings": "Impostazioni",
+    "my_equipment_listings": "Le mie inserzioni attrezzature",
+    "verification": "Verifica",
+    "trust_score": "Punteggio fiducia",
+    "owner": "Proprietario",
+    "watchlist": "Lista preferiti",
+    "support": "Supporto",
+    "payouts": "Pagamenti",
+    "add_new_listing": "Aggiungi nuova inserzione",
+    "add_new_listing_subtitle": "Mantieni l'inventario fresco",
+    "list_equipment": "Elenca la tua attrezzatura",
+    "list_equipment_subtitle": "Guadagna quando la tua attrezzatura è inattiva",
+    "upcoming_booking": "Prenotazione imminente",
+    "total": "Totale",
+    "view_details": "Visualizza dettagli",
+    "payout_glance_title": "Pagamenti",
+    "payout_glance_pending": "{{count}} in sospeso",
+    "track_earnings": "Traccia i tuoi guadagni",
+    "last_payout": "Ultimo pagamento: {{date}}",
+    "view_payouts": "Visualizza pagamenti",
+    "whats_new": "Novità",
+    "updates": "Aggiornamenti"
+  }
+}

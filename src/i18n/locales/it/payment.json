@@ -1,0 +1,48 @@
+{
+  "checkout": {
+    "title": "Pagamento",
+    "payment_details": "Dettagli Pagamento",
+    "card_number": "Numero Carta",
+    "expiry_date": "Data di Scadenza",
+    "cvc": "CVC",
+    "billing_address": "Indirizzo di Fatturazione",
+    "pay_now": "Paga Ora",
+    "processing": "Elaborazione Pagamento...",
+    "secure_payment": "Pagamento sicuro fornito da Stripe"
+  },
+  "confirmation": {
+    "title": "Pagamento Riuscito",
+    "message": "Il tuo pagamento è stato elaborato con successo",
+    "booking_confirmed": "La tua prenotazione è confermata",
+    "receipt_sent": "Una ricevuta è stata inviata alla tua email",
+    "view_booking": "Visualizza Prenotazione",
+    "back_to_dashboard": "Torna alla Dashboard"
+  },
+  "escrow": {
+    "funds_held": "Fondi Trattenuti in Deposito",
+    "release_on_completion": "I fondi saranno rilasciati al proprietario al completamento del noleggio",
+    "protection_message": "Il tuo pagamento è protetto fino al completamento del noleggio"
+  },
+  "refund": {
+    "refund_initiated": "Rimborso Avviato",
+    "refund_processing": "Il tuo rimborso è in elaborazione",
+    "refund_completed": "Rimborso Completato",
+    "refund_amount": "Importo Rimborsato",
+    "refund_reason": "Motivo del Rimborso"
+  },
+  "history": {
+    "payment_history": "Storico Pagamenti",
+    "transaction_id": "ID Transazione",
+    "date": "Data",
+    "amount": "Importo",
+    "status": "Stato",
+    "download_receipt": "Scarica Ricevuta",
+    "no_payments": "Ancora nessun pagamento nel tuo storico"
+  },
+  "errors": {
+    "payment_failed": "Pagamento fallito. Riprova.",
+    "invalid_card": "Dettagli carta non validi",
+    "insufficient_funds": "Fondi insufficienti",
+    "card_declined": "Carta rifiutata"
+  }
+}

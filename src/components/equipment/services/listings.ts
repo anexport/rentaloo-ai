@@ -11,9 +11,53 @@ export type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
 export type Listing = EquipmentRow & {
   category: CategoryRow | null;
   photos: EquipmentPhotoRow[];
-  owner: Pick<ProfileRow, "id" | "email"> | null;
+  owner: Pick<ProfileRow, "id" | "email" | "identity_verified"> | null;
   reviews?: Array<Pick<ReviewRow, "rating">>;
 };
+
+// Type helper to validate and safely cast query results
+function isListingQueryResult(item: unknown): item is Omit<Listing, "reviews"> {
+  if (!item || typeof item !== "object") return false;
+  const candidate = item as Record<string, unknown>;
+
+  // Validate required equipment fields
+  const hasValidBasicFields =
+    typeof candidate.id === "string" &&
+    typeof candidate.title === "string" &&
+    typeof candidate.description === "string" &&
+    typeof candidate.owner_id === "string" &&
+    typeof candidate.category_id === "string" &&
+    typeof candidate.daily_rate === "number" &&
+    typeof candidate.condition === "string" &&
+    typeof candidate.location === "string" &&
+    typeof candidate.is_available === "boolean" &&
+    Array.isArray(candidate.photos);
+
+  if (!hasValidBasicFields) return false;
+
+  // Validate optional numeric fields (should be number or null)
+  const hasValidOptionalFields =
+    (candidate.latitude === null || typeof candidate.latitude === "number") &&
+    (candidate.longitude === null || typeof candidate.longitude === "number");
+
+  if (!hasValidOptionalFields) return false;
+
+  // Validate category (should be object or null)
+  const hasValidCategory =
+    candidate.category === null ||
+    (typeof candidate.category === "object" && candidate.category !== null);
+
+  // Validate owner structure (should be null or have id, email, and identity_verified)
+  const hasValidOwner =
+    candidate.owner === null ||
+    (typeof candidate.owner === "object" &&
+      candidate.owner !== null &&
+      "id" in candidate.owner &&
+      "email" in candidate.owner &&
+      "identity_verified" in candidate.owner);
+
+  return hasValidCategory && hasValidOwner;
+}
 
 export type ListingsFilters = {
   search?: string;
@@ -21,8 +65,14 @@ export type ListingsFilters = {
   priceMin?: number;
   priceMax?: number;
   location?: string;
+  conditions?: Database["public"]["Enums"]["equipment_condition"][];
   condition?: Database["public"]["Enums"]["equipment_condition"] | "all";
   limit?: number;
+  verified?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+  equipmentTypeName?: string;
+  equipmentCategoryId?: string;
 };
 
 export const fetchListings = async (
@@ -35,7 +85,7 @@ export const fetchListings = async (
       `*,
        category:categories(*),
        photos:equipment_photos(*),
-       owner:profiles!equipment_owner_id_fkey(id,email)
+       owner:profiles!equipment_owner_id_fkey(id,email,identity_verified)
       `
     )
     .eq("is_available", true)
@@ -45,8 +95,13 @@ export const fetchListings = async (
     query = query.abortSignal(signal);
   }
 
-  if (filters.categoryId && filters.categoryId !== "all") {
-    query = query.eq("category_id", filters.categoryId);
+  const categoryFilter =
+    filters.equipmentCategoryId ||
+    (filters.categoryId && filters.categoryId !== "all"
+      ? filters.categoryId
+      : undefined);
+  if (categoryFilter) {
+    query = query.eq("category_id", categoryFilter);
   }
 
   if (typeof filters.priceMin === "number") {
@@ -56,19 +111,45 @@ export const fetchListings = async (
     query = query.lte("daily_rate", filters.priceMax);
   }
 
-  if (filters.condition && filters.condition !== "all") {
+  const selectedConditions =
+    filters.conditions && filters.conditions.length > 0
+      ? Array.from(new Set(filters.conditions))
+      : [];
+
+  if (selectedConditions.length > 0) {
+    query = query.in("condition", selectedConditions);
+  } else if (filters.condition && filters.condition !== "all") {
     query = query.eq("condition", filters.condition);
   }
 
   if (filters.location && filters.location.trim().length > 0) {
-    query = query.ilike("location", `%${filters.location}%`);
+    // Extract city name (part before first comma) for more flexible matching
+    // This allows "Denver, CO" to match "Denver, Colorado" and vice versa
+    // Also helps match "Pescara, PE" with "Pescara, Italy" by just matching "Pescara"
+    const locationQuery = filters.location.trim();
+    const cityName = locationQuery.split(',')[0].trim();
+
+    // Sanitize city name to escape SQL LIKE pattern metacharacters (%, _, \)
+    // to prevent users from altering the matching behavior
+    const sanitizedCityName = cityName
+      .replace(/\\/g, '\\\\')  // Escape backslashes first
+      .replace(/%/g, '\\%')     // Escape % wildcard
+      .replace(/_/g, '\\_');    // Escape _ single-char wildcard
+
+    // Use sanitized city name for search to be more flexible with state/region variations
+    query = query.ilike("location", `%${sanitizedCityName}%`);
   }
 
   if (filters.search && filters.search.trim().length > 0) {
     const term = filters.search.trim();
     // Sanitize user input to avoid PostgREST filter injection by removing
     // reserved separators used by the `.or()` filter grammar.
-    const sanitized = term.replace(/[(),]/g, "");
+    // Also escape SQL LIKE metacharacters to keep search terms literal.
+    const sanitized = term
+      .replace(/[(),]/g, "")
+      .replace(/\\/g, "\\\\")
+      .replace(/%/g, "\\%")
+      .replace(/_/g, "\\_");
     query = query.or(
       `title.ilike.%${sanitized}%,description.ilike.%${sanitized}%`
     );
@@ -84,11 +165,64 @@ export const fetchListings = async (
   const { data, error } = await query;
   if (error) throw error;
 
-  const listings = (data || []) as unknown as Listing[];
+  // Validate and safely convert query results
+  const validatedListings = (data || []).filter(isListingQueryResult) as Omit<
+    Listing,
+    "reviews"
+  >[];
+
+  if (validatedListings.length === 0) {
+    return [];
+  }
+
+  let filteredListings = validatedListings;
+
+  // Apply date availability filter if provided
+  if (filters.dateFrom) {
+    const from = filters.dateFrom;
+    const to = filters.dateTo ?? filters.dateFrom;
+    const equipmentIds = validatedListings.map((item) => item.id);
+    const availabilityQuery = supabase
+      .from("availability_calendar")
+      .select("equipment_id")
+      .gte("date", from)
+      .lte("date", to)
+      .eq("is_available", false)
+      .in("equipment_id", equipmentIds);
+
+    const availabilityRequest = signal
+      ? availabilityQuery.abortSignal(signal)
+      : availabilityQuery;
+
+    const { data: unavailable, error: availabilityError } =
+      await availabilityRequest;
+
+    if (availabilityError) {
+      console.error("Failed to load availability calendar for filters", {
+        filters,
+        error: availabilityError,
+      });
+    } else if (unavailable) {
+      const unavailableIds = new Set(unavailable.map((row) => row.equipment_id));
+      filteredListings = filteredListings.filter(
+        (item) => !unavailableIds.has(item.id)
+      );
+    }
+  }
+
+  // Apply equipment type filter client-side if only the name was provided (fallback)
+  // Skip this if we're doing a text search (search parameter takes precedence)
+  if (!filters.equipmentCategoryId && filters.equipmentTypeName && !filters.search) {
+    const target = filters.equipmentTypeName.toLowerCase();
+    filteredListings = filteredListings.filter((item) => {
+      const categoryName = item.category?.name?.toLowerCase();
+      return categoryName ? categoryName.includes(target) : false;
+    });
+  }
 
   // Collect all unique owner IDs
   const ownerIds = [
-    ...new Set(listings.map((item) => item.owner?.id).filter(Boolean)),
+    ...new Set(filteredListings.map((item) => item.owner?.id).filter(Boolean)),
   ] as string[];
 
   // Fetch all reviews in a single query
@@ -105,10 +239,15 @@ export const fetchListings = async (
           .select("rating, reviewee_id")
           .in("reviewee_id", ownerIds);
 
-    const { data: reviews } = await reviewsQuery;
-
-    // Build map from reviewee_id to reviews
-    if (reviews) {
+    const { data: reviews, error: reviewsError } = await reviewsQuery;
+    if (reviewsError) {
+      // Log and continue so listings can still be rendered without reviews
+      console.error("Failed to load reviews for listings", {
+        ownerIds,
+        error: reviewsError,
+      });
+    } else if (reviews) {
+      // Build map from reviewee_id to reviews
       reviews.forEach((review) => {
         const existing = reviewsMap.get(review.reviewee_id) || [];
         existing.push({ rating: review.rating });
@@ -118,12 +257,19 @@ export const fetchListings = async (
   }
 
   // Map over listings once to attach reviews
-  const listingsWithReviews = listings.map((item) => {
+  const listingsWithReviews: Listing[] = filteredListings.map((item) => {
     const reviews = item.owner?.id ? reviewsMap.get(item.owner.id) || [] : [];
-    return { ...item, reviews } as Listing;
+    return { ...item, reviews };
   });
 
-  return listingsWithReviews;
+  let finalListings = listingsWithReviews;
+  if (filters.verified) {
+    finalListings = finalListings.filter(
+      (listing) => listing.owner?.identity_verified === true
+    );
+  }
+
+  return finalListings;
 };
 
 export const fetchListingById = async (id: string): Promise<Listing | null> => {
@@ -133,7 +279,7 @@ export const fetchListingById = async (id: string): Promise<Listing | null> => {
       `*,
        category:categories(*),
        photos:equipment_photos(*),
-       owner:profiles!equipment_owner_id_fkey(id,email)
+       owner:profiles!equipment_owner_id_fkey(id,email,identity_verified)
       `
     )
     .eq("id", id)
@@ -142,13 +288,28 @@ export const fetchListingById = async (id: string): Promise<Listing | null> => {
   if (error) throw error;
   if (!data) return null;
 
-  const base = data as unknown as Listing;
+  // Validate the query result
+  if (!isListingQueryResult(data)) {
+    throw new Error("Invalid listing data received from database");
+  }
+
+  const base = data as Omit<Listing, "reviews">;
   if (!base.owner?.id) return { ...base, reviews: [] };
 
-  const { data: reviews } = await supabase
+  const { data: reviews, error: reviewsError } = await supabase
     .from("reviews")
     .select("rating")
     .eq("reviewee_id", base.owner.id);
+
+  if (reviewsError) {
+    // Log and fall back to an empty reviews list to keep the page usable
+    console.error("Failed to load reviews for listing", {
+      listingId: id,
+      ownerId: base.owner.id,
+      error: reviewsError,
+    });
+    return { ...base, reviews: [] };
+  }
 
   return { ...base, reviews: reviews || [] };
 };

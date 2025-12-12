@@ -14,6 +14,25 @@ export type PaymentStatus =
 
 export type EscrowStatus = "held" | "released" | "refunded" | "disputed";
 
+export type DepositStatus = 'held' | 'released' | 'claimed' | 'refunded';
+
+// Constants for type-safe status values
+export const PAYMENT_STATUS = {
+  PENDING: "pending",
+  PROCESSING: "processing",
+  SUCCEEDED: "succeeded",
+  FAILED: "failed",
+  REFUNDED: "refunded",
+  CANCELLED: "cancelled",
+} as const satisfies Record<string, PaymentStatus>;
+
+export const ESCROW_STATUS = {
+  HELD: "held",
+  RELEASED: "released",
+  REFUNDED: "refunded",
+  DISPUTED: "disputed",
+} as const satisfies Record<string, EscrowStatus>;
+
 export type PaymentMethod = {
   id: string;
   type: "card";
@@ -44,10 +63,20 @@ export type PaymentIntent = {
   };
 };
 
+export interface PaymentWithDeposit extends Payment {
+  rental_amount: number;
+  deposit_amount: number;
+  insurance_amount: number;
+  deposit_status: DepositStatus;
+  deposit_released_at?: string;
+}
+
 export type PaymentSummary = {
   subtotal: number;
   service_fee: number;
   tax: number;
+  insurance: number;
+  deposit: number;
   total: number;
   escrow_amount: number;
   owner_payout: number;

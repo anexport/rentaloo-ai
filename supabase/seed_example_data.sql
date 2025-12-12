@@ -17,16 +17,16 @@ INSERT INTO profiles (id, email, role, created_at, updated_at) VALUES
 ('550e8400-e29b-41d4-a716-446655440202', 'james.miller@example.com', 'renter', NOW(), NOW());
 
 -- Insert owner profiles
-INSERT INTO owner_profiles (id, profile_id, business_info, earnings_total, verification_level, created_at, updated_at) VALUES
-('550e8400-e29b-41d4-a716-446655440300', '550e8400-e29b-41d4-a716-446655440100', '{"business_name": "Mountain Gear Rentals", "description": "Professional outdoor equipment rental service"}', 1250.00, 'verified', NOW(), NOW()),
-('550e8400-e29b-41d4-a716-446655440301', '550e8400-e29b-41d4-a716-446655440101', '{"business_name": "Ski & Snowboard Central", "description": "Premium winter sports equipment"}', 890.50, 'verified', NOW(), NOW()),
-('550e8400-e29b-41d4-a716-446655440302', '550e8400-e29b-41d4-a716-446655440102', '{"business_name": "Adventure Equipment Co", "description": "Quality gear for outdoor enthusiasts"}', 2100.75, 'verified', NOW(), NOW());
+INSERT INTO owner_profiles (id, profile_id, business_info, earnings_total, created_at, updated_at) VALUES
+('550e8400-e29b-41d4-a716-446655440300', '550e8400-e29b-41d4-a716-446655440100', '{"business_name": "Mountain Gear Rentals", "description": "Professional outdoor equipment rental service"}', 1250.00, NOW(), NOW()),
+('550e8400-e29b-41d4-a716-446655440301', '550e8400-e29b-41d4-a716-446655440101', '{"business_name": "Ski & Snowboard Central", "description": "Premium winter sports equipment"}', 890.50, NOW(), NOW()),
+('550e8400-e29b-41d4-a716-446655440302', '550e8400-e29b-41d4-a716-446655440102', '{"business_name": "Adventure Equipment Co", "description": "Quality gear for outdoor enthusiasts"}', 2100.75, NOW(), NOW());
 
 -- Insert renter profiles
-INSERT INTO renter_profiles (id, profile_id, experience_level, preferences, verification_status, created_at, updated_at) VALUES
-('550e8400-e29b-41d4-a716-446655440400', '550e8400-e29b-41d4-a716-446655440200', 'intermediate', '{"favorite_activities": ["skiing", "snowboarding"], "preferred_conditions": ["powder", "groomed"]}', 'verified', NOW(), NOW()),
-('550e8400-e29b-41d4-a716-446655440401', '550e8400-e29b-41d4-a716-446655440201', 'beginner', '{"favorite_activities": ["hiking", "camping"], "preferred_conditions": ["dry", "sunny"]}', 'pending', NOW(), NOW()),
-('550e8400-e29b-41d4-a716-446655440402', '550e8400-e29b-41d4-a716-446655440202', 'expert', '{"favorite_activities": ["climbing", "mountaineering"], "preferred_conditions": ["challenging", "technical"]}', 'verified', NOW(), NOW());
+INSERT INTO renter_profiles (id, profile_id, experience_level, preferences, created_at, updated_at) VALUES
+('550e8400-e29b-41d4-a716-446655440400', '550e8400-e29b-41d4-a716-446655440200', 'intermediate', '{"favorite_activities": ["skiing", "snowboarding"], "preferred_conditions": ["powder", "groomed"]}', NOW(), NOW()),
+('550e8400-e29b-41d4-a716-446655440401', '550e8400-e29b-41d4-a716-446655440201', 'beginner', '{"favorite_activities": ["hiking", "camping"], "preferred_conditions": ["dry", "sunny"]}', NOW(), NOW()),
+('550e8400-e29b-41d4-a716-446655440402', '550e8400-e29b-41d4-a716-446655440202', 'expert', '{"favorite_activities": ["climbing", "mountaineering"], "preferred_conditions": ["challenging", "technical"]}', NOW(), NOW());
 
 -- Insert example equipment
 INSERT INTO equipment (id, owner_id, category_id, title, description, daily_rate, condition, location, latitude, longitude, is_available, created_at, updated_at) VALUES

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,6 +12,7 @@ import {
   MapPin,
   ArrowRight,
   Check,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,12 +114,14 @@ type RenterSignupFormProps = {
   onSuccess: (email: string) => void;
   onBack: () => void;
   onShowLogin: () => void;
+  onScrollToTop: () => void;
 };
 
 const RenterSignupForm = ({
   onSuccess,
   onBack,
   onShowLogin,
+  onScrollToTop,
 }: RenterSignupFormProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
@@ -126,6 +129,11 @@ const RenterSignupForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { signUp } = useAuth();
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    onScrollToTop();
+  }, [currentStep, onScrollToTop]);
 
   const {
     register,
@@ -247,6 +255,8 @@ const RenterSignupForm = ({
               </Label>
               <Input
                 id="fullName"
+                type="text"
+                autoComplete="name"
                 {...register("fullName")}
                 placeholder="John Doe"
                 className={errors.fullName ? "border-destructive" : ""}
@@ -256,8 +266,9 @@ const RenterSignupForm = ({
                 }
               />
               {errors.fullName && (
-                <p id="fullName-error" className="text-sm text-destructive">
-                  {errors.fullName.message}
+                <p id="fullName-error" className="text-sm text-destructive flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{errors.fullName.message}</span>
                 </p>
               )}
             </div>
@@ -272,6 +283,9 @@ const RenterSignupForm = ({
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
+                autoCapitalize="off"
+                spellCheck="false"
                 {...register("email")}
                 placeholder="john@example.com"
                 className={errors.email ? "border-destructive" : ""}
@@ -279,8 +293,9 @@ const RenterSignupForm = ({
                 aria-describedby={errors.email ? "email-error" : undefined}
               />
               {errors.email && (
-                <p id="email-error" className="text-sm text-destructive">
-                  {errors.email.message}
+                <p id="email-error" className="text-sm text-destructive flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{errors.email.message}</span>
                 </p>
               )}
             </div>
@@ -295,9 +310,10 @@ const RenterSignupForm = ({
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   {...register("password")}
                   placeholder="Create a strong password"
-                  className={errors.password ? "border-destructive" : ""}
+                  className={errors.password ? "border-destructive pr-12" : "pr-12"}
                   aria-invalid={!!errors.password}
                   aria-describedby={
                     errors.password ? "password-error" : undefined
@@ -306,8 +322,8 @@ const RenterSignupForm = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  size="icon-sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -320,8 +336,9 @@ const RenterSignupForm = ({
               </div>
               <PasswordStrength password={password || ""} />
               {errors.password && (
-                <p id="password-error" className="text-sm text-destructive">
-                  {errors.password.message}
+                <p id="password-error" className="text-sm text-destructive flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{errors.password.message}</span>
                 </p>
               )}
             </div>
@@ -336,9 +353,10 @@ const RenterSignupForm = ({
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   {...register("confirmPassword")}
                   placeholder="Confirm your password"
-                  className={errors.confirmPassword ? "border-destructive" : ""}
+                  className={errors.confirmPassword ? "border-destructive pr-12" : "pr-12"}
                   aria-invalid={!!errors.confirmPassword}
                   aria-describedby={
                     errors.confirmPassword ? "confirmPassword-error" : undefined
@@ -347,8 +365,8 @@ const RenterSignupForm = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  size="icon-sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   aria-label={
                     showConfirmPassword ? "Hide password" : "Show password"
@@ -394,6 +412,8 @@ const RenterSignupForm = ({
               </Label>
               <Input
                 id="location"
+                type="text"
+                autoComplete="address-level2"
                 {...register("location")}
                 placeholder="San Francisco, CA"
                 className={errors.location ? "border-destructive" : ""}

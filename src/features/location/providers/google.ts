@@ -263,27 +263,87 @@ export async function searchGooglePlaces(
         // This ensures place detail requests are tied to the autocomplete session
         // and correctly billed as outcomes rather than separate requests
         const place = placePrediction.toPlace();
-        
-        // Fetch place details - request location field with session token
+
+        // Fetch place details - request location and addressComponents fields with session token
         // Pass sessionToken to maintain the session context for billing
-        await place.fetchFields({ 
-          fields: ['location'],
-          sessionToken 
+        await place.fetchFields({
+          fields: ['location', 'addressComponents'],
+          sessionToken
         });
 
         if (place.location) {
           // Place API has location directly on the Place object, not under geometry
           // location can be either LatLng object or LatLngLiteral { lat, lng }
-          const lat = place.location instanceof google.maps.LatLng 
-            ? place.location.lat() 
+          const lat = place.location instanceof google.maps.LatLng
+            ? place.location.lat()
             : place.location.lat;
-          const lng = place.location instanceof google.maps.LatLng 
-            ? place.location.lng() 
+          const lng = place.location instanceof google.maps.LatLng
+            ? place.location.lng()
             : place.location.lng;
-          
+
+          // Normalize location label to "City, State" format for database compatibility
+          // This ensures user searches match equipment locations in the database
+          let normalizedLabel = text; // fallback to full text
+
+          if (place.addressComponents && place.addressComponents.length > 0) {
+            let cityName = '';
+            let adminArea = '';
+            let countryCode = '';
+
+            for (const component of place.addressComponents) {
+              const types = component.types || [];
+
+              // Extract city/town name from various Google Places component types
+              // Priority order: locality > postal_town > sublocality > admin_area_level_2
+              // This handles different naming conventions across countries (e.g., UK uses postal_town)
+              if (!cityName && types.includes('locality')) {
+                cityName = component.longText || component.shortText || '';
+              } else if (!cityName && types.includes('postal_town')) {
+                // Used in UK and other countries for town/city names
+                cityName = component.longText || component.shortText || '';
+              } else if (!cityName && types.includes('sublocality_level_1')) {
+                // Sometimes used for city districts or smaller towns
+                cityName = component.longText || component.shortText || '';
+              } else if (!cityName && types.includes('administrative_area_level_2')) {
+                // Can represent cities or counties in some countries
+                cityName = component.longText || component.shortText || '';
+              }
+
+              // Extract state/region (prefer short name for US states, e.g., "CA")
+              if (!adminArea && types.includes('administrative_area_level_1')) {
+                adminArea = component.shortText || component.longText || '';
+              }
+
+              // Extract country code for disambiguation when adminArea is missing
+              if (!countryCode && types.includes('country')) {
+                countryCode = component.shortText || ''; // e.g., "US", "FR", "IT"
+              }
+            }
+
+            // Build normalized label with fallback hierarchy for global coverage:
+            // 1. "City, State" - Best case (e.g., "Denver, CO")
+            // 2. "City, Country" - When state unavailable (e.g., "Paris, FR" vs just "Paris")
+            // 3. "City" - Single city name (last resort for city-only data)
+            // 4. "State, Country" - When only region available (e.g., "California, US" vs "California, Colombia")
+            // 5. "State" - Region only (fallback)
+            // 6. Original text - Ultimate fallback
+            if (cityName && adminArea) {
+              normalizedLabel = `${cityName}, ${adminArea}`;
+            } else if (cityName && countryCode) {
+              normalizedLabel = `${cityName}, ${countryCode}`;
+            } else if (cityName) {
+              normalizedLabel = cityName;
+            } else if (adminArea && countryCode) {
+              normalizedLabel = `${adminArea}, ${countryCode}`;
+            } else if (adminArea) {
+              normalizedLabel = adminArea;
+            }
+            // else: keep the original text as fallback
+          }
+
           return {
             id: placeId,
-            label: text,
+            label: normalizedLabel,
             lat,
             lon: lng,
           };

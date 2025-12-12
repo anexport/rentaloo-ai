@@ -1,0 +1,95 @@
+{
+  "form": {
+    "title": "Lascia una Recensione",
+    "description": "Condividi la tua esperienza di noleggio \"{{equipmentTitle}}\" da {{revieweeName}}",
+    "rating_label": "Valutazione Complessiva",
+    "rating_required": "Valutazione Complessiva *",
+    "rating_display": "{{rating}} su 5",
+    "comment_label": "La Tua Recensione",
+    "comment_required": "La Tua Recensione *",
+    "comment_placeholder": "Racconta agli altri della tua esperienza... (minimo 10 caratteri)",
+    "comment_hint": "Sii onesto e costruttivo. La tua recensione aiuterà gli altri a prendere decisioni informate.",
+    "guidelines_title": "Linee Guida per le Recensioni",
+    "guideline_specific": "Sii specifico sulla tua esperienza con l'attrezzatura e il proprietario",
+    "guideline_respectful": "Mantieni un tono rispettoso e costruttivo",
+    "guideline_facts": "Concentrati sui fatti piuttosto che sulle emozioni",
+    "guideline_improvements": "Menziona sia gli aspetti positivi che le aree di miglioramento",
+    "submit_button": "Invia Recensione",
+    "submitting_button": "Invio in corso...",
+    "cancel_button": "Annulla",
+    "edit_review": "Modifica Recensione",
+    "delete_review": "Elimina Recensione",
+    "validation_errors": {
+      "min_rating": "La valutazione deve essere almeno 1 stella",
+      "max_rating": "La valutazione non può superare 5 stelle",
+      "rating_required": "Seleziona una valutazione",
+      "rating_whole_number": "La valutazione deve essere un numero intero",
+      "min_length": "La recensione deve contenere almeno 10 caratteri",
+      "max_length": "La recensione non può superare 1000 caratteri"
+    }
+  },
+  "display": {
+    "verified_badge": "Verificato",
+    "equipment_label": "Attrezzatura: ",
+    "overall_rating": "Valutazione Complessiva",
+    "average_rating": "Valutazione Media",
+    "rating_display": "{{rating}} / 5.0",
+    "verified_rental": "Noleggio Verificato",
+    "helpful": "Utile",
+    "report": "Segnala",
+    "owner_response": "Risposta del Proprietario",
+    "show_more": "Mostra Altro",
+    "show_less": "Mostra Meno",
+    "review_photo_alt": "Foto recensione {{number}}"
+  },
+  "empty_states": {
+    "loading": "Caricamento recensioni...",
+    "no_reviews": "Nessuna recensione ancora",
+    "be_first": "Sii il primo a lasciare una recensione!",
+    "no_matching_filter": "Nessuna recensione corrisponde al tuo filtro",
+    "reviews_count_single": "Recensioni ({{count}})",
+    "reviews_count_plural": "Recensioni ({{count}})"
+  },
+  "filters": {
+    "all": "Tutte",
+    "positive": "Positivo",
+    "negative": "Negativo",
+    "recent": "Recenti",
+    "all_reviews": "Tutte le Recensioni",
+    "5_stars": "5 Stelle",
+    "4_stars": "4 Stelle",
+    "3_stars": "3 Stelle",
+    "2_stars": "2 Stelle",
+    "1_star": "1 Stella",
+    "most_recent": "Più Recenti",
+    "highest_rated": "Valutazione Più Alta",
+    "lowest_rated": "Valutazione Più Bassa"
+  },
+  "summary": {
+    "title": "Valutazione Complessiva",
+    "no_reviews": "Nessuna recensione ancora",
+    "be_first": "Sii il primo a lasciare una recensione!",
+    "based_on_one": "Basato su {{count}} recensione",
+    "based_on_other": "Basato su {{count}} recensioni"
+  },
+  "actions": {
+    "load_more": "Carica Altre Recensioni"
+  },
+  "star_rating": {
+    "aria_rate_one": "Valuta {{starNumber}} stella",
+    "aria_rate_other": "Valuta {{starNumber}} stelle"
+  },
+  "errors": {
+    "not_logged_in": "Devi essere connesso per inviare una recensione",
+    "submit_failed": "Impossibile inviare la recensione. Riprova.",
+    "auth_required": "Autenticazione richiesta"
+  },
+  "success": {
+    "review_submitted": "Recensione inviata con successo",
+    "review_updated": "Recensione aggiornata con successo",
+    "review_deleted": "Recensione eliminata con successo"
+  },
+  "messages": {
+    "already_reviewed": "Hai già recensito questa prenotazione"
+  }
+}

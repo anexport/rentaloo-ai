@@ -1,0 +1,63 @@
+{
+  "title": "Verifica dell'Identità",
+  "subtitle": "Verifica la tua identità per creare fiducia nella comunità",
+  "steps": {
+    "email": "Verifica Email",
+    "phone": "Verifica Telefono",
+    "identity": "Documento d'Identità",
+    "address": "Verifica Indirizzo"
+  },
+  "status": {
+    "verified": "Verificato",
+    "pending": "In Attesa",
+    "unverified": "Non Verificato",
+    "failed": "Verifica Fallita"
+  },
+  "email": {
+    "title": "Verifica la Tua Email",
+    "description": "Conferma il tuo indirizzo email per continuare",
+    "send_code": "Invia Codice di Verifica",
+    "resend_code": "Reinvia Codice",
+    "enter_code": "Inserisci il codice inviato a {{email}}",
+    "verified_message": "La tua email è stata verificata"
+  },
+  "phone": {
+    "title": "Verifica il Tuo Numero di Telefono",
+    "description": "Aggiungi il tuo numero di telefono per la sicurezza dell'account",
+    "enter_phone": "Inserisci Numero di Telefono",
+    "send_code": "Invia Codice",
+    "enter_code": "Inserisci Codice di Verifica",
+    "verified_message": "Il tuo numero di telefono è stato verificato"
+  },
+  "identity": {
+    "title": "Carica Documento d'Identità",
+    "description": "Carica un documento d'identità rilasciato dal governo",
+    "document_types": "Accettati: Passaporto, Patente di Guida, Carta d'Identità",
+    "upload_front": "Carica Fronte",
+    "upload_back": "Carica Retro (se applicabile)",
+    "uploading": "Caricamento in corso...",
+    "submitted_message": "Il tuo documento è stato inviato per la revisione",
+    "verified_message": "La tua identità è stata verificata"
+  },
+  "address": {
+    "title": "Verifica il Tuo Indirizzo",
+    "description": "Fornisci una prova di residenza",
+    "document_types": "Accettati: Bolletta, Estratto Conto Bancario",
+    "upload_document": "Carica Documento",
+    "submitted_message": "La tua prova di residenza è stata inviata",
+    "verified_message": "Il tuo indirizzo è stato verificato"
+  },
+  "trust_score": {
+    "title": "Punteggio di Fiducia",
+    "description": "Completa le verifiche per aumentare il tuo punteggio di fiducia",
+    "score": "{{score}}/100",
+    "benefits": "Punteggi di fiducia più alti portano a più prenotazioni"
+  },
+  "badges": {
+    "email_verified": "Email Verificata",
+    "phone_verified": "Telefono Verificato",
+    "identity_verified": "Identità Verificata",
+    "address_verified": "Indirizzo Verificato",
+    "trusted_member": "Membro Fidato"
+  }
+}

@@ -1,4 +1,5 @@
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
+import { z } from "zod";
 import { supabase } from "./supabase";
 
 // Stripe publishable key - In production, use environment variable
@@ -19,10 +20,41 @@ export const getStripe = (): Promise<Stripe | null> => {
 };
 
 /**
+ * Zod schema for PaymentBookingData validation
+ * Validates payment-critical data before creating payment intents
+ */
+export const paymentBookingDataSchema = z.object({
+  equipment_id: z.string().uuid("Invalid equipment ID"),
+  start_date: z.string().refine(
+    (val) => !isNaN(Date.parse(val)),
+    "Invalid start date format"
+  ),
+  end_date: z.string().refine(
+    (val) => !isNaN(Date.parse(val)),
+    "Invalid end date format"
+  ),
+  total_amount: z.number().positive("Total amount must be positive"),
+  insurance_type: z.enum(["none", "basic", "premium"]),
+  insurance_cost: z.number().nonnegative("Insurance cost cannot be negative"),
+  damage_deposit_amount: z.number().nonnegative("Deposit cannot be negative"),
+});
+
+/**
+ * Booking data required to create a payment intent
+ * This is sent to the Edge Function which stores it in Stripe metadata
+ * The booking is only created in the database after payment succeeds
+ */
+export type PaymentBookingData = z.infer<typeof paymentBookingDataSchema>;
+
+/**
  * Create a payment intent via Supabase Edge Function
+ * 
+ * IMPORTANT: This does NOT create a booking in the database!
+ * The booking is created by the webhook after payment succeeds.
+ * This prevents orphaned bookings if users abandon payment.
  */
 export const createPaymentIntent = async (
-  bookingRequestId: string
+  bookingData: PaymentBookingData
 ): Promise<{ clientSecret: string; paymentIntentId: string }> => {
   // Get session token
   const { data: session } = await supabase.auth.getSession();
@@ -38,7 +70,7 @@ export const createPaymentIntent = async (
     throw new Error("VITE_SUPABASE_URL is not configured");
   }
 
-  // Call Edge Function
+  // Call Edge Function with booking data
   const response = await fetch(
     `${supabaseUrl}/functions/v1/create-payment-intent`,
     {
@@ -47,7 +79,7 @@ export const createPaymentIntent = async (
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ bookingRequestId }),
+      body: JSON.stringify(bookingData),
     }
   );
 

@@ -1,25 +1,37 @@
 import { useVerification } from "@/hooks/useVerification";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Shield, Star, Calendar, CheckCircle, AlertCircle } from "lucide-react";
-import VerificationBadge from "./VerificationBadge";
+import {
+  Shield,
+  Star,
+  Calendar,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  Loader2,
+} from "lucide-react";
+import VerificationStatusGrid from "./VerificationStatusGrid";
+import TrustScore from "./TrustScore";
 import {
   getTrustScoreColor,
+  getTrustScoreLabel,
   formatVerificationDate,
-} from "../../lib/verification";
+} from "@/lib/verification";
+import { cn } from "@/lib/utils";
 
-interface RenterScreeningProps {
+type RenterScreeningProps = {
   renterId: string;
-}
+  className?: string;
+};
 
-const RenterScreening = ({ renterId }: RenterScreeningProps) => {
+const RenterScreening = ({ renterId, className }: RenterScreeningProps) => {
   const { profile, loading } = useVerification({ userId: renterId });
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center">
-          <p className="text-gray-500">Loading renter information...</p>
+      <Card className={className}>
+        <CardContent className="py-12 text-center">
+          <Loader2 className="h-8 w-8 mx-auto mb-3 text-muted-foreground animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading renter profile...</p>
         </CardContent>
       </Card>
     );
@@ -27,10 +39,12 @@ const RenterScreening = ({ renterId }: RenterScreeningProps) => {
 
   if (!profile) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center">
-          <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500">Unable to load renter information</p>
+      <Card className={className}>
+        <CardContent className="py-12 text-center">
+          <AlertCircle className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+          <p className="text-sm text-muted-foreground">
+            Unable to load renter information
+          </p>
         </CardContent>
       </Card>
     );
@@ -39,188 +53,164 @@ const RenterScreening = ({ renterId }: RenterScreeningProps) => {
   const isHighlyTrusted = profile.trustScore.overall >= 80;
   const isTrusted = profile.trustScore.overall >= 60;
 
+  const getRecommendationConfig = () => {
+    if (isHighlyTrusted) {
+      return {
+        icon: CheckCircle,
+        title: "Highly Recommended",
+        description: "This renter has excellent trust metrics and verification status.",
+        bgClass: "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800",
+        iconClass: "text-green-600 dark:text-green-400",
+        textClass: "text-green-900 dark:text-green-200",
+        descClass: "text-green-700 dark:text-green-300",
+      };
+    }
+    if (isTrusted) {
+      return {
+        icon: CheckCircle,
+        title: "Recommended",
+        description: "This renter meets standard trust requirements.",
+        bgClass: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800",
+        iconClass: "text-blue-600 dark:text-blue-400",
+        textClass: "text-blue-900 dark:text-blue-200",
+        descClass: "text-blue-700 dark:text-blue-300",
+      };
+    }
+    return {
+      icon: AlertCircle,
+      title: "Building Trust",
+      description:
+        "This renter is still building their trust profile. Consider requesting additional verification or a security deposit.",
+      bgClass: "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800",
+      iconClass: "text-amber-600 dark:text-amber-400",
+      textClass: "text-amber-900 dark:text-amber-200",
+      descClass: "text-amber-700 dark:text-amber-300",
+    };
+  };
+
+  const recommendation = getRecommendationConfig();
+  const RecommendationIcon = recommendation.icon;
+
   return (
-    <div className="space-y-6">
-      {/* Trust Score Overview */}
+    <div className={cn("space-y-4", className)}>
+      {/* Trust Overview Card */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <span>Renter Trust Profile</span>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Shield className="h-4 w-4 text-primary" />
+            Renter Trust Profile
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-6">
+        <CardContent className="space-y-4">
+          {/* Score Display */}
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Trust Score</p>
+              <p className="text-xs text-muted-foreground mb-1">Trust Score</p>
+              <div className="flex items-baseline gap-2">
+                <span
+                  className={cn(
+                    "text-3xl font-bold tabular-nums",
+                    getTrustScoreColor(profile.trustScore.overall)
+                  )}
+                >
+                  {profile.trustScore.overall}
+                </span>
+                <span className="text-xs text-muted-foreground">/100</span>
+              </div>
               <p
-                className={`text-4xl font-bold ${getTrustScoreColor(
-                  profile.trustScore.overall
-                )}`}
+                className={cn(
+                  "text-xs font-medium mt-1",
+                  getTrustScoreColor(profile.trustScore.overall)
+                )}
               >
-                {profile.trustScore.overall}
+                {getTrustScoreLabel(profile.trustScore.overall)}
               </p>
-              <p className="text-sm text-gray-500">out of 100</p>
             </div>
-            <div className="text-right">
-              {isHighlyTrusted && (
-                <Badge className="bg-green-100 text-green-800 mb-2">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Highly Trusted
-                </Badge>
-              )}
-              {isTrusted && !isHighlyTrusted && (
-                <Badge className="bg-blue-100 text-blue-800 mb-2">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Trusted Renter
-                </Badge>
-              )}
-              {!isTrusted && (
-                <Badge className="bg-yellow-100 text-yellow-800 mb-2">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Building Trust
-                </Badge>
-              )}
-            </div>
+
+            <TrustScore score={profile.trustScore} compact />
           </div>
 
-          {/* Verification Status */}
-          <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Identity</span>
-              <VerificationBadge
-                status={profile.identityVerified ? "verified" : "unverified"}
-                showLabel={false}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Email</span>
-              <VerificationBadge
-                status={profile.emailVerified ? "verified" : "unverified"}
-                showLabel={false}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Phone</span>
-              <VerificationBadge
-                status={profile.phoneVerified ? "verified" : "unverified"}
-                showLabel={false}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Address</span>
-              <VerificationBadge
-                status={profile.addressVerified ? "verified" : "unverified"}
-                showLabel={false}
-              />
-            </div>
-          </div>
+          {/* Verification Status Grid */}
+          <VerificationStatusGrid profile={profile} compact className="mt-4" />
 
           {profile.verifiedAt && (
-            <p className="text-xs text-gray-500 mt-4">
+            <p className="text-[11px] text-muted-foreground pt-2 border-t">
               {formatVerificationDate(profile.verifiedAt)}
             </p>
           )}
         </CardContent>
       </Card>
 
-      {/* Trust Score Breakdown */}
+      {/* Score Breakdown Card */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Trust Score Components</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Trust Score Breakdown</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Shield className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700">Verification</span>
-            </div>
-            <span className="text-sm font-medium">
-              {profile.trustScore.components.verification}/30
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Star className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700">Reviews</span>
-            </div>
-            <span className="text-sm font-medium">
-              {profile.trustScore.components.reviews}/25
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700">Completed Bookings</span>
-            </div>
-            <span className="text-sm font-medium">
-              {profile.trustScore.components.completedBookings}/20
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700">Account Age</span>
-            </div>
-            <span className="text-sm font-medium">
-              {profile.trustScore.components.accountAge}/10
-            </span>
-          </div>
+          {[
+            {
+              icon: Shield,
+              label: "Verification",
+              value: profile.trustScore.components.verification,
+              max: 30,
+            },
+            {
+              icon: Star,
+              label: "Reviews",
+              value: profile.trustScore.components.reviews,
+              max: 25,
+            },
+            {
+              icon: CheckCircle,
+              label: "Completed Bookings",
+              value: profile.trustScore.components.completedBookings,
+              max: 20,
+            },
+            {
+              icon: Clock,
+              label: "Response Time",
+              value: profile.trustScore.components.responseTime,
+              max: 15,
+            },
+            {
+              icon: Calendar,
+              label: "Account Age",
+              value: profile.trustScore.components.accountAge,
+              max: 10,
+            },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.label}
+                className="flex items-center justify-between text-sm"
+              >
+                <div className="flex items-center gap-2">
+                  <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-muted-foreground">{item.label}</span>
+                </div>
+                <span className="font-medium tabular-nums">
+                  {item.value}/{item.max}
+                </span>
+              </div>
+            );
+          })}
         </CardContent>
       </Card>
 
-      {/* Recommendation */}
-      <Card
-        className={
-          isHighlyTrusted
-            ? "border-green-200 bg-green-50"
-            : isTrusted
-            ? "border-blue-200 bg-blue-50"
-            : "border-yellow-200 bg-yellow-50"
-        }
-      >
+      {/* Recommendation Card */}
+      <Card className={cn("border", recommendation.bgClass)}>
         <CardContent className="py-4">
-          <div className="flex items-start space-x-3">
-            {isHighlyTrusted ? (
-              <CheckCircle className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-            ) : isTrusted ? (
-              <CheckCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
-            )}
+          <div className="flex items-start gap-3">
+            <RecommendationIcon
+              className={cn("h-5 w-5 shrink-0 mt-0.5", recommendation.iconClass)}
+            />
             <div>
-              <p
-                className={`font-semibold text-sm ${
-                  isHighlyTrusted
-                    ? "text-green-900"
-                    : isTrusted
-                    ? "text-blue-900"
-                    : "text-yellow-900"
-                }`}
-              >
-                {isHighlyTrusted
-                  ? "Highly Recommended"
-                  : isTrusted
-                  ? "Recommended"
-                  : "Proceed with Caution"}
+              <p className={cn("font-semibold text-sm", recommendation.textClass)}>
+                {recommendation.title}
               </p>
-              <p
-                className={`text-xs ${
-                  isHighlyTrusted
-                    ? "text-green-700"
-                    : isTrusted
-                    ? "text-blue-700"
-                    : "text-yellow-700"
-                }`}
-              >
-                {isHighlyTrusted
-                  ? "This renter has excellent trust metrics and verification status."
-                  : isTrusted
-                  ? "This renter meets standard trust requirements."
-                  : "This renter is still building their trust profile. Consider requesting additional verification or a security deposit."}
+              <p className={cn("text-xs mt-0.5", recommendation.descClass)}>
+                {recommendation.description}
               </p>
             </div>
           </div>

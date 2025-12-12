@@ -17,6 +17,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 
+// Helper to safely parse metadata numbers
+const parseMetadataNumber = (value: string | undefined, defaultValue = 0): number => {
+  if (!value) return defaultValue;
+  const parsed = parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : defaultValue;
+};
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -69,103 +76,190 @@ Deno.serve(async (req) => {
     if (event.type === "payment_intent.succeeded") {
       const pi = event.data.object as Stripe.PaymentIntent;
       const charge = (pi.charges?.data?.[0]) as Stripe.Charge | undefined;
+      const metadata = pi.metadata || {};
 
-      // Update payment state
-      const { error: updateError } = await supabase
-        .from("payments")
-        .update({
-          payment_status: "succeeded",
-          failure_reason: null,
-          stripe_charge_id: charge?.id ?? null,
-        })
-        .eq("stripe_payment_intent_id", pi.id);
+      console.log("Processing successful payment:", {
+        paymentIntentId: pi.id,
+        metadata,
+      });
 
-      if (updateError) {
-        console.error("Error updating payment:", updateError);
-        // Don't fail the webhook, Stripe will retry
+      // Extract booking data from metadata
+      const equipmentId = metadata.equipment_id;
+      const renterId = metadata.renter_id;
+      const ownerId = metadata.owner_id;
+      const startDate = metadata.start_date;
+      const endDate = metadata.end_date;
+      const totalAmount = parseMetadataNumber(metadata.total_amount);
+      const rentalAmount = parseMetadataNumber(metadata.rental_amount);
+      const serviceFee = parseMetadataNumber(metadata.service_fee);
+      const insuranceType = metadata.insurance_type || "none";
+      const insuranceCost = parseMetadataNumber(metadata.insurance_cost);
+      const depositAmount = parseMetadataNumber(metadata.damage_deposit_amount);
+      const equipmentTitle = metadata.equipment_title || "";
+
+      // Validate required metadata
+      if (!equipmentId || !renterId || !ownerId || !startDate || !endDate) {
+        console.error("Missing required metadata in PaymentIntent:", {
+          equipmentId,
+          renterId,
+          ownerId,
+          startDate,
+          endDate,
+        });
+        // Still return 200 to acknowledge receipt - we can investigate manually
+        return new Response(
+          JSON.stringify({ received: true, warning: "Missing metadata" }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
       }
 
-      // Approve booking request to trigger booking creation via trigger 013
-      const brId = (pi.metadata?.booking_request_id as string) || null;
-      if (brId) {
-        const { error: bookingError } = await supabase
-          .from("booking_requests")
-          .update({ status: "approved" })
-          .eq("id", brId);
+      // Check if booking already exists for this payment intent (idempotency)
+      const { data: existingPayment } = await supabase
+        .from("payments")
+        .select("id, booking_request_id")
+        .eq("stripe_payment_intent_id", pi.id)
+        .maybeSingle();
 
-        if (bookingError) {
-          console.error("Error approving booking request:", bookingError);
-          // Don't fail the webhook
-        }
+      if (existingPayment) {
+        console.log("Payment already processed:", existingPayment.id);
+        // Update payment status if needed
+        await supabase
+          .from("payments")
+          .update({
+            payment_status: "succeeded",
+            stripe_charge_id: charge?.id ?? null,
+          })
+          .eq("id", existingPayment.id);
 
-        // After approving booking request, create conversation and send confirmation message
-        try {
-          // Get booking request details
-          const { data: bookingRequest } = await supabase
-            .from("booking_requests")
-            .select(`
-              id,
-              renter_id,
-              start_date,
-              end_date,
-              total_amount,
-              equipment:equipment(id, title, owner_id)
-            `)
-            .eq("id", brId)
+        return new Response(
+          JSON.stringify({ received: true, existing: true }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Create the booking_request with "approved" status (already paid)
+      const { data: newBooking, error: bookingError } = await supabase
+        .from("booking_requests")
+        .insert({
+          equipment_id: equipmentId,
+          renter_id: renterId,
+          start_date: startDate,
+          end_date: endDate,
+          total_amount: totalAmount,
+          status: "approved", // Immediately approved since payment succeeded
+          insurance_type: insuranceType,
+          insurance_cost: insuranceCost,
+          damage_deposit_amount: depositAmount,
+          message: null,
+        })
+        .select("id")
+        .single();
+
+      if (bookingError || !newBooking) {
+        console.error("Error creating booking request:", bookingError);
+        // Return 200 to prevent Stripe retries - we need to investigate manually
+        return new Response(
+          JSON.stringify({
+            received: true,
+            error: "Failed to create booking",
+            details: bookingError?.message,
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      console.log("Created booking request:", newBooking.id);
+
+      // Create the payment record
+      const { data: newPayment, error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+          booking_request_id: newBooking.id,
+          renter_id: renterId,
+          owner_id: ownerId,
+          stripe_payment_intent_id: pi.id,
+          stripe_charge_id: charge?.id ?? null,
+          subtotal: rentalAmount,
+          rental_amount: rentalAmount,
+          service_fee: serviceFee,
+          tax: 0,
+          insurance_amount: insuranceCost,
+          deposit_amount: depositAmount,
+          total_amount: totalAmount,
+          escrow_amount: totalAmount,
+          owner_payout_amount: rentalAmount,
+          currency: "usd",
+          payment_status: "succeeded",
+          escrow_status: "held",
+          deposit_status: depositAmount > 0 ? "held" : null,
+        })
+        .select("id")
+        .single();
+
+      if (paymentError) {
+        console.error("Error creating payment record:", paymentError);
+        // Booking was created but payment record failed - still need to handle
+      } else {
+        console.log("Created payment record:", newPayment?.id);
+      }
+
+      // Create conversation and send confirmation message
+      try {
+        // Check if conversation exists
+        const { data: existingConv } = await supabase
+          .from("conversations")
+          .select("id")
+          .eq("booking_request_id", newBooking.id)
+          .maybeSingle();
+
+        let conversationId = existingConv?.id;
+
+        // Create conversation if it doesn't exist
+        if (!conversationId) {
+          const { data: newConv } = await supabase
+            .from("conversations")
+            .insert({
+              booking_request_id: newBooking.id,
+              participants: [renterId, ownerId],
+            })
+            .select("id")
             .single();
 
-          if (bookingRequest && bookingRequest.equipment) {
-            const ownerId = (bookingRequest.equipment as { owner_id: string }).owner_id;
-            
-            // Check if conversation exists for this booking
-            const { data: existingConv } = await supabase
-              .from("conversations")
-              .select("id")
-              .eq("booking_request_id", brId)
-              .maybeSingle();
+          conversationId = newConv?.id;
 
-            let conversationId = existingConv?.id;
-
-            // Create conversation if it doesn't exist
-            if (!conversationId) {
-              const { data: newConv } = await supabase
-                .from("conversations")
-                .insert({
-                  booking_request_id: brId,
-                  participants: [bookingRequest.renter_id, ownerId]
-                })
-                .select("id")
-                .single();
-              
-              conversationId = newConv?.id;
-
-              // Add conversation participants
-              if (conversationId) {
-                await supabase.from("conversation_participants").insert([
-                  { conversation_id: conversationId, profile_id: bookingRequest.renter_id },
-                  { conversation_id: conversationId, profile_id: ownerId }
-                ]);
-              }
-            }
-
-            // Send payment confirmation message
-            if (conversationId) {
-              const startDate = new Date(bookingRequest.start_date).toLocaleDateString();
-              const endDate = new Date(bookingRequest.end_date).toLocaleDateString();
-              const equipmentTitle = (bookingRequest.equipment as { title: string }).title;
-              
-              await supabase.from("messages").insert({
-                conversation_id: conversationId,
-                sender_id: bookingRequest.renter_id,
-                content: `Payment confirmed! I've booked your "${equipmentTitle}" from ${startDate} to ${endDate} ($${bookingRequest.total_amount.toFixed(2)} total).`,
-                message_type: "booking_approved"
-              });
-            }
+          // Add conversation participants
+          if (conversationId) {
+            await supabase.from("conversation_participants").insert([
+              { conversation_id: conversationId, profile_id: renterId },
+              { conversation_id: conversationId, profile_id: ownerId },
+            ]);
           }
-        } catch (convError) {
-          console.error("Error creating conversation after payment:", convError);
-          // Don't fail the webhook - booking is still valid
         }
+
+        // Send payment confirmation message
+        if (conversationId) {
+          const startDateFormatted = new Date(startDate).toLocaleDateString();
+          const endDateFormatted = new Date(endDate).toLocaleDateString();
+
+          await supabase.from("messages").insert({
+            conversation_id: conversationId,
+            sender_id: renterId,
+            content: `Payment confirmed! I've booked your "${equipmentTitle}" from ${startDateFormatted} to ${endDateFormatted} ($${totalAmount.toFixed(2)} total).`,
+            message_type: "booking_approved",
+          });
+        }
+      } catch (convError) {
+        console.error("Error creating conversation after payment:", convError);
+        // Don't fail the webhook - booking and payment are still valid
       }
     }
 
@@ -173,6 +267,14 @@ Deno.serve(async (req) => {
     if (event.type === "payment_intent.payment_failed") {
       const pi = event.data.object as Stripe.PaymentIntent;
 
+      // Since we don't create booking/payment until success, nothing to update here
+      // Just log for debugging
+      console.log("Payment failed:", {
+        paymentIntentId: pi.id,
+        error: pi.last_payment_error?.message,
+      });
+
+      // If there was an existing payment record (from old flow), update it
       const { error: updateError } = await supabase
         .from("payments")
         .update({
@@ -187,13 +289,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({ received: true }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Webhook error:", error);
     return new Response(
@@ -208,4 +307,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-

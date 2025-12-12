@@ -1,0 +1,74 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "browse_equipment": "Equipment durchsuchen",
+    "messages": "Nachrichten",
+    "verification": "Verifizierung",
+    "settings": "Einstellungen",
+    "sign_out": "Abmelden",
+    "explore": "Erkunden",
+    "my_rentals": "Meine Vermietungen",
+    "my_listings": "Meine Angebote",
+    "payments": "Zahlungen"
+  },
+  "user_role": {
+    "loading": "Wird geladen...",
+    "equipment_owner": "Equipment-Eigentümer",
+    "renter": "Mieter"
+  },
+  "pages": {
+    "home": "Startseite",
+    "explore": "Equipment erkunden",
+    "dashboard": "Dashboard",
+    "messages": "Nachrichten",
+    "settings": "Einstellungen",
+    "verification": "Identitätsverifizierung",
+    "payment_confirmation": "Zahlungsbestätigung"
+  },
+  "auth": {
+    "sign_in": "Anmelden",
+    "get_started": "Erste Schritte"
+  },
+  "errors": {
+    "signout_failed_title": "Abmeldung fehlgeschlagen",
+    "signout_failed_message": "Abmeldung fehlgeschlagen. Bitte versuchen Sie es erneut."
+  },
+  "aria": {
+    "open_menu": "Menü öffnen",
+    "expand_sidebar": "Seitenleiste erweitern",
+    "collapse_sidebar": "Seitenleiste minimieren",
+    "user_menu": "Benutzermenü"
+  },
+  "sidebar": {
+    "main": "Hauptmenü",
+    "activity": "Aktivität",
+    "account": "Konto",
+    "dashboard": "Dashboard",
+    "browse_equipment": "Equipment durchsuchen",
+    "my_bookings": "Meine Buchungen",
+    "messages": "Nachrichten",
+    "payments": "Zahlungen",
+    "settings": "Einstellungen",
+    "my_equipment_listings": "Meine Equipment-Angebote",
+    "verification": "Verifizierung",
+    "trust_score": "Vertrauenswert",
+    "owner": "Eigentümer",
+    "watchlist": "Beobachtungsliste",
+    "support": "Unterstützung",
+    "payouts": "Auszahlungen",
+    "add_new_listing": "Neue Anzeige hinzufügen",
+    "add_new_listing_subtitle": "Bestand aktuell halten",
+    "list_equipment": "Ihre Ausrüstung auflisten",
+    "list_equipment_subtitle": "Verdienen Sie, wenn Ihre Ausrüstung nicht verwendet wird",
+    "upcoming_booking": "Kommende Buchung",
+    "total": "Gesamt",
+    "view_details": "Details anzeigen",
+    "payout_glance_title": "Auszahlungen",
+    "payout_glance_pending": "{{count}} ausstehend",
+    "track_earnings": "Verdienste verfolgen",
+    "last_payout": "Letzte Auszahlung: {{date}}",
+    "view_payouts": "Auszahlungen anzeigen",
+    "whats_new": "Neuigkeiten",
+    "updates": "Updates"
+  }
+}

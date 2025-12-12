@@ -1,0 +1,84 @@
+{
+  "conversation_list": {
+    "title": "Mensajes",
+    "subtitle": "Mantente en contacto con tus arrendatarios",
+    "all_conversations": "Todas las conversaciones",
+    "unread": "No leídos",
+    "bookings": "Reservas",
+    "conversations": "Conversaciones",
+    "no_conversations": "Sin mensajes aún",
+    "start_conversation": "Comienza una conversación reservando equipamiento",
+    "unread_count": "{{count}} sin leer",
+    "search_placeholder": "Buscar conversaciones...",
+    "filter_placeholder": "Filtrar",
+    "unknown_user": "Usuario Desconocido",
+    "empty_title": "Sin conversaciones aún",
+    "empty_description": "Verás mensajes de reserva y chats de arrendatarios aquí una vez que comiencen."
+  },
+  "empty_states": {
+    "select_conversation_title": "Selecciona una conversación",
+    "select_conversation_message": "Elige una conversación de la lista para ver los mensajes.",
+    "no_conversations_yet": "Las conversaciones aparecerán aquí una vez que te conectes con los arrendatarios.",
+    "no_messages_title": "Sin mensajes aún",
+    "no_messages_message": "Inicia la conversación para planificar los detalles del alquiler.",
+    "regarding": "Con respecto a"
+  },
+  "chat": {
+    "type_message": "Escribe un mensaje...",
+    "send": "Enviar",
+    "sending": "Enviando...",
+    "online": "En línea",
+    "offline": "Desconectado",
+    "typing": "{{name}} está escribiendo...",
+    "last_seen": "Último visto {{time}}",
+    "just_now": "Justo ahora",
+    "minutes_ago": "hace {{count}} minuto",
+    "minutes_ago_plural": "hace {{count}} minutos",
+    "hours_ago": "hace {{count}} hora",
+    "hours_ago_plural": "hace {{count}} horas",
+    "days_ago": "hace {{count}} día",
+    "days_ago_plural": "hace {{count}} días"
+  },
+  "system_messages": {
+    "booking_created": "Solicitud de reserva creada",
+    "booking_approved": "Reserva aprobada",
+    "booking_declined": "Reserva rechazada",
+    "booking_cancelled": "Reserva cancelada",
+    "payment_completed": "Pago completado"
+  },
+  "actions": {
+    "view_booking": "Ver Reserva",
+    "view_equipment": "Ver Equipamiento",
+    "delete_conversation": "Eliminar Conversación",
+    "mark_as_read": "Marcar como Leído",
+    "mark_as_unread": "Marcar como No Leído",
+    "retry": "Reintentar"
+  },
+  "aria_labels": {
+    "close_panel": "Cerrar panel de mensajería",
+    "filter_conversations": "Filtrar conversaciones",
+    "search_conversations": "Buscar conversaciones",
+    "open_conversations": "Abrir lista de conversaciones",
+    "search_messages": "Buscar mensajes",
+    "close_messaging": "Cerrar mensajería"
+  },
+  "errors": {
+    "load_failed_title": "Error al cargar mensajes",
+    "load_failed_message": "No pudimos cargar los mensajes de esta conversación. Por favor, inténtalo de nuevo.",
+    "conversation_failed_title": "Error al cargar conversación",
+    "conversation_failed_message": "No pudimos cargar los mensajes de esta conversación. Por favor, inténtalo de nuevo."
+  },
+  "input": {
+    "placeholder": "Escribe un mensaje...",
+    "send": "Enviar mensaje",
+    "attach_file": "Adjuntar archivo",
+    "insert_emoji": "Insertar emoji",
+    "quick_replies": "Respuestas rápidas",
+    "send_error": "No pudimos enviar tu mensaje. Intenta de nuevo en un momento.",
+    "templates": {
+      "availability": "¡Gracias por ponerte en contacto! Puedo confirmar disponibilidad para esas fechas.",
+      "help": "Con gusto ayudo. ¿Podrías compartir un poco más sobre cómo planeas usar el equipamiento?",
+      "pickup": "Coordinemos la logística de recogida. ¿Prefieres por la mañana o por la tarde?"
+    }
+  }
+}

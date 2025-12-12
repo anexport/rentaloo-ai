@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { ReviewSummary as ReviewSummaryType } from "../../types/review";
 import { getRatingPercentage } from "../../lib/reviews";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,20 +10,22 @@ interface ReviewSummaryProps {
 }
 
 const ReviewSummary = ({ summary }: ReviewSummaryProps) => {
+  const { t } = useTranslation("reviews");
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Star className="h-5 w-5 text-primary" />
-          <span>Overall Rating</span>
+          <span>{t("summary.title")}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         {summary.totalReviews === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Star className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p>No reviews yet</p>
-            <p className="text-sm">Be the first to leave a review!</p>
+            <p>{t("summary.no_reviews")}</p>
+            <p className="text-sm">{t("summary.be_first")}</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -33,8 +36,7 @@ const ReviewSummary = ({ summary }: ReviewSummaryProps) => {
               </div>
               <StarRating rating={summary.averageRating} size="lg" />
               <p className="text-sm text-gray-600 mt-2">
-                Based on {summary.totalReviews}{" "}
-                {summary.totalReviews === 1 ? "review" : "reviews"}
+                {t("summary.based_on", { count: summary.totalReviews })}
               </p>
             </div>
 
@@ -81,4 +83,3 @@ const ReviewSummary = ({ summary }: ReviewSummaryProps) => {
 };
 
 export default ReviewSummary;
-

@@ -1,0 +1,48 @@
+{
+  "checkout": {
+    "title": "Payment",
+    "payment_details": "Payment Details",
+    "card_number": "Card Number",
+    "expiry_date": "Expiry Date",
+    "cvc": "CVC",
+    "billing_address": "Billing Address",
+    "pay_now": "Pay Now",
+    "processing": "Processing Payment...",
+    "secure_payment": "Secure payment powered by Stripe"
+  },
+  "confirmation": {
+    "title": "Payment Successful",
+    "message": "Your payment has been processed successfully",
+    "booking_confirmed": "Your booking is confirmed",
+    "receipt_sent": "A receipt has been sent to your email",
+    "view_booking": "View Booking",
+    "back_to_dashboard": "Back to Dashboard"
+  },
+  "escrow": {
+    "funds_held": "Funds Held in Escrow",
+    "release_on_completion": "Funds will be released to the owner upon rental completion",
+    "protection_message": "Your payment is protected until the rental is complete"
+  },
+  "refund": {
+    "refund_initiated": "Refund Initiated",
+    "refund_processing": "Your refund is being processed",
+    "refund_completed": "Refund Completed",
+    "refund_amount": "Refund Amount",
+    "refund_reason": "Reason for Refund"
+  },
+  "history": {
+    "payment_history": "Payment History",
+    "transaction_id": "Transaction ID",
+    "date": "Date",
+    "amount": "Amount",
+    "status": "Status",
+    "download_receipt": "Download Receipt",
+    "no_payments": "No payment history yet"
+  },
+  "errors": {
+    "payment_failed": "Payment failed. Please try again.",
+    "invalid_card": "Invalid card details",
+    "insufficient_funds": "Insufficient funds",
+    "card_declined": "Card declined"
+  }
+}

@@ -49,7 +49,6 @@ const NotificationsPanel = () => {
           pendingBookingsResult,
           pendingPaymentsResult,
           unreadMessagesResult,
-          approvedBookingsResult,
         ] = await Promise.allSettled([
           // Check for pending booking requests
           supabase
@@ -66,13 +65,6 @@ const NotificationsPanel = () => {
             .limit(1),
           // Check for new messages using RPC function
           supabase.rpc("get_unread_messages_count"),
-          // Check for approved bookings
-          supabase
-            .from("booking_requests")
-            .select("*", { count: "exact", head: true })
-            .eq("renter_id", user.id)
-            .eq("status", "approved")
-            .gte("start_date", formatDateForStorage(new Date())),
         ]);
 
         // Process pending booking requests
@@ -149,33 +141,6 @@ const NotificationsPanel = () => {
           console.error(
             "Failed to fetch unread messages:",
             unreadMessagesResult.reason
-          );
-        }
-
-        // Process approved bookings
-        if (approvedBookingsResult.status === "fulfilled") {
-          const approvedCount = approvedBookingsResult.value.count ?? 0;
-          if (approvedCount > 0) {
-            newNotifications.push({
-              id: "approved-bookings",
-              type: "success",
-              title: `${approvedCount} Upcoming ${
-                approvedCount === 1 ? "Rental" : "Rentals"
-              }`,
-              description: `You have ${approvedCount} approved ${
-                approvedCount === 1 ? "booking" : "bookings"
-              } coming up.`,
-              action: {
-                label: "View Details",
-                href: "/renter/dashboard?tab=bookings",
-              },
-              dismissible: true,
-            });
-          }
-        } else {
-          console.error(
-            "Failed to fetch approved bookings:",
-            approvedBookingsResult.reason
           );
         }
 

@@ -1,0 +1,108 @@
+{
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit",
+    "continue": "Continue",
+    "back": "Back",
+    "close": "Close",
+    "confirm": "Confirm",
+    "view_details": "View Details",
+    "load_more": "Load More",
+    "upload": "Upload",
+    "download": "Download",
+    "search": "Search",
+    "filter": "Filter",
+    "apply": "Apply",
+    "reset": "Reset",
+    "send": "Send",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "labels": {
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "state": "State",
+    "zip": "ZIP Code",
+    "country": "Country",
+    "date": "Date",
+    "time": "Time",
+    "description": "Description",
+    "title": "Title",
+    "price": "Price",
+    "location": "Location",
+    "category": "Category",
+    "status": "Status"
+  },
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "declined": "Declined",
+    "cancelled": "Cancelled",
+    "completed": "Completed",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "time": {
+    "per_day": "per day",
+    "per_week": "per week",
+    "per_month": "per month",
+    "days": "days",
+    "hours": "hours",
+    "minutes": "minutes",
+    "seconds": "seconds"
+  },
+  "errors": {
+    "required_field": "This field is required",
+    "invalid_email": "Please enter a valid email address",
+    "invalid_phone": "Please enter a valid phone number",
+    "min_length": "Minimum {{count}} characters required",
+    "max_length": "Maximum {{count}} characters allowed",
+    "generic_error": "Something went wrong. Please try again.",
+    "network_error": "Network error. Please check your connection.",
+    "unauthorized": "You are not authorized to perform this action",
+    "not_found": "The requested resource was not found"
+  },
+  "success": {
+    "saved": "Successfully saved",
+    "deleted": "Successfully deleted",
+    "updated": "Successfully updated",
+    "created": "Successfully created",
+    "sent": "Successfully sent"
+  },
+  "loading": {
+    "default": "Loading...",
+    "saving": "Saving...",
+    "uploading": "Uploading...",
+    "processing": "Processing...",
+    "searching": "Searching..."
+  },
+  "confirmation": {
+    "delete_title": "Are you sure?",
+    "delete_message": "This action cannot be undone.",
+    "cancel_title": "Cancel?",
+    "cancel_message": "Are you sure you want to cancel?"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle": "Toggle theme"
+  },
+  "language": {
+    "select": "Select Language",
+    "english": "English",
+    "spanish": "Spanish",
+    "french": "French",
+    "german": "German"
+  },
+  "navigation": {
+    "menu": "Menu"
+  }
+}

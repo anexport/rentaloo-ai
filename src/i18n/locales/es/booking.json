@@ -1,0 +1,117 @@
+{
+  "sidebar": {
+    "title": "Reserva Este Equipamiento",
+    "select_dates": "Seleccionar Fechas",
+    "start_date": "Fecha de Inicio",
+    "end_date": "Fecha de Fin",
+    "pricing": "Detalles de Precios",
+    "daily_rate": "Tarifa Diaria",
+    "number_of_days": "Número de Días",
+    "subtotal": "Subtotal",
+    "service_fee": "Tarifa de Servicio",
+    "total": "Total",
+    "request_booking": "Solicitar Reserva",
+    "requesting": "Solicitando...",
+    "dates_required": "Por favor selecciona fechas de inicio y fin",
+    "unavailable_dates": "Algunas fechas en tu selección no están disponibles",
+    "aria_booking_info": "Información de reserva",
+    "aria_pricing": "Precios",
+    "aria_location_contact": "Ubicación y contacto",
+    "aria_dates": "Fechas",
+    "aria_pricing_breakdown": "Desglose de precios",
+    "aria_insurance": "Opciones de seguro"
+  },
+  "status": {
+    "pending": "Pendiente",
+    "approved": "Aprobado",
+    "declined": "Rechazado",
+    "cancelled": "Cancelado",
+    "completed": "Completado"
+  },
+  "requests": {
+    "my_requests": "Mis Solicitudes de Reserva",
+    "incoming_requests": "Solicitudes Entrantes",
+    "no_requests": "Sin solicitudes de reserva aún",
+    "view_details": "Ver Detalles",
+    "approve": "Aprobar",
+    "decline": "Rechazar",
+    "cancel": "Cancelar Reserva",
+    "confirm_cancel": "¿Estás seguro de que deseas cancelar esta reserva?"
+  },
+  "details": {
+    "booking_details": "Detalles de la Reserva",
+    "equipment": "Equipamiento",
+    "renter": "Arrendatario",
+    "owner": "Propietario",
+    "dates": "Fechas de Alquiler",
+    "duration": "Duración",
+    "total_cost": "Costo Total",
+    "booking_status": "Estado",
+    "message_from_renter": "Mensaje del Arrendatario",
+    "pickup_method": "Método de Entrega",
+    "delivery_address": "Dirección de Entrega"
+  },
+  "calendar": {
+    "available": "Disponible",
+    "unavailable": "No Disponible",
+    "booked": "Reservado",
+    "select_range": "Selecciona tus fechas de alquiler",
+    "minimum_rental": "Alquiler mínimo de {{count}} día",
+    "minimum_rental_plural": "Alquiler mínimo de {{count}} días"
+  },
+  "messages": {
+    "request_sent": "Solicitud de reserva enviada exitosamente",
+    "request_approved": "Solicitud de reserva aprobada",
+    "request_declined": "Solicitud de reserva rechazada",
+    "booking_cancelled": "Reserva cancelada exitosamente"
+  },
+  "card": {
+    "status": {
+      "awaiting_payment": "Esperando Pago",
+      "booking_confirmed": "Reserva Confirmada"
+    },
+    "labels": {
+      "renter": "Arrendatario",
+      "owner": "Propietario",
+      "message": "Mensaje:",
+      "per_day": "/día"
+    },
+    "buttons": {
+      "view_renter_info": "Ver Información del Arrendatario",
+      "hide_renter_info": "Ocultar Información del Arrendatario",
+      "pickup_inspection": "Inspección de Entrega",
+      "view_pickup_inspection": "Ver Inspección de Entrega",
+      "return_inspection": "Inspección de Devolución",
+      "view_return_inspection": "Ver Inspección de Devolución",
+      "file_damage_claim": "Presentar Reclamación de Daño",
+      "cancel_booking": "Cancelar Reserva",
+      "cancelling": "Cancelando...",
+      "message": "Mensaje",
+      "loading": "Cargando..."
+    },
+    "alerts": {
+      "awaiting_payment_owner": "Esta solicitud de reserva está esperando el pago del arrendatario.",
+      "awaiting_payment_renter": "Tu solicitud de reserva está esperando pago. Completa el pago para confirmar tu reserva.",
+      "payment_confirmed": "¡Pago recibido! La reserva está confirmada.",
+      "cancelled_renter": "Has cancelado esta solicitud de reserva.",
+      "cancelled_owner": "El arrendatario ha cancelado esta solicitud de reserva."
+    },
+    "modals": {
+      "complete_payment": "Completar Pago",
+      "renter_verification": "Perfil de Verificación del Arrendatario"
+    },
+    "confirmations": {
+      "cancel_owner": "¿Estás seguro de que deseas cancelar esta reserva? El arrendatario recibirá un reembolso completo.",
+      "cancel_renter": "¿Estás seguro de que deseas cancelar esta reserva? Recibirás un reembolso completo."
+    },
+    "timestamps": {
+      "requested": "Solicitado:",
+      "updated": "Actualizado:"
+    },
+    "errors": {
+      "refund_failed": "El procesamiento del reembolso falló. Por favor, contacta con soporte para cancelar esta reserva.",
+      "conversation_failed": "No se pudo iniciar la conversación. Por favor, intenta de nuevo.",
+      "cancel_failed": "No se pudo cancelar la reserva. Por favor, intenta de nuevo."
+    }
+  }
+}
