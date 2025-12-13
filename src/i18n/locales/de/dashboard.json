@@ -4,6 +4,16 @@
       "title": "Dashboard-Übersicht",
       "description": "Willkommen zurück! Hier ist, was mit deinen Mietangeboten passiert."
     },
+    "welcome": {
+      "greeting_morning": "Guten Morgen",
+      "greeting_afternoon": "Guten Tag",
+      "greeting_evening": "Guten Abend",
+      "fallback_name": "dort",
+      "verified_badge": "Verifiziert",
+      "upcoming_rentals_one": "Du hast {{count}} anstehende Miete. Nächste Miete beginnt {{time}}.",
+      "upcoming_rentals_other": "Du hast {{count}} anstehende Mieten. Nächste Miete beginnt {{time}}.",
+      "empty_state": "Bereit zu mieten? Durchsuche Ausrüstung und starte dein nächstes Abenteuer."
+    },
     "verification": {
       "incomplete_title": "Schließe deine Verifizierung ab",
       "incomplete_message": "Dein Konto ist zu {{progress}}% verifiziert. Schließe die Identitätsverifizierung ab, um sicher mieten zu können.",
@@ -41,6 +51,23 @@
     "header": {
       "title": "Eigentümer-Dashboard",
       "description": "Verwalte deine Ausrüstungsangebote und verfolge deine Einnahmen"
+    },
+    "welcome": {
+      "greeting_morning": "Guten Morgen",
+      "greeting_afternoon": "Guten Tag",
+      "greeting_evening": "Guten Abend",
+      "fallback_name": "dort",
+      "verified_badge": "Verifiziert",
+      "pending_requests": "Du hast {{count}} ausstehende Anfrage zu überprüfen.",
+      "pending_requests_plural": "Du hast {{count}} ausstehende Anfragen zu überprüfen.",
+      "upcoming_rentals_one": "Du hast {{count}} anstehende Miete. Nächste Miete beginnt {{time}}.",
+      "upcoming_rentals_other": "Du hast {{count}} anstehende Mieten. Nächste Miete beginnt {{time}}.",
+      "empty_state": "Bereit zu verdienen? Füge ein Angebot hinzu, um Buchungsanfragen zu erhalten."
+    },
+    "verification": {
+      "incomplete_title": "Schließe deine Verifizierung ab",
+      "incomplete_message": "Dein Konto ist zu {{progress}}% verifiziert. Schließe die Identitätsverifizierung ab, um sicher Einnahmen zu erzielen.",
+      "verify_button": "Jetzt verifizieren"
     },
     "stats": {
       "total_listings": {

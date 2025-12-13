@@ -140,6 +140,17 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+
+  /* Grid pattern background for hero sections */
+  .bg-grid-pattern {
+    background-image: linear-gradient(
+        to right,
+        currentColor 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, currentColor 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
 }
 
 /* Suggestion list animations */

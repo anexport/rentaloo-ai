@@ -4,6 +4,16 @@
       "title": "Aperçu du Tableau de Bord",
       "description": "Bienvenue! Voici ce qui se passe avec vos locations."
     },
+    "welcome": {
+      "greeting_morning": "Bonjour",
+      "greeting_afternoon": "Bon après-midi",
+      "greeting_evening": "Bonsoir",
+      "fallback_name": "là",
+      "verified_badge": "Vérifié",
+      "upcoming_rentals_one": "Vous avez {{count}} location à venir. La prochaine location commence {{time}}.",
+      "upcoming_rentals_other": "Vous avez {{count}} locations à venir. La prochaine location commence {{time}}.",
+      "empty_state": "Prêt à louer? Parcourez les équipements et commencez votre prochaine aventure."
+    },
     "verification": {
       "incomplete_title": "Complétez votre vérification",
       "incomplete_message": "Votre compte est {{progress}}% vérifié. Complétez la vérification d'identité pour commencer à louer en toute sécurité.",
@@ -41,6 +51,23 @@
     "header": {
       "title": "Tableau de Bord du Propriétaire",
       "description": "Gérez vos annonces d'équipements et suivez vos revenus"
+    },
+    "welcome": {
+      "greeting_morning": "Bonjour",
+      "greeting_afternoon": "Bon après-midi",
+      "greeting_evening": "Bonsoir",
+      "fallback_name": "là",
+      "verified_badge": "Vérifié",
+      "pending_requests": "Vous avez {{count}} demande en attente à examiner.",
+      "pending_requests_plural": "Vous avez {{count}} demandes en attente à examiner.",
+      "upcoming_rentals_one": "Vous avez {{count}} location à venir. La prochaine location commence {{time}}.",
+      "upcoming_rentals_other": "Vous avez {{count}} locations à venir. La prochaine location commence {{time}}.",
+      "empty_state": "Prêt à gagner? Ajoutez une annonce pour commencer à recevoir des demandes de réservation."
+    },
+    "verification": {
+      "incomplete_title": "Complétez votre vérification",
+      "incomplete_message": "Votre compte est {{progress}}% vérifié. Complétez la vérification d'identité pour commencer à gagner en toute sécurité.",
+      "verify_button": "Vérifier maintenant"
     },
     "stats": {
       "total_listings": {

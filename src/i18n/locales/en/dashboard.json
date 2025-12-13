@@ -4,6 +4,16 @@
       "title": "Dashboard Overview",
       "description": "Welcome back! Here's what's happening with your rentals."
     },
+    "welcome": {
+      "greeting_morning": "Good morning",
+      "greeting_afternoon": "Good afternoon",
+      "greeting_evening": "Good evening",
+      "fallback_name": "there",
+      "verified_badge": "Verified",
+      "upcoming_rentals_one": "You have {{count}} rental coming up. Next rental starts {{time}}.",
+      "upcoming_rentals_other": "You have {{count}} rentals coming up. Next rental starts {{time}}.",
+      "empty_state": "Ready to rent? Browse equipment and start your next adventure."
+    },
     "verification": {
       "incomplete_title": "Complete your verification",
       "incomplete_message": "Your account is {{progress}}% verified. Complete identity verification to start renting safely.",
@@ -41,6 +51,23 @@
     "header": {
       "title": "Owner Dashboard",
       "description": "Manage your equipment listings and track your earnings"
+    },
+    "welcome": {
+      "greeting_morning": "Good morning",
+      "greeting_afternoon": "Good afternoon",
+      "greeting_evening": "Good evening",
+      "fallback_name": "there",
+      "verified_badge": "Verified",
+      "pending_requests": "You have {{count}} pending request to review.",
+      "pending_requests_plural": "You have {{count}} pending requests to review.",
+      "upcoming_rentals_one": "You have {{count}} upcoming rental. Next rental starts {{time}}.",
+      "upcoming_rentals_other": "You have {{count}} upcoming rentals. Next rental starts {{time}}.",
+      "empty_state": "Ready to earn? Add a listing to start receiving booking requests."
+    },
+    "verification": {
+      "incomplete_title": "Complete your verification",
+      "incomplete_message": "Your account is {{progress}}% verified. Complete identity verification to start earning safely.",
+      "verify_button": "Verify now"
     },
     "stats": {
       "total_listings": {
