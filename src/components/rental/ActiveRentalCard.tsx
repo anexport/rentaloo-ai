@@ -30,18 +30,24 @@ interface ActiveRentalCardProps {
   booking: BookingRequestWithDetails;
   className?: string;
   compact?: boolean;
+  viewerRole?: "renter" | "owner";
 }
 
 export default function ActiveRentalCard({
   booking,
   className,
   compact = false,
+  viewerRole = "renter",
 }: ActiveRentalCardProps) {
   if (!booking.equipment) return null;
 
   const equipment = booking.equipment;
   const primaryPhoto = equipment.equipment_photos?.find((p) => p.is_primary);
   const photoUrl = primaryPhoto?.photo_url || equipment.equipment_photos?.[0]?.photo_url;
+  const counterparty =
+    viewerRole === "owner" ? booking.renter : equipment.owner;
+  const counterpartyLabel =
+    viewerRole === "owner" ? "Rented by" : "Renting from";
 
   if (compact) {
     return (
@@ -112,15 +118,17 @@ export default function ActiveRentalCard({
           <div className="h-14 mb-4">
             <h3 className="font-semibold text-lg truncate">{equipment.title}</h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              {equipment.owner ? (
+              {counterparty ? (
                 <>
                   <Avatar className="h-5 w-5">
-                    <AvatarImage src={equipment.owner.avatar_url || undefined} />
+                    <AvatarImage src={counterparty.avatar_url || undefined} />
                     <AvatarFallback className="text-[10px]">
-                      {getInitials(getDisplayName(equipment.owner))}
+                      {getInitials(getDisplayName(counterparty))}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="truncate">Renting from {getDisplayName(equipment.owner)}</span>
+                  <span className="truncate">
+                    {counterpartyLabel} {getDisplayName(counterparty)}
+                  </span>
                 </>
               ) : (
                 <span>&nbsp;</span>
@@ -147,4 +155,3 @@ export default function ActiveRentalCard({
     </Card>
   );
 }
-

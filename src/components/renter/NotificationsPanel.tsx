@@ -18,7 +18,7 @@ import { formatDateForStorage } from "@/lib/utils";
 
 interface Notification {
   id: string;
-  type: "pending_booking" | "verification" | "payment" | "message" | "success";
+  type: "pending_booking" | "verification" | "payment" | "success";
   title: string;
   description: string;
   action?: {
@@ -48,7 +48,6 @@ const NotificationsPanel = () => {
         const [
           pendingBookingsResult,
           pendingPaymentsResult,
-          unreadMessagesResult,
         ] = await Promise.allSettled([
           // Check for pending booking requests
           supabase
@@ -63,8 +62,6 @@ const NotificationsPanel = () => {
             .eq("renter_id", user.id)
             .eq("payment_status", "pending")
             .limit(1),
-          // Check for new messages using RPC function
-          supabase.rpc("get_unread_messages_count"),
         ]);
 
         // Process pending booking requests
@@ -114,33 +111,6 @@ const NotificationsPanel = () => {
           console.error(
             "Failed to fetch pending payments:",
             pendingPaymentsResult.reason
-          );
-        }
-
-        // Process unread messages
-        if (unreadMessagesResult.status === "fulfilled") {
-          const unreadCount = unreadMessagesResult.value.data ?? 0;
-          if (unreadCount > 0) {
-            newNotifications.push({
-              id: "unread-messages",
-              type: "message",
-              title: `${unreadCount} Unread ${
-                unreadCount === 1 ? "Message" : "Messages"
-              }`,
-              description: `You have ${unreadCount} unread ${
-                unreadCount === 1 ? "message" : "messages"
-              } from equipment owners.`,
-              action: {
-                label: "View Messages",
-                href: "/messages",
-              },
-              dismissible: true,
-            });
-          }
-        } else {
-          console.error(
-            "Failed to fetch unread messages:",
-            unreadMessagesResult.reason
           );
         }
 
@@ -196,8 +166,6 @@ const NotificationsPanel = () => {
         return <Shield className="h-4 w-4" />;
       case "payment":
         return <DollarSign className="h-4 w-4" />;
-      case "message":
-        return <AlertCircle className="h-4 w-4" />;
       case "success":
         return <CheckCircle className="h-4 w-4" />;
       default:

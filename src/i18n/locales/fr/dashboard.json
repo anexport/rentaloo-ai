@@ -142,6 +142,10 @@
     "payments": {
       "section_title": "Paiements et Séquestre",
       "section_description": "Gérez vos revenus et vos fonds en séquestre"
+    },
+    "active_rentals": {
+      "title": "Locations Actives",
+      "description": "Locations actuellement en cours pour vos annonces."
     }
   }
 }

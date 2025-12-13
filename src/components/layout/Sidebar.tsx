@@ -55,7 +55,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const verificationProgress = profile ? getVerificationProgress(profile) : 0;
   const trustScore = profile?.trustScore?.overall ?? 0;
   const { user } = useAuth();
-  const { activeMode } = useRoleMode();
+  const { activeMode, isAlsoOwner } = useRoleMode();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const userId = user?.id;
@@ -418,8 +418,8 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         {/* Role Switcher */}
         <RoleSwitcher collapsed={collapsed} variant="sidebar" />
 
-        {/* Owner quick action - only show in owner mode or if user has equipment */}
-        {(activeMode === "owner" || hasEquipment) && (
+        {/* Owner quick action - show for owners, users with equipment, or renters who want to become owners */}
+        {(activeMode === "owner" || hasEquipment || (user && !isAlsoOwner)) && (
         <div className="px-2 pb-2">
           {hasEquipment ? (
             <Link
@@ -439,8 +439,8 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               )}
             </Link>
           ) : (
-            // Only show "List your equipment" link if user is not already an owner
-            user?.user_metadata?.role !== "owner" && (
+            // Show "List your equipment" link if user is not already an owner
+            !isAlsoOwner && (
               <Link
                 to={
                   user

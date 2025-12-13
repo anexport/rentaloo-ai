@@ -142,6 +142,10 @@
     "payments": {
       "section_title": "Zahlungen & Treuhandverwaltung",
       "section_description": "Verwalte deine Einnahmen und Treuhandfonds"
+    },
+    "active_rentals": {
+      "title": "Aktive Vermietungen",
+      "description": "Derzeit laufende Vermietungen für deine Angebote."
     }
   }
 }

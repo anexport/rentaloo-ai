@@ -3,10 +3,12 @@ import {
   Plus,
   BarChart3,
   Calendar,
+  Package,
   Star,
   MessageSquare,
   Shield,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -30,9 +33,14 @@ import EscrowDashboard from "@/components/payment/EscrowDashboard";
 import TransactionHistory from "@/components/payment/TransactionHistory";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import WelcomeHero from "@/components/owner/WelcomeHero";
+import OwnerNotificationsPanel from "@/components/owner/NotificationsPanel";
+import OwnerClaimsList from "@/components/claims/OwnerClaimsList";
 import { useVerification } from "@/hooks/useVerification";
 import { getVerificationProgress } from "@/lib/verification";
 import { formatDateForStorage } from "@/lib/utils";
+import { useActiveRentals } from "@/hooks/useActiveRental";
+import ActiveRentalCard from "@/components/rental/ActiveRentalCard";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const OWNER_DASHBOARD_TABS = [
   "overview",
@@ -79,6 +87,11 @@ const OwnerDashboard = () => {
     loading: bookingsLoading,
     fetchBookingRequests,
   } = useBookingRequests("owner");
+  const {
+    rentals: activeRentals,
+    isLoading: activeRentalsLoading,
+    error: activeRentalsError,
+  } = useActiveRentals("owner");
 
   const progress = profile ? getVerificationProgress(profile) : 0;
 
@@ -211,6 +224,107 @@ const OwnerDashboard = () => {
               </Link>
             </CardContent>
           </Card>
+        )}
+
+        {/* Notifications / Tasks */}
+        <OwnerNotificationsPanel />
+
+        {/* Claims Requiring Action */}
+        <div className="animate-in slide-in-from-top-4 duration-500 delay-100">
+          <OwnerClaimsList />
+        </div>
+
+        {/* Active Rentals Section - Show error only when no data to fall back on */}
+        {activeRentalsLoading && (
+          <div
+            className="space-y-4 animate-in slide-in-from-top-4 duration-500 delay-150"
+            aria-busy="true"
+            aria-label={t("owner.active_rentals.title")}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                  <Package className="h-6 w-6 text-emerald-500" />
+                  {t("owner.active_rentals.title")}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t("owner.active_rentals.description")}
+                </p>
+              </div>
+              <div
+                className="flex items-center gap-2 text-sm text-muted-foreground"
+                role="status"
+                aria-label="Loading active rentals"
+              >
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <span className="sr-only">Loading active rentals</span>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={`active-rental-skeleton-${index}`}
+                  className="animate-in slide-in-from-bottom-4 duration-500"
+                  style={{ animationDelay: `${150 + index * 50}ms` }}
+                >
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
+                    <div className="relative h-36 bg-muted flex-shrink-0">
+                      <Skeleton className="h-full w-full rounded-none" />
+                      <Skeleton className="absolute top-3 left-3 h-5 w-24 rounded-full" />
+                    </div>
+                    <CardContent className="p-4 flex flex-col flex-1">
+                      <div className="h-14 mb-4">
+                        <Skeleton className="h-6 w-3/4" />
+                        <div className="flex items-center gap-2 mt-2">
+                          <Skeleton className="h-5 w-5 rounded-full" />
+                          <Skeleton className="h-4 w-2/3" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-2/3" />
+                      </div>
+                      <Skeleton className="mt-auto h-10 w-full" />
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!activeRentalsLoading && activeRentalsError && activeRentals.length === 0 && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{activeRentalsError}</AlertDescription>
+          </Alert>
+        )}
+
+        {!activeRentalsLoading && activeRentals.length > 0 && (
+          <div className="space-y-4 animate-in slide-in-from-top-4 duration-500 delay-150">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                  <Package className="h-6 w-6 text-emerald-500" />
+                  {t("owner.active_rentals.title")}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t("owner.active_rentals.description")}
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {activeRentals.map((rental, index) => (
+                <div
+                  key={rental.id}
+                  className="animate-in slide-in-from-bottom-4 duration-500"
+                  style={{ animationDelay: `${150 + index * 50}ms` }}
+                >
+                  <ActiveRentalCard booking={rental} viewerRole="owner" />
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Stats Overview */}

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,25 +8,34 @@ import {
 import { NuqsAdapter } from "nuqs/adapters/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
-import EmailVerification from "@/pages/auth/EmailVerification";
-import RenterDashboard from "@/pages/renter/RenterDashboard";
-import OwnerDashboard from "@/pages/owner/OwnerDashboard";
-import HomePage from "@/pages/HomePage";
-import ExplorePage from "@/pages/ExplorePage";
-import EquipmentDetailPage from "@/pages/equipment/EquipmentDetailPage";
-import MessagingPage from "@/pages/MessagingPage";
-import PaymentConfirmation from "@/pages/payment/PaymentConfirmation";
-import PaymentsPage from "@/pages/renter/PaymentsPage";
-import VerifyIdentity from "@/pages/verification/VerifyIdentity";
-import ProfileSettings from "@/pages/ProfileSettings";
-import SupportPage from "@/pages/SupportPage";
-import EquipmentInspectionPage from "@/pages/inspection/EquipmentInspectionPage";
-import InspectionView from "@/components/inspection/InspectionView";
-import FileClaimPage from "@/pages/claims/FileClaimPage";
-import ReviewClaimPage from "@/pages/claims/ReviewClaimPage";
-import ActiveRentalPage from "@/pages/rental/ActiveRentalPage";
 import { Analytics } from "@vercel/analytics/react";
-import OwnerUpgrade from "@/pages/owner/OwnerUpgrade";
+
+// Lazy-loaded page components
+const EmailVerification = lazy(() => import("@/pages/auth/EmailVerification"));
+const RenterDashboard = lazy(() => import("@/pages/renter/RenterDashboard"));
+const OwnerDashboard = lazy(() => import("@/pages/owner/OwnerDashboard"));
+const HomePage = lazy(() => import("@/pages/HomePage"));
+const ExplorePage = lazy(() => import("@/pages/ExplorePage"));
+const EquipmentDetailPage = lazy(() => import("@/pages/equipment/EquipmentDetailPage"));
+const MessagingPage = lazy(() => import("@/pages/MessagingPage"));
+const PaymentConfirmation = lazy(() => import("@/pages/payment/PaymentConfirmation"));
+const PaymentsPage = lazy(() => import("@/pages/renter/PaymentsPage"));
+const VerifyIdentity = lazy(() => import("@/pages/verification/VerifyIdentity"));
+const ProfileSettings = lazy(() => import("@/pages/ProfileSettings"));
+const SupportPage = lazy(() => import("@/pages/SupportPage"));
+const EquipmentInspectionPage = lazy(() => import("@/pages/inspection/EquipmentInspectionPage"));
+const InspectionView = lazy(() => import("@/components/inspection/InspectionView"));
+const FileClaimPage = lazy(() => import("@/pages/claims/FileClaimPage"));
+const ReviewClaimPage = lazy(() => import("@/pages/claims/ReviewClaimPage"));
+const ManageClaimPage = lazy(() => import("@/pages/claims/ManageClaimPage"));
+const ActiveRentalPage = lazy(() => import("@/pages/rental/ActiveRentalPage"));
+const OwnerUpgrade = lazy(() => import("@/pages/owner/OwnerUpgrade"));
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+  </div>
+);
 
 function App() {
   const { user, loading } = useAuth();
@@ -43,7 +53,8 @@ function App() {
       <Router>
         <NuqsAdapter>
           <div className="min-h-screen bg-background">
-            <Routes>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/explore" element={<ExplorePage />} />
@@ -100,9 +111,14 @@ function App() {
                   path="/claims/review/:claimId"
                   element={<ReviewClaimPage />}
                 />
+                <Route
+                  path="/claims/manage/:claimId"
+                  element={<ManageClaimPage />}
+                />
               </>
             )}
-            </Routes>
+              </Routes>
+            </Suspense>
             <Toaster />
           </div>
         </NuqsAdapter>

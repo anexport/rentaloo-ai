@@ -142,6 +142,10 @@
     "payments": {
       "section_title": "Pagos y Depósito en Garantía",
       "section_description": "Gestiona tus ganancias y fondos en depósito"
+    },
+    "active_rentals": {
+      "title": "Alquileres Activos",
+      "description": "Alquileres actualmente en progreso para tus anuncios."
     }
   }
 }

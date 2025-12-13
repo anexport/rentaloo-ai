@@ -142,6 +142,10 @@
     "payments": {
       "section_title": "Pagamenti e Deposito",
       "section_description": "Gestisci i tuoi guadagni e i fondi in deposito"
+    },
+    "active_rentals": {
+      "title": "Noleggi Attivi",
+      "description": "Noleggi attualmente in corso per le tue inserzioni."
     }
   }
 }

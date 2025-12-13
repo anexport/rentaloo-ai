@@ -142,6 +142,10 @@
     "payments": {
       "section_title": "Payments & Escrow",
       "section_description": "Manage your earnings and escrow funds"
+    },
+    "active_rentals": {
+      "title": "Active Rentals",
+      "description": "Rentals currently in progress for your listings."
     }
   }
 }

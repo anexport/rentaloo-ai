@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -127,6 +127,7 @@ const OWNER_PERKS = [
 const OwnerUpgrade = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -228,6 +229,13 @@ const OwnerUpgrade = () => {
   };
 
   const onSubmit = async (formData: OwnerUpgradeForm) => {
+    // Only allow submission from the final step
+    if (currentStep !== STEPS.length) {
+      // If not on final step, just move to next step instead of submitting
+      await handleNextStep();
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     setSuccess(false);
@@ -282,6 +290,15 @@ const OwnerUpgrade = () => {
           "Owner upgrade saved, but we couldn't sync your auth metadata. Sign out/in if navigation seems off."
         );
       }
+
+      // Invalidate the owner profile query cache so dashboard recognizes the new owner
+      await queryClient.invalidateQueries({
+        queryKey: ["owner-profile-exists", user.id],
+      });
+      // Also invalidate the owner-profile query used on this page
+      await queryClient.invalidateQueries({
+        queryKey: ["owner-profile", user.id],
+      });
 
       setSuccess(true);
       timeoutRef.current = setTimeout(() => {
@@ -396,6 +413,12 @@ const OwnerUpgrade = () => {
 
         <form
           onSubmit={(e) => {
+            e.preventDefault();
+            // Only process form submission on final step
+            if (currentStep !== STEPS.length) {
+              void handleNextStep();
+              return;
+            }
             void handleSubmit(onSubmit)(e);
           }}
           className="space-y-6"
