@@ -9,6 +9,7 @@ import { NuqsAdapter } from "nuqs/adapters/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/toaster";
 import { Analytics } from "@vercel/analytics/react";
+import { RoleModeProvider } from "@/contexts/RoleModeContext";
 
 // Lazy-loaded page components
 const EmailVerification = lazy(() => import("@/pages/auth/EmailVerification"));
@@ -51,10 +52,11 @@ function App() {
   return (
     <>
       <Router>
-        <NuqsAdapter>
-          <div className="min-h-screen bg-background">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
+        <RoleModeProvider>
+          <NuqsAdapter>
+            <div className="min-h-screen bg-background">
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/explore" element={<ExplorePage />} />
@@ -117,11 +119,12 @@ function App() {
                 />
               </>
             )}
-              </Routes>
-            </Suspense>
-            <Toaster />
-          </div>
-        </NuqsAdapter>
+                </Routes>
+              </Suspense>
+              <Toaster />
+            </div>
+          </NuqsAdapter>
+        </RoleModeProvider>
       </Router>
       <Analytics />
     </>
