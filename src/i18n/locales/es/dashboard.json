@@ -4,6 +4,16 @@
       "title": "Descripción General del Panel",
       "description": "¡Bienvenido de nuevo! Esto es lo que está pasando con tus alquileres."
     },
+    "welcome": {
+      "greeting_morning": "Buenos días",
+      "greeting_afternoon": "Buenas tardes",
+      "greeting_evening": "Buenas noches",
+      "fallback_name": "allí",
+      "verified_badge": "Verificado",
+      "upcoming_rentals_one": "Tienes {{count}} alquiler próximo. El próximo alquiler comienza {{time}}.",
+      "upcoming_rentals_other": "Tienes {{count}} alquileres próximos. El próximo alquiler comienza {{time}}.",
+      "empty_state": "¿Listo para alquilar? Explora equipos y comienza tu próxima aventura."
+    },
     "verification": {
       "incomplete_title": "Completa tu verificación",
       "incomplete_message": "Tu cuenta está {{progress}}% verificada. Completa la verificación de identidad para comenzar a alquilar con seguridad.",
@@ -41,6 +51,23 @@
     "header": {
       "title": "Panel del Propietario",
       "description": "Gestiona tus listados de equipos y realiza un seguimiento de tus ganancias"
+    },
+    "welcome": {
+      "greeting_morning": "Buenos días",
+      "greeting_afternoon": "Buenas tardes",
+      "greeting_evening": "Buenas noches",
+      "fallback_name": "allí",
+      "verified_badge": "Verificado",
+      "pending_requests": "Tienes {{count}} solicitud pendiente por revisar.",
+      "pending_requests_plural": "Tienes {{count}} solicitudes pendientes por revisar.",
+      "upcoming_rentals_one": "Tienes {{count}} alquiler próximo. El próximo alquiler comienza {{time}}.",
+      "upcoming_rentals_other": "Tienes {{count}} alquileres próximos. El próximo alquiler comienza {{time}}.",
+      "empty_state": "¿Listo para ganar? Añade un listado para comenzar a recibir solicitudes de reserva."
+    },
+    "verification": {
+      "incomplete_title": "Completa tu verificación",
+      "incomplete_message": "Tu cuenta está {{progress}}% verificada. Completa la verificación de identidad para empezar a ganar con seguridad.",
+      "verify_button": "Verificar ahora"
     },
     "stats": {
       "total_listings": {

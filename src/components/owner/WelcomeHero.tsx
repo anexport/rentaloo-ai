@@ -1,59 +1,49 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useVerification } from "@/hooks/useVerification";
-import { useUpcomingBookings } from "@/components/renter/hooks/useUpcomingBookings";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, CheckCircle2 } from "lucide-react";
-import { formatDistanceToNow, parseISO, type Locale } from "date-fns";
-import { enUS, es, fr, de, it } from "date-fns/locale";
+import { Calendar, CheckCircle2, Inbox } from "lucide-react";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
-import i18n from "@/i18n";
 
-// Map i18n language codes to date-fns locales
-const getDateFnsLocale = (language: string) => {
-  const localeMap: Record<string, Locale> = {
-    en: enUS,
-    es: es,
-    fr: fr,
-    de: de,
-    it: it,
-  };
-  return localeMap[language] || enUS;
+type OwnerWelcomeHeroProps = {
+  bookingsLoading?: boolean;
+  pendingCount: number;
+  upcomingCount: number;
+  nextStartDate: string | null;
+  isVerified?: boolean;
+  subtitle?: string;
 };
 
-const WelcomeHero = () => {
+const WelcomeHero = ({
+  bookingsLoading = false,
+  pendingCount,
+  upcomingCount,
+  nextStartDate,
+  isVerified = false,
+  subtitle,
+}: OwnerWelcomeHeroProps) => {
   const { user } = useAuth();
-  const { profile } = useVerification();
-  const { data, isLoading } = useUpcomingBookings(user?.id);
   const { t } = useTranslation("dashboard");
-
-  const upcomingCount = data?.count || 0;
-  const nextRentalDate = data?.nextDate;
-
-  // Get current language and corresponding date-fns locale
-  const currentLanguage = i18n.language.split("-")[0]; // Handle "en-US" -> "en"
-  const dateLocale = getDateFnsLocale(currentLanguage);
 
   // Get personalized greeting based on time of day
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return t("renter.welcome.greeting_morning");
-    if (hour < 17) return t("renter.welcome.greeting_afternoon");
-    return t("renter.welcome.greeting_evening");
+    if (hour < 12) return t("owner.welcome.greeting_morning");
+    if (hour < 17) return t("owner.welcome.greeting_afternoon");
+    return t("owner.welcome.greeting_evening");
   };
 
   // Extract first name from email (fallback to translated "there" if not available)
   const getFirstName = () => {
-    if (!user?.email) return t("renter.welcome.fallback_name");
+    if (!user?.email) return t("owner.welcome.fallback_name");
     const emailName = user.email.split("@")[0];
-    if (!emailName) return t("renter.welcome.fallback_name");
+    if (!emailName) return t("owner.welcome.fallback_name");
     const namePart = emailName.split(".")[0];
     return namePart.charAt(0).toUpperCase() + namePart.slice(1);
   };
 
   const firstName = getFirstName();
   const greeting = getGreeting();
-  const isVerified = profile?.identityVerified;
 
   return (
     <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-primary/10 via-primary/5 to-background shadow-lg">
@@ -65,13 +55,18 @@ const WelcomeHero = () => {
             <div className="flex items-center gap-4">
               <div className="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/20 border-2 border-primary/30 shadow-md transition-transform hover:scale-105">
                 <span className="text-2xl md:text-3xl font-bold text-primary">
-                  {firstName.charAt(0).toUpperCase()}
+                  {firstName.charAt(0)}
                 </span>
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
                   {greeting}, {firstName}!
                 </h1>
+                {subtitle && (
+                  <p className="text-sm md:text-base text-muted-foreground mt-2">
+                    {subtitle}
+                  </p>
+                )}
                 {isVerified && (
                   <div className="flex items-center gap-2 mt-2">
                     <Badge
@@ -79,7 +74,7 @@ const WelcomeHero = () => {
                       className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300 dark:border-green-700 shadow-sm"
                     >
                       <CheckCircle2 className="h-3 w-3 mr-1" />
-                      {t("renter.welcome.verified_badge")}
+                      {t("owner.welcome.verified_badge")}
                     </Badge>
                   </div>
                 )}
@@ -87,42 +82,47 @@ const WelcomeHero = () => {
             </div>
 
             {/* Activity Summary */}
-            {!isLoading && (
+            {!bookingsLoading && (
               <div className="space-y-2 pl-0 md:pl-24">
-                {upcomingCount > 0 && nextRentalDate ? (
+                {pendingCount > 0 && (
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
+                    <Inbox className="h-4 w-4 text-primary flex-shrink-0" />
                     <span className="text-sm md:text-base">
-                      {(() => {
-                        let formattedTime = "";
-                        try {
-                          const parsedDate = parseISO(nextRentalDate);
-                          if (isNaN(parsedDate.getTime())) {
-                            throw new Error("Invalid date");
-                          }
-                          formattedTime = formatDistanceToNow(parsedDate, {
-                            addSuffix: true,
-                            locale: dateLocale,
-                          });
-                        } catch (error) {
-                          // Fallback to empty string if date parsing/formatting fails
-                          formattedTime = "";
-                        }
-                        return t("renter.welcome.upcoming_rentals", {
-                          count: upcomingCount,
-                          time: formattedTime,
-                        });
-                      })()}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
-                    <span className="text-sm md:text-base">
-                      {t("renter.welcome.empty_state")}
+                      {t(
+                        pendingCount === 1
+                          ? "owner.welcome.pending_requests"
+                          : "owner.welcome.pending_requests_plural",
+                        { count: pendingCount }
+                      )}
                     </span>
                   </div>
                 )}
+
+                {upcomingCount > 0 && nextStartDate ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
+                    <span className="text-sm md:text-base">
+                      {t(
+                        upcomingCount === 1
+                          ? "owner.welcome.upcoming_rentals"
+                          : "owner.welcome.upcoming_rentals_plural",
+                        {
+                          count: upcomingCount,
+                          time: formatDistanceToNow(parseISO(nextStartDate), {
+                            addSuffix: true,
+                          }),
+                        }
+                      )}
+                    </span>
+                  </div>
+                ) : pendingCount === 0 ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
+                    <span className="text-sm md:text-base">
+                      {t("owner.welcome.empty_state")}
+                    </span>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>

@@ -4,6 +4,16 @@
       "title": "Panoramica Dashboard",
       "description": "Bentornato! Ecco cosa sta succedendo con i tuoi noleggi."
     },
+    "welcome": {
+      "greeting_morning": "Buongiorno",
+      "greeting_afternoon": "Buon pomeriggio",
+      "greeting_evening": "Buonasera",
+      "fallback_name": "utente",
+      "verified_badge": "Verificato",
+      "upcoming_rentals_one": "Hai {{count}} noleggio imminente. Il prossimo noleggio inizia {{time}}.",
+      "upcoming_rentals_other": "Hai {{count}} noleggi imminenti. Il prossimo noleggio inizia {{time}}.",
+      "empty_state": "Pronto a noleggiare? Sfoglia l'attrezzatura e inizia la tua prossima avventura."
+    },
     "verification": {
       "incomplete_title": "Completa la tua verifica",
       "incomplete_message": "Il tuo account è verificato al {{progress}}%. Completa la verifica dell'identità per iniziare a noleggiare in sicurezza.",
@@ -41,6 +51,23 @@
     "header": {
       "title": "Dashboard Proprietario",
       "description": "Gestisci i tuoi annunci di attrezzatura e monitora i tuoi guadagni"
+    },
+    "welcome": {
+      "greeting_morning": "Buongiorno",
+      "greeting_afternoon": "Buon pomeriggio",
+      "greeting_evening": "Buonasera",
+      "fallback_name": "utente",
+      "verified_badge": "Verificato",
+      "pending_requests": "Hai {{count}} richiesta in sospeso da esaminare.",
+      "pending_requests_plural": "Hai {{count}} richieste in sospeso da esaminare.",
+      "upcoming_rentals_one": "Hai {{count}} noleggio imminente. Il prossimo noleggio inizia {{time}}.",
+      "upcoming_rentals_other": "Hai {{count}} noleggi imminenti. Il prossimo noleggio inizia {{time}}.",
+      "empty_state": "Pronto a guadagnare? Aggiungi un annuncio per iniziare a ricevere richieste di prenotazione."
+    },
+    "verification": {
+      "incomplete_title": "Completa la tua verifica",
+      "incomplete_message": "Il tuo account è verificato al {{progress}}%. Completa la verifica dell'identità per iniziare a guadagnare in sicurezza.",
+      "verify_button": "Verifica ora"
     },
     "stats": {
       "total_listings": {

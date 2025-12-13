@@ -13,8 +13,8 @@ import { useBreadcrumbs } from "@/hooks/useBreadcrumbs";
 const BreadcrumbNav = () => {
   const breadcrumbs = useBreadcrumbs();
 
-  // Don't show breadcrumbs if there are none or only home
-  if (breadcrumbs.length === 0) {
+  // Don't show breadcrumbs if there are none or only the dashboard root
+  if (breadcrumbs.length <= 1) {
     return null;
   }
 
@@ -56,4 +56,3 @@ const BreadcrumbNav = () => {
 };
 
 export default BreadcrumbNav;
-

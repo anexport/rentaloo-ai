@@ -6,6 +6,7 @@ import {
   Star,
   MessageSquare,
   Shield,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,8 +16,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import { useRoleMode } from "@/contexts/RoleModeContext";
@@ -28,6 +29,10 @@ import ReviewList from "@/components/reviews/ReviewList";
 import EscrowDashboard from "@/components/payment/EscrowDashboard";
 import TransactionHistory from "@/components/payment/TransactionHistory";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import WelcomeHero from "@/components/owner/WelcomeHero";
+import { useVerification } from "@/hooks/useVerification";
+import { getVerificationProgress } from "@/lib/verification";
+import { formatDateForStorage } from "@/lib/utils";
 
 const OWNER_DASHBOARD_TABS = [
   "overview",
@@ -52,6 +57,7 @@ const OwnerDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation("dashboard");
   const { isAlsoOwner, isLoading: isCheckingOwner } = useRoleMode();
+  const { profile, loading: verificationLoading } = useVerification();
   const [stats, setStats] = useState({
     totalListings: 0,
     activeBookings: 0,
@@ -73,6 +79,21 @@ const OwnerDashboard = () => {
     loading: bookingsLoading,
     fetchBookingRequests,
   } = useBookingRequests("owner");
+
+  const progress = profile ? getVerificationProgress(profile) : 0;
+
+  const bookingSummary = useMemo(() => {
+    const today = formatDateForStorage(new Date());
+    const upcomingBookings = bookingRequests
+      .filter((r) => r.status === "approved" && r.start_date >= today)
+      .sort((a, b) => a.start_date.localeCompare(b.start_date));
+
+    return {
+      pendingCount: bookingRequests.filter((r) => r.status === "pending").length,
+      upcomingCount: upcomingBookings.length,
+      nextStartDate: upcomingBookings[0]?.start_date ?? null,
+    };
+  }, [bookingRequests]);
 
   // Redirect non-owners to become-owner page
   useEffect(() => {
@@ -150,15 +171,47 @@ const OwnerDashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
-        {/* Header */}
-        <div>
-          <h2 className="text-3xl font-bold text-foreground mb-2">
-            {t("owner.header.title")}
-          </h2>
-          <p className="text-muted-foreground">
-            {t("owner.header.description")}
-          </p>
-        </div>
+        {/* Welcome Hero Section */}
+        <WelcomeHero
+          subtitle={t("owner.header.description")}
+          isVerified={!!profile?.identityVerified}
+          bookingsLoading={bookingsLoading}
+          pendingCount={bookingSummary.pendingCount}
+          upcomingCount={bookingSummary.upcomingCount}
+          nextStartDate={bookingSummary.nextStartDate}
+        />
+
+        {/* High-Emphasis Banner for unverified identity */}
+        {!verificationLoading && profile && !profile.identityVerified && (
+          <Card className="border-destructive/40 bg-destructive/5 ring-1 ring-destructive/20 animate-in slide-in-from-top-4 duration-500">
+            <CardContent className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-full bg-destructive/10">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-base font-semibold text-destructive">
+                    {t("owner.verification.incomplete_title")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {t("owner.verification.incomplete_message", { progress })}
+                  </p>
+                </div>
+              </div>
+              <Link to="/verification">
+                <Button
+                  variant="default"
+                  size="lg"
+                  className="font-semibold shadow-lg ring-2 ring-primary/50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
+                  aria-label={t("owner.verification.verify_button")}
+                  data-testid="verify-now-banner-owner"
+                >
+                  {t("owner.verification.verify_button")}
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
