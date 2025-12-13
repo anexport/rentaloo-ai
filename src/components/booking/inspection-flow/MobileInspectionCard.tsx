@@ -61,6 +61,11 @@ export default function MobileInspectionCard({
 
   const phase = getPhase();
 
+  // Hide pickup prompts for owners
+  if (isOwner && phase === "awaiting_pickup_inspection") {
+    return null;
+  }
+
   // Calculate progress percentage
   const getProgressPercentage = (): number => {
     if (hasPickupInspection && hasReturnInspection) return 100;

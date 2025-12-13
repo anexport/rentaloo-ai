@@ -93,6 +93,13 @@ export default function EquipmentInspectionPage() {
           return;
         }
 
+        // Only the renter should complete the pickup inspection; redirect owners away
+        if (inspectionType === "pickup" && isOwner) {
+          navigate("/owner/dashboard", { replace: true });
+          setLoading(false);
+          return;
+        }
+
         // Check booking status based on inspection type
         // Pickup inspection: booking must be 'approved'
         // Return inspection: booking must be 'active'
@@ -124,7 +131,7 @@ export default function EquipmentInspectionPage() {
     };
 
     fetchBooking();
-  }, [bookingId, user, inspectionType]);
+  }, [bookingId, inspectionType, navigate, user]);
 
   const handleSuccess = () => {
     // Navigate back to appropriate dashboard

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -60,10 +62,14 @@ export default function InspectionView() {
     inspectionType: "pickup" | "return";
   }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [inspection, setInspection] = useState<InspectionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [role, setRole] = useState({ isOwner: false, isRenter: false });
+  const [confirmingOwner, setConfirmingOwner] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchInspection = async () => {
@@ -105,6 +111,27 @@ export default function InspectionView() {
   }, [bookingId, inspectionType]);
 
   useEffect(() => {
+    const fetchRole = async () => {
+      if (!bookingId || !user) return;
+
+      const { data, error: bookingError } = await supabase
+        .from("booking_requests")
+        .select("renter_id, equipment:equipment(owner_id)")
+        .eq("id", bookingId)
+        .single();
+
+      if (bookingError || !data) return;
+
+      setRole({
+        isOwner: (data as { equipment: { owner_id: string } }).equipment.owner_id === user.id,
+        isRenter: data.renter_id === user.id,
+      });
+    };
+
+    void fetchRole();
+  }, [bookingId, user]);
+
+  useEffect(() => {
     if (!selectedPhoto) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -114,6 +141,37 @@ export default function InspectionView() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedPhoto]);
+
+  const handleOwnerConfirm = async () => {
+    if (!inspection || !role.isOwner) return;
+
+    setConfirmError(null);
+    setConfirmingOwner(true);
+
+    try {
+      const { data, error: updateError } = await supabase
+        .from("equipment_inspections")
+        .update({ verified_by_owner: true, owner_signature: "owner_verified" })
+        .eq("id", inspection.id)
+        .select("*")
+        .single();
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setInspection(data);
+    } catch (err) {
+      console.error("Error confirming inspection:", err);
+      setConfirmError(
+        err instanceof Error
+          ? err.message
+          : "Failed to confirm inspection. Please try again."
+      );
+    } finally {
+      setConfirmingOwner(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString("en-US", {
@@ -211,6 +269,12 @@ export default function InspectionView() {
       </div>
     );
   }
+
+  const canOwnerConfirm =
+    inspectionType === "return" &&
+    role.isOwner &&
+    !inspection.verified_by_owner &&
+    !!inspection.verified_by_renter;
 
   const checklistItems = getChecklistItems();
   const statusCounts = getStatusCounts();
@@ -337,6 +401,51 @@ export default function InspectionView() {
             </CardContent>
           </Card>
         </div>
+
+        {canOwnerConfirm && (
+          <Card className="border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
+                <div>
+                  <p className="font-medium text-green-800 dark:text-green-200">
+                    Renter completed the return inspection
+                  </p>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Review the details and confirm to validate the return as the owner.
+                  </p>
+                </div>
+              </div>
+
+              {confirmError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{confirmError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={handleOwnerConfirm}
+                  disabled={confirmingOwner}
+                  className="flex-1"
+                >
+                  {confirmingOwner ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Confirming...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Confirm return inspection
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Metadata */}
         <Card>

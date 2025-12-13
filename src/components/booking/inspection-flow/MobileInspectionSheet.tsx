@@ -83,6 +83,11 @@ export default function MobileInspectionSheet({
 
   const phase = getPhase();
 
+  // Owners should not see pickup inspection prompts
+  if (isOwner && phase === "awaiting_pickup_inspection") {
+    return null;
+  }
+
   // Calculate progress percentage
   const getProgressPercentage = (): number => {
     if (hasPickupInspection && hasReturnInspection) return 100;
