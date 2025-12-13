@@ -4,6 +4,7 @@ import {
   DollarSign,
   Heart,
   Home,
+  LayoutDashboard,
   LifeBuoy,
   MessageSquare,
   Package,
@@ -38,11 +39,6 @@ export const useBreadcrumbs = (): BreadcrumbItem[] => {
   const isRenterDashboard = normalizedPath === "/renter/dashboard";
   const isOwnerDashboard = normalizedPath === "/owner/dashboard";
 
-  // Hide breadcrumbs on dashboard overview pages
-  if ((isRenterDashboard || isOwnerDashboard) && (!tab || tab === "overview")) {
-    return [];
-  }
-
   const dashboardHome =
     normalizedPath.startsWith("/owner")
       ? isAlsoOwner
@@ -56,8 +52,22 @@ export const useBreadcrumbs = (): BreadcrumbItem[] => {
   
   // Base breadcrumb
   const breadcrumbs: BreadcrumbItem[] = [
-    { label: "Dashboard", href: dashboardHome, icon: Home },
+    {
+      label: dashboardHome.startsWith("/owner") ? "Owner Dashboard" : "Renter Dashboard",
+      href: dashboardHome,
+      icon: dashboardHome.startsWith("/owner") ? Package : Home,
+    },
   ];
+
+  // Dashboard overview breadcrumb
+  if ((isRenterDashboard || isOwnerDashboard) && (!tab || tab === "overview")) {
+    breadcrumbs.push({
+      label: "Overview",
+      href: isOwnerDashboard ? "/owner/dashboard?tab=overview" : "/renter/dashboard?tab=overview",
+      icon: LayoutDashboard,
+    });
+    return breadcrumbs;
+  }
 
   // Dashboard tab breadcrumbs
   if (isRenterDashboard && tab) {
