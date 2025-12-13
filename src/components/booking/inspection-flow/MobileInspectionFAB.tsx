@@ -51,6 +51,11 @@ export default function MobileInspectionFAB({
 
   const phase = getPhase();
 
+  // Owners shouldn't see pickup inspection prompts
+  if (isOwner && phase === "awaiting_pickup_inspection") {
+    return null;
+  }
+
   // Don't show FAB if all inspections are complete
   if (phase === "all_complete") {
     return null;

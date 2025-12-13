@@ -49,7 +49,7 @@ export default function MobileInspectionCTA({
   const today = new Date();
 
   // Determine what inspection is needed
-  const isPickupNeeded = !hasPickupInspection;
+  const isPickupNeeded = !hasPickupInspection && !isOwner;
   const daysUntilEnd = differenceInDays(endDate, today);
   const isReturnNeeded =
     hasPickupInspection &&

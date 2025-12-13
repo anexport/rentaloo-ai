@@ -63,6 +63,11 @@ export default function InspectionFlowBanner({
 
   const phase = getPhase();
 
+  // Owners should not be prompted to start pickup inspections
+  if (isOwner && phase === "awaiting_pickup_inspection") {
+    return null;
+  }
+
   // Calculate timing context
   const daysUntilStart = differenceInDays(startDate, today);
   const hoursUntilStart = differenceInHours(startDate, today);

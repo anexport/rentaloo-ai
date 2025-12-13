@@ -345,8 +345,10 @@ const BookingRequestCard = ({
 
   // Determine if we should show the inspection flow banner prominently
   // Show for approved (pickup inspection) and active (return inspection) bookings
-  const shouldShowInspectionBanner = hasPayment && 
-    (bookingRequest.status === "approved" || bookingRequest.status === "active");
+  const shouldShowInspectionBanner =
+    hasPayment &&
+    (bookingRequest.status === "approved" || bookingRequest.status === "active") &&
+    (!isOwner || !!pickupInspectionId || bookingRequest.status === "active");
 
   return (
     <Card className="w-full overflow-hidden hover:shadow-lg transition-shadow !p-0">
