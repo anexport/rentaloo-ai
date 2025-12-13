@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 
-type NotificationType = "pending_booking" | "payout" | "message";
+type NotificationType = "pending_booking" | "payout";
 
 interface Notification {
   id: string;
@@ -37,7 +37,7 @@ const OwnerNotificationsPanel = () => {
       try {
         const newNotifications: Notification[] = [];
 
-        const [pendingBookingsResult, pendingPayoutsResult, unreadMessagesResult] =
+        const [pendingBookingsResult, pendingPayoutsResult] =
           await Promise.allSettled([
             supabase
               .from("booking_requests")
@@ -52,7 +52,6 @@ const OwnerNotificationsPanel = () => {
               .select("id", { count: "exact", head: true })
               .eq("owner_id", user.id)
               .or("payout_status.eq.pending,payout_status.is.null"),
-            supabase.rpc("get_unread_messages_count"),
           ]);
 
         if (pendingBookingsResult.status === "fulfilled") {
@@ -120,39 +119,6 @@ const OwnerNotificationsPanel = () => {
           );
         }
 
-        if (unreadMessagesResult.status === "fulfilled") {
-          if (unreadMessagesResult.value.error) {
-            console.error(
-              "Failed to fetch unread messages:",
-              unreadMessagesResult.value.error
-            );
-          } else {
-            const unreadCount = unreadMessagesResult.value.data ?? 0;
-            if (unreadCount > 0) {
-              newNotifications.push({
-                id: "unread-messages",
-                type: "message",
-                title: `${unreadCount} Unread ${
-                  unreadCount === 1 ? "Message" : "Messages"
-                }`,
-                description: `You have ${unreadCount} unread ${
-                  unreadCount === 1 ? "message" : "messages"
-                } from renters.`,
-                action: {
-                  label: "View Messages",
-                  href: "/messages",
-                },
-                dismissible: true,
-              });
-            }
-          }
-        } else {
-          console.error(
-            "Failed to fetch unread messages:",
-            unreadMessagesResult.reason
-          );
-        }
-
         if (isMounted) {
           setNotifications(newNotifications);
         }
@@ -189,7 +155,6 @@ const OwnerNotificationsPanel = () => {
         return <Clock className="h-4 w-4" />;
       case "payout":
         return <DollarSign className="h-4 w-4" />;
-      case "message":
       default:
         return <AlertCircle className="h-4 w-4" />;
     }
