@@ -93,9 +93,9 @@ export default function EquipmentInspectionPage() {
           return;
         }
 
-        // Only the renter should complete the pickup inspection
+        // Only the renter should complete the pickup inspection; redirect owners away
         if (inspectionType === "pickup" && isOwner) {
-          setError("Pickup inspections must be completed by the renter");
+          navigate("/owner/dashboard", { replace: true });
           setLoading(false);
           return;
         }
@@ -131,7 +131,7 @@ export default function EquipmentInspectionPage() {
     };
 
     fetchBooking();
-  }, [bookingId, user, inspectionType]);
+  }, [bookingId, inspectionType, navigate, user]);
 
   const handleSuccess = () => {
     // Navigate back to appropriate dashboard
