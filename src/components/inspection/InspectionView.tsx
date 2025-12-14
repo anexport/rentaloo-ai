@@ -22,6 +22,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/useToast";
 import type { Database } from "@/lib/database.types";
 
 type InspectionData = Database["public"]["Tables"]["equipment_inspections"]["Row"];
@@ -63,6 +64,7 @@ export default function InspectionView() {
   }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [inspection, setInspection] = useState<InspectionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +72,7 @@ export default function InspectionView() {
   const [role, setRole] = useState({ isOwner: false, isRenter: false });
   const [confirmingOwner, setConfirmingOwner] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [releasingDeposit, setReleasingDeposit] = useState(false);
 
   useEffect(() => {
     const fetchInspection = async () => {
@@ -162,15 +165,44 @@ export default function InspectionView() {
 
       setInspection(data);
 
+      // Release the deposit
       if (bookingId) {
-        void supabase.functions
-          .invoke("release-deposit", { body: { bookingId } })
-          .then(({ error: releaseError }) => {
-            if (releaseError) {
-              console.error("Deposit release error:", releaseError);
-            }
+        setReleasingDeposit(true);
+        try {
+          const { data: releaseData, error: releaseError } = await supabase.functions
+            .invoke("release-deposit", { body: { bookingId } });
+
+          if (releaseError) {
+            throw releaseError;
+          }
+
+          // Check for error in the function response payload
+          if (releaseData?.error) {
+            throw new Error(releaseData.error);
+          }
+
+          toast({
+            title: "Deposit Released",
+            description: "The security deposit has been successfully released to the renter.",
           });
+        } catch (releaseErr) {
+          console.error("Deposit release error:", releaseErr);
+          toast({
+            variant: "destructive",
+            title: "Deposit Release Failed",
+            description: releaseErr instanceof Error
+              ? releaseErr.message
+              : "Failed to release deposit. Please try again or contact support.",
+          });
+        } finally {
+          setReleasingDeposit(false);
+        }
       }
+
+      toast({
+        title: "Inspection Confirmed",
+        description: "You have successfully confirmed the return inspection.",
+      });
     } catch (err) {
       console.error("Error confirming inspection:", err);
       setConfirmError(
@@ -437,13 +469,13 @@ export default function InspectionView() {
               <div className="flex items-center gap-3">
                 <Button
                   onClick={handleOwnerConfirm}
-                  disabled={confirmingOwner}
+                  disabled={confirmingOwner || releasingDeposit}
                   className="flex-1"
                 >
-                  {confirmingOwner ? (
+                  {confirmingOwner || releasingDeposit ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Confirming...
+                      {releasingDeposit ? "Releasing deposit..." : "Confirming..."}
                     </>
                   ) : (
                     <>

@@ -99,8 +99,25 @@ Deno.serve(async (req) => {
     const booking = payment.booking_request as {
       id: string;
       renter_id: string;
-      equipment: { owner_id: string; deposit_refund_timeline_hours: number | null };
-    };
+      equipment: { owner_id: string; deposit_refund_timeline_hours: number | null } | null;
+    } | null;
+
+    if (!booking) {
+      console.error("Booking request not found for payment:", payment.id);
+      return new Response(JSON.stringify({ error: "Booking not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!booking.equipment) {
+      console.error("Equipment not found for booking:", booking.id);
+      return new Response(JSON.stringify({ error: "Equipment not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const isOwner = booking.equipment.owner_id === user.id;
     const isRenter = booking.renter_id === user.id;
 
@@ -177,14 +194,28 @@ Deno.serve(async (req) => {
 
     // Auto-accept the return if the claim window has expired and the owner never confirmed
     if (!returnInspection.verified_by_owner && claimWindowExpired) {
-      const { error: autoAcceptErr } = await supabase
+      const { data: autoAcceptData, error: autoAcceptErr } = await supabase
         .from("equipment_inspections")
         .update({ verified_by_owner: true, owner_signature: "auto_accepted" })
         .eq("id", returnInspection.id)
-        .eq("verified_by_owner", false);
+        .or("verified_by_owner.eq.false,verified_by_owner.is.null")
+        .select("id")
+        .maybeSingle();
 
       if (autoAcceptErr) {
         console.error("Error auto-accepting return inspection:", autoAcceptErr);
+        return new Response(
+          JSON.stringify({ error: "Failed to auto-accept inspection. Please try again." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (!autoAcceptData) {
+        console.error("Auto-accept update matched no rows for inspection:", returnInspection.id);
+        return new Response(
+          JSON.stringify({ error: "Inspection could not be auto-accepted. It may have already been processed." }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
     }
 

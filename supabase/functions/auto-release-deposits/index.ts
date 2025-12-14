@@ -290,7 +290,7 @@ Deno.serve(async (req) => {
           .from("equipment_inspections")
           .update({ verified_by_owner: true, owner_signature: "auto_accepted" })
           .eq("id", returnInspection.id)
-          .eq("verified_by_owner", false);
+          .or("verified_by_owner.eq.false,verified_by_owner.is.null");
         if (acceptErr) {
           console.error("Failed to auto-accept return inspection:", acceptErr);
         }

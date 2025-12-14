@@ -104,12 +104,19 @@ export default function EquipmentInspectionPage() {
 
         // Return inspections are submitted by renters; owners only review/accept or file a claim
         if (inspectionType === "return" && isOwner) {
-          const { data: existingReturnInspection } = await supabase
+          const { data: existingReturnInspection, error: inspectionError } = await supabase
             .from("equipment_inspections")
             .select("id")
             .eq("booking_id", bookingId)
             .eq("inspection_type", "return")
             .maybeSingle();
+
+          if (inspectionError) {
+            console.error("Error checking return inspection:", inspectionError);
+            setError("Failed to check inspection status. Please try again.");
+            setLoading(false);
+            return;
+          }
 
           if (existingReturnInspection?.id) {
             navigate(`/inspection/${bookingId}/view/return`, { replace: true });
