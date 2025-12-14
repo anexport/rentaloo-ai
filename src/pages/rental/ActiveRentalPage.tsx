@@ -88,6 +88,7 @@ export default function ActiveRentalPage() {
     primaryPhoto?.photo_url || equipment.equipment_photos?.[0]?.photo_url;
 
   const isRenter = booking.renter_id === user?.id;
+  const isOwner = equipment.owner_id === user?.id;
   const countdown = calculateRentalCountdown(booking.start_date, booking.end_date);
   const hoursUntilEnd = differenceInHours(new Date(booking.end_date), new Date());
   const isEndingSoon = hoursUntilEnd <= 24 && hoursUntilEnd > 0;
@@ -110,7 +111,7 @@ export default function ActiveRentalPage() {
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Return Reminder Banner */}
-        {isEndingSoon && !returnInspection && (
+        {isRenter && isEndingSoon && !returnInspection && (
           <Alert className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/30">
             <AlertTriangle className="h-4 w-4 text-orange-500" />
             <AlertTitle className="text-orange-700 dark:text-orange-400">
@@ -124,7 +125,7 @@ export default function ActiveRentalPage() {
         )}
 
         {/* Overdue Alert */}
-        {isOverdue && !returnInspection && (
+        {isRenter && isOverdue && !returnInspection && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Rental Overdue</AlertTitle>
@@ -249,7 +250,7 @@ export default function ActiveRentalPage() {
               ownerId={equipment.owner?.id}
               equipmentLocation={equipment.location}
               hasPickupInspection={!!pickupInspection}
-              showReturnAction={isEndingSoon || isOverdue}
+              showReturnAction={isRenter && (isEndingSoon || isOverdue)}
             />
           </CardContent>
         </Card>
@@ -304,21 +305,28 @@ export default function ActiveRentalPage() {
                   </Button>
                 </Link>
               ) : (
-                <Link to={`/inspection/${booking.id}/return`}>
-                  <Button
-                    variant={isEndingSoon || isOverdue ? "default" : "outline"}
-                    size="sm"
-                  >
-                    Start
-                  </Button>
-                </Link>
+                <>
+                  {isRenter && (
+                    <Link to={`/inspection/${booking.id}/return`}>
+                      <Button
+                        variant={isEndingSoon || isOverdue ? "default" : "outline"}
+                        size="sm"
+                      >
+                        Start
+                      </Button>
+                    </Link>
+                  )}
+                  {isOwner && (
+                    <Badge variant="secondary">Awaiting renter</Badge>
+                  )}
+                </>
               )}
             </div>
           </CardContent>
         </Card>
 
         {/* Main Return CTA */}
-        {!returnInspection && (
+        {isRenter && !returnInspection && (
           <Card className="border-primary/30 bg-primary/5">
             <CardContent className="p-6 text-center">
               <Camera className="h-10 w-10 text-primary mx-auto mb-3" />
@@ -359,4 +367,3 @@ export default function ActiveRentalPage() {
     </div>
   );
 }
-

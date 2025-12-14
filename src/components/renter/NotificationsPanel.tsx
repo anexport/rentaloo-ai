@@ -1,24 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  X,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  DollarSign,
-  Shield,
-} from "lucide-react";
+import { X, AlertCircle, Clock, DollarSign } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { useVerification } from "@/hooks/useVerification";
-import { getVerificationProgress } from "@/lib/verification";
 import { supabase } from "@/lib/supabase";
-import { formatDateForStorage } from "@/lib/utils";
 
 interface Notification {
   id: string;
-  type: "pending_booking" | "verification" | "payment" | "success";
+  type: "pending_booking" | "payment";
   title: string;
   description: string;
   action?: {
@@ -30,8 +20,6 @@ interface Notification {
 
 const NotificationsPanel = () => {
   const { user } = useAuth();
-  const { profile } = useVerification();
-  const verificationProgress = profile ? getVerificationProgress(profile) : 0;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
 
@@ -133,7 +121,7 @@ const NotificationsPanel = () => {
     return () => {
       isMounted = false;
     };
-  }, [user, verificationProgress]);
+  }, [user]);
 
   const handleDismiss = (id: string) => {
     setDismissedIds([...dismissedIds, id]);
@@ -149,8 +137,6 @@ const NotificationsPanel = () => {
 
   const getAlertVariant = (type: Notification["type"]) => {
     switch (type) {
-      case "success":
-        return "default";
       case "payment":
         return "destructive";
       default:
@@ -162,12 +148,8 @@ const NotificationsPanel = () => {
     switch (type) {
       case "pending_booking":
         return <Clock className="h-4 w-4" />;
-      case "verification":
-        return <Shield className="h-4 w-4" />;
       case "payment":
         return <DollarSign className="h-4 w-4" />;
-      case "success":
-        return <CheckCircle className="h-4 w-4" />;
       default:
         return <AlertCircle className="h-4 w-4" />;
     }

@@ -15,7 +15,6 @@ import {
   CreditCard,
   Heart,
   LifeBuoy,
-  Plus,
   Sparkles,
   PiggyBank,
   ListChecks,
@@ -417,56 +416,6 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
         {/* Role Switcher */}
         <RoleSwitcher collapsed={collapsed} variant="sidebar" />
-
-        {/* Owner quick action - show for owners, users with equipment, or renters who want to become owners */}
-        {(activeMode === "owner" || hasEquipment || (user && !isAlsoOwner)) && (
-        <div className="px-2 pb-2">
-          {hasEquipment ? (
-            <Link
-              to="/owner/dashboard?tab=equipment"
-              className={cn(
-                "flex items-center gap-3 rounded-lg border border-dashed border-primary/40 px-3 py-2.5 text-sm font-medium text-primary transition hover:border-primary hover:bg-primary/10",
-                collapsed ? "justify-center" : ""
-              )}
-              title={collapsed ? t("sidebar.add_new_listing") : undefined}
-            >
-              <Plus className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>{t("sidebar.add_new_listing")}</span>}
-              {!collapsed && (
-                <span className="ml-auto text-xs text-primary/80">
-                  {t("sidebar.add_new_listing_subtitle")}
-                </span>
-              )}
-            </Link>
-          ) : (
-            // Show "List your equipment" link if user is not already an owner
-            !isAlsoOwner && (
-              <Link
-                to={
-                  user
-                    ? "/owner/become-owner"
-                    : "/register/owner"
-                }
-                className={cn(
-                  "flex items-center gap-3 rounded-lg border border-dashed border-muted px-3 py-2.5 text-sm font-medium transition hover:border-primary hover:bg-primary/5",
-                  collapsed ? "justify-center" : ""
-                )}
-                title={collapsed ? t("sidebar.list_equipment") : undefined}
-              >
-                <Sparkles className="h-4 w-4 shrink-0 text-primary" />
-                {!collapsed && (
-                  <div className="flex flex-col">
-                    <span>{t("sidebar.list_equipment")}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {t("sidebar.list_equipment_subtitle")}
-                    </span>
-                  </div>
-                )}
-              </Link>
-            )
-          )}
-        </div>
-        )}
 
         {/* Navigation */}
         <nav className="flex-1 px-2">

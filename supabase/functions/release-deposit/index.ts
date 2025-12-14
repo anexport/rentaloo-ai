@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
         booking_request:booking_requests(
           id,
           renter_id,
-          equipment:equipment(owner_id)
+          equipment:equipment(owner_id, deposit_refund_timeline_hours)
         )
       `
       )
@@ -99,8 +99,25 @@ Deno.serve(async (req) => {
     const booking = payment.booking_request as {
       id: string;
       renter_id: string;
-      equipment: { owner_id: string };
-    };
+      equipment: { owner_id: string; deposit_refund_timeline_hours: number | null } | null;
+    } | null;
+
+    if (!booking) {
+      console.error("Booking request not found for payment:", payment.id);
+      return new Response(JSON.stringify({ error: "Booking not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!booking.equipment) {
+      console.error("Equipment not found for booking:", booking.id);
+      return new Response(JSON.stringify({ error: "Equipment not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const isOwner = booking.equipment.owner_id === user.id;
     const isRenter = booking.renter_id === user.id;
 
@@ -143,17 +160,63 @@ Deno.serve(async (req) => {
     // Check for return inspection (optional but recommended)
     const { data: returnInspection } = await supabase
       .from("equipment_inspections")
-      .select("id")
+      .select("id, verified_by_owner, verified_by_renter, timestamp, created_at")
       .eq("booking_id", bookingId)
       .eq("inspection_type", "return")
       .maybeSingle();
 
-    // Only owners can release without return inspection
-    if (!returnInspection && !isOwner) {
+    if (!returnInspection) {
       return new Response(
         JSON.stringify({ error: "Return inspection required before deposit release" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    if (!returnInspection.verified_by_renter) {
+      return new Response(
+        JSON.stringify({ error: "Return inspection must be submitted by the renter before deposit release" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const claimWindowHours = booking.equipment.deposit_refund_timeline_hours ?? 48;
+    const submittedAt = new Date(returnInspection.timestamp || returnInspection.created_at);
+    const claimDeadlineMs = submittedAt.getTime() + claimWindowHours * 60 * 60 * 1000;
+    const claimWindowExpired = Date.now() > claimDeadlineMs;
+
+    // Require owner confirmation unless the claim window has expired (auto-accept)
+    if (!returnInspection.verified_by_owner && !claimWindowExpired) {
+      return new Response(
+        JSON.stringify({ error: "Owner confirmation or claim window expiry required before deposit release" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Auto-accept the return if the claim window has expired and the owner never confirmed
+    if (!returnInspection.verified_by_owner && claimWindowExpired) {
+      const { data: autoAcceptData, error: autoAcceptErr } = await supabase
+        .from("equipment_inspections")
+        .update({ verified_by_owner: true, owner_signature: "auto_accepted" })
+        .eq("id", returnInspection.id)
+        .or("verified_by_owner.eq.false,verified_by_owner.is.null")
+        .select("id")
+        .maybeSingle();
+
+      if (autoAcceptErr) {
+        console.error("Error auto-accepting return inspection:", autoAcceptErr);
+        return new Response(
+          JSON.stringify({ error: "Failed to auto-accept inspection. Please try again." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (!autoAcceptData) {
+        console.error("Auto-accept update matched no rows for inspection:", returnInspection.id);
+        return new Response(
+          JSON.stringify({ error: "Inspection could not be auto-accepted. It may have already been processed." }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Atomically move deposit to "releasing" to prevent concurrent refunds

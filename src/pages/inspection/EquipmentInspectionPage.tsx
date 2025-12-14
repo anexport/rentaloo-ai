@@ -20,6 +20,7 @@ interface BookingDetails {
     id: string;
     title: string;
     owner_id: string;
+    deposit_refund_timeline_hours: number | null;
     category: {
       sport_type: string;
     } | null;
@@ -67,6 +68,7 @@ export default function EquipmentInspectionPage() {
               id,
               title,
               owner_id,
+              deposit_refund_timeline_hours,
               category:categories(sport_type)
             )
           `
@@ -89,6 +91,39 @@ export default function EquipmentInspectionPage() {
 
         if (!isOwner && !isRenter) {
           setError("You are not authorized to view this inspection");
+          setLoading(false);
+          return;
+        }
+
+        // Only the renter should complete the pickup inspection; redirect owners away
+        if (inspectionType === "pickup" && isOwner) {
+          navigate("/owner/dashboard", { replace: true });
+          setLoading(false);
+          return;
+        }
+
+        // Return inspections are submitted by renters; owners only review/accept or file a claim
+        if (inspectionType === "return" && isOwner) {
+          const { data: existingReturnInspection, error: inspectionError } = await supabase
+            .from("equipment_inspections")
+            .select("id")
+            .eq("booking_id", bookingId)
+            .eq("inspection_type", "return")
+            .maybeSingle();
+
+          if (inspectionError) {
+            console.error("Error checking return inspection:", inspectionError);
+            setError("Failed to check inspection status. Please try again.");
+            setLoading(false);
+            return;
+          }
+
+          if (existingReturnInspection?.id) {
+            navigate(`/inspection/${bookingId}/view/return`, { replace: true });
+          } else {
+            navigate("/owner/dashboard", { replace: true });
+          }
+
           setLoading(false);
           return;
         }
@@ -124,7 +159,7 @@ export default function EquipmentInspectionPage() {
     };
 
     fetchBooking();
-  }, [bookingId, user, inspectionType]);
+  }, [bookingId, inspectionType, navigate, user]);
 
   const handleSuccess = () => {
     // Navigate back to appropriate dashboard
@@ -182,6 +217,7 @@ export default function EquipmentInspectionPage() {
     startDate: booking.start_date,
     endDate: booking.end_date,
     depositAmount: booking.damage_deposit_amount ?? undefined,
+    claimWindowHours: booking.equipment.deposit_refund_timeline_hours ?? 48,
   };
 
   return (
