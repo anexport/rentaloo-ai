@@ -1357,7 +1357,7 @@ export type Database = {
       deposit_status: "held" | "releasing" | "released" | "claimed" | "refunded"
       equipment_condition: "new" | "excellent" | "good" | "fair"
       inspection_type: "pickup" | "return"
-      user_role: "renter" | "owner"
+      user_role: "renter" | "owner" | "admin"
       verification_status: "unverified" | "pending" | "verified"
     }
     CompositeTypes: {
@@ -1512,7 +1512,7 @@ export const Constants = {
       deposit_status: ["held", "releasing", "released", "claimed", "refunded"],
       equipment_condition: ["new", "excellent", "good", "fair"],
       inspection_type: ["pickup", "return"],
-      user_role: ["renter", "owner"],
+      user_role: ["renter", "owner", "admin"],
       verification_status: ["unverified", "pending", "verified"],
     },
   },

@@ -5,7 +5,7 @@ import type { Database } from "@/lib/database.types";
 import i18n from "@/i18n/config";
 
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
-type UserMetadata = { role: "renter" | "owner" } & Record<string, unknown>;
+type UserMetadata = { role: "renter" | "owner" | "admin" } & Record<string, unknown>;
 type UpdateProfileError = AuthError | PostgrestError;
 
 interface AuthContextType {

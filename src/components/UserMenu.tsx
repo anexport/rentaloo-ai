@@ -9,6 +9,7 @@ import {
   Search,
   MessageSquare,
   Shield,
+  ShieldCheck,
   Settings,
   LogOut,
   ChevronDown,
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSelector from "@/components/LanguageSelector";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 const UserMenu = () => {
   const { t } = useTranslation("navigation");
@@ -30,6 +32,7 @@ const UserMenu = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
+  const { isAdmin } = useAdminAccess();
 
   const handleSignOut = async () => {
     try {
@@ -89,6 +92,11 @@ const UserMenu = () => {
 
   const initials = getInitials(user.email);
   const displayName = user.user_metadata?.fullName || user.email;
+  const roleLabel = isAdmin
+    ? "Admin"
+    : activeMode === "owner"
+      ? t("user_role.equipment_owner")
+      : t("user_role.renter");
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -115,11 +123,7 @@ const UserMenu = () => {
           <p className="text-sm font-semibold text-foreground truncate">
             {displayName}
           </p>
-          <p className="text-xs text-gray-500 truncate mt-0.5">
-            {activeMode === "owner"
-              ? t("user_role.equipment_owner")
-              : t("user_role.renter")}
-          </p>
+          <p className="text-xs text-gray-500 truncate mt-0.5">{roleLabel}</p>
         </div>
 
         {/* Navigation Items */}
@@ -129,6 +133,13 @@ const UserMenu = () => {
           <LayoutDashboard className="h-4 w-4 text-gray-500" />
           <span>{t("menu.dashboard")}</span>
         </DropdownMenuItem>
+
+        {isAdmin && (
+          <DropdownMenuItem onClick={() => handleNavigation("/admin")}>
+            <ShieldCheck className="h-4 w-4 text-gray-500" />
+            <span>Admin</span>
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuItem onClick={() => handleNavigation("/equipment")}>
           <Search className="h-4 w-4 text-gray-500" />

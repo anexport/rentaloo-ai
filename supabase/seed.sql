@@ -12,7 +12,8 @@ INSERT INTO categories (id, name, sport_type, attributes) VALUES
 INSERT INTO profiles (id, email, role) VALUES
     ('11111111-1111-1111-1111-111111111111', 'renter@example.com', 'renter'),
     ('22222222-2222-2222-2222-222222222222', 'owner@example.com', 'owner'),
-    ('33333333-3333-3333-3333-333333333333', 'owner2@example.com', 'owner');
+    ('33333333-3333-3333-3333-333333333333', 'owner2@example.com', 'owner'),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 'admin@example.com', 'admin');
 
 -- Insert sample renter profile
 INSERT INTO renter_profiles (profile_id, experience_level) VALUES
