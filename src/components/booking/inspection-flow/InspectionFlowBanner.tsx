@@ -9,9 +9,17 @@ import {
   ArrowRight,
   Calendar,
   Package,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { differenceInDays, differenceInHours, isPast, isFuture, isToday } from "date-fns";
+import type { Database } from "@/lib/database.types";
+
+type InspectionRow = Database["public"]["Tables"]["equipment_inspections"]["Row"];
+export type ReturnInspectionSummary = Pick<
+  InspectionRow,
+  "id" | "verified_by_owner" | "verified_by_renter" | "timestamp" | "created_at"
+>;
 
 export type InspectionPhase =
   | "awaiting_pickup_inspection"
@@ -27,6 +35,8 @@ interface InspectionFlowBannerProps {
   hasPickupInspection: boolean;
   hasReturnInspection: boolean;
   isOwner: boolean;
+  returnInspection?: ReturnInspectionSummary | null;
+  claimWindowHours?: number;
   className?: string;
 }
 
@@ -37,6 +47,8 @@ export default function InspectionFlowBanner({
   hasPickupInspection,
   hasReturnInspection,
   isOwner,
+  returnInspection,
+  claimWindowHours,
   className,
 }: InspectionFlowBannerProps) {
   const navigate = useNavigate();
@@ -142,6 +154,54 @@ export default function InspectionFlowBanner({
 
   // Don't show banner if all inspections complete
   if (phase === "all_complete") {
+    const windowHours = claimWindowHours ?? 48;
+    const submittedAt = returnInspection?.timestamp || returnInspection?.created_at;
+    const isClaimWindowExpired = submittedAt
+      ? Date.now() > new Date(submittedAt).getTime() + windowHours * 60 * 60 * 1000
+      : false;
+    const ownerNeedsReturnReview =
+      isOwner &&
+      !!returnInspection?.id &&
+      !!returnInspection.verified_by_renter &&
+      !returnInspection.verified_by_owner &&
+      !isClaimWindowExpired;
+
+    if (ownerNeedsReturnReview) {
+      return (
+        <Alert
+          className={cn(
+            "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950 py-3",
+            className
+          )}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <div className="flex items-start gap-2 flex-1 min-w-0">
+              <Eye className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <AlertTitle className="text-sm font-semibold leading-tight text-amber-800 dark:text-amber-200">
+                  Return inspection submitted
+                </AlertTitle>
+                <AlertDescription className="text-xs mt-0.5 line-clamp-2 text-amber-700 dark:text-amber-300">
+                  Review and confirm the return, or file a claim
+                  {claimWindowHours ? ` within ${claimWindowHours} hours` : ""}.
+                </AlertDescription>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => navigate(`/inspection/${bookingId}/view/return`)}
+              className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white"
+              size="sm"
+            >
+              <Eye className="h-3.5 w-3.5 mr-1.5" />
+              Review Return
+              <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+            </Button>
+          </div>
+        </Alert>
+      );
+    }
+
     return (
       <Alert className={cn("border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950 py-2.5", className)}>
         <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -208,6 +268,7 @@ export default function InspectionFlowBanner({
       phase === "awaiting_return_inspection" ||
       (phase === "pickup_inspection_complete" && isEndingSoon)
     ) {
+      if (isOwner) return;
       navigate(`/inspection/${bookingId}/return`);
     }
   };
@@ -240,6 +301,9 @@ export default function InspectionFlowBanner({
       return `As the ${role}, you must document the equipment condition before pickup. This protects both parties and is required to proceed with the rental.`;
     }
     if (phase === "awaiting_return_inspection") {
+      if (isOwner) {
+        return "Waiting for the renter to submit the return inspection. You'll be able to review and confirm once it's submitted.";
+      }
       return `As the ${role}, you must document the equipment condition upon return. This is required to complete the rental and release the security deposit.`;
     }
     if (phase === "pickup_inspection_complete" && isEndingSoon) {
@@ -247,6 +311,12 @@ export default function InspectionFlowBanner({
     }
     return "";
   };
+
+  const showActionButton =
+    !isOwner &&
+    (phase === "awaiting_pickup_inspection" ||
+      phase === "awaiting_return_inspection" ||
+      (phase === "pickup_inspection_complete" && isEndingSoon));
 
   return (
     <Alert className={cn(styles.container, "py-3", className)}>
@@ -269,15 +339,17 @@ export default function InspectionFlowBanner({
           </div>
         </div>
         
-        <Button
-          onClick={handleInspectionClick}
-          className={cn("shrink-0", styles.button)}
-          size="sm"
-        >
-          <Camera className="h-3.5 w-3.5 mr-1.5" />
-          {phase === "awaiting_pickup_inspection" ? "Complete Pickup" : "Complete Return"}
-          <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-        </Button>
+        {showActionButton && (
+          <Button
+            onClick={handleInspectionClick}
+            className={cn("shrink-0", styles.button)}
+            size="sm"
+          >
+            <Camera className="h-3.5 w-3.5 mr-1.5" />
+            {phase === "awaiting_pickup_inspection" ? "Complete Pickup" : "Complete Return"}
+            <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+          </Button>
+        )}
       </div>
     </Alert>
   );

@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { differenceInDays, isPast, isToday, isFuture } from "date-fns";
 import MobileInspectionSheet from "./MobileInspectionSheet";
-import type { InspectionPhase } from "./InspectionFlowBanner";
+import type { InspectionPhase, ReturnInspectionSummary } from "./InspectionFlowBanner";
 
 interface MobileInspectionCardProps {
   bookingId: string;
@@ -24,6 +24,8 @@ interface MobileInspectionCardProps {
   hasPickupInspection: boolean;
   hasReturnInspection: boolean;
   isOwner: boolean;
+  returnInspection?: ReturnInspectionSummary | null;
+  claimWindowHours?: number;
   className?: string;
 }
 
@@ -35,11 +37,25 @@ export default function MobileInspectionCard({
   hasPickupInspection,
   hasReturnInspection,
   isOwner,
+  returnInspection,
+  claimWindowHours,
   className,
 }: MobileInspectionCardProps) {
   const navigate = useNavigate();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const today = new Date();
+
+  const windowHours = claimWindowHours ?? 48;
+  const submittedAt = returnInspection?.timestamp || returnInspection?.created_at;
+  const isClaimWindowExpired = submittedAt
+    ? Date.now() > new Date(submittedAt).getTime() + windowHours * 60 * 60 * 1000
+    : false;
+  const ownerNeedsReturnReview =
+    isOwner &&
+    hasReturnInspection &&
+    !!returnInspection?.verified_by_renter &&
+    !returnInspection?.verified_by_owner &&
+    !isClaimWindowExpired;
 
   // Determine the current phase
   const getPhase = (): InspectionPhase => {
@@ -99,6 +115,7 @@ export default function MobileInspectionCard({
 
   // Get timing text
   const getTimingText = (): string => {
+    if (ownerNeedsReturnReview) return "Review";
     if (phase === "awaiting_pickup_inspection") {
       if (isPast(startDate)) return "Overdue!";
       if (isToday(startDate)) return "Due today";
@@ -118,6 +135,7 @@ export default function MobileInspectionCard({
 
   // Get action label
   const getActionLabel = (): string => {
+    if (ownerNeedsReturnReview) return "Review Return";
     if (phase === "awaiting_pickup_inspection") return "Complete Pickup";
     if (phase === "awaiting_return_inspection") return "Complete Return";
     if (phase === "pickup_inspection_complete") return "Rental Active";
@@ -126,8 +144,14 @@ export default function MobileInspectionCard({
 
   // Get description
   const getDescription = (): string => {
+    if (ownerNeedsReturnReview) {
+      return `Confirm return or file claim${claimWindowHours ? ` within ${claimWindowHours}h` : ""}`;
+    }
     if (phase === "awaiting_pickup_inspection") return "Document equipment before pickup";
-    if (phase === "awaiting_return_inspection") return "Document equipment upon return";
+    if (phase === "awaiting_return_inspection") {
+      if (isOwner) return "Waiting for renter to submit return inspection";
+      return "Document equipment upon return";
+    }
     if (phase === "pickup_inspection_complete") return "Return inspection needed at end";
     return "Both inspections documented";
   };
@@ -172,14 +196,26 @@ export default function MobileInspectionCard({
   const Icon = getIcon();
 
   const handlePrimaryAction = () => {
-    if (phase === "awaiting_pickup_inspection") {
-      navigate(`/inspection/${bookingId}/pickup`);
-    } else if (phase === "awaiting_return_inspection") {
-      navigate(`/inspection/${bookingId}/return`);
-    } else {
-      setIsSheetOpen(true);
+    if (ownerNeedsReturnReview) {
+      navigate(`/inspection/${bookingId}/view/return`);
+      return;
     }
+    if (!isOwner && phase === "awaiting_pickup_inspection") {
+      navigate(`/inspection/${bookingId}/pickup`);
+      return;
+    }
+    if (!isOwner && phase === "awaiting_return_inspection") {
+      navigate(`/inspection/${bookingId}/return`);
+      return;
+    }
+    setIsSheetOpen(true);
   };
+
+  const showStartButton =
+    ownerNeedsReturnReview ||
+    (!isOwner &&
+      phase !== "all_complete" &&
+      phase !== "pickup_inspection_complete");
 
   return (
     <>
@@ -223,13 +259,13 @@ export default function MobileInspectionCard({
           </div>
 
           {/* Action area */}
-          {phase !== "all_complete" && phase !== "pickup_inspection_complete" ? (
+          {showStartButton ? (
             <Button
               size="sm"
               className={cn("shrink-0", buttonStyles[urgency])}
               onClick={handlePrimaryAction}
             >
-              Start
+              {ownerNeedsReturnReview ? "Review" : "Start"}
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
@@ -269,6 +305,8 @@ export default function MobileInspectionCard({
         hasPickupInspection={hasPickupInspection}
         hasReturnInspection={hasReturnInspection}
         isOwner={isOwner}
+        returnInspection={returnInspection}
+        claimWindowHours={claimWindowHours}
         isOpen={isSheetOpen}
         onOpenChange={setIsSheetOpen}
       />

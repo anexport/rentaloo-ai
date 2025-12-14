@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 import { format, differenceInDays, isPast, isFuture } from "date-fns";
 
 type Payment = Database["public"]["Tables"]["payments"]["Row"];
+type InspectionRow = Database["public"]["Tables"]["equipment_inspections"]["Row"];
 
 interface BookingRequestCardProps {
   bookingRequest: BookingRequestWithDetails;
@@ -68,7 +69,12 @@ const BookingRequestCard = ({
   const [showRenterScreening, setShowRenterScreening] = useState(false);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [pickupInspectionId, setPickupInspectionId] = useState<string | null>(null);
-  const [returnInspectionId, setReturnInspectionId] = useState<string | null>(null);
+  const [returnInspection, setReturnInspection] = useState<
+    Pick<
+      InspectionRow,
+      "id" | "verified_by_owner" | "verified_by_renter" | "timestamp" | "created_at"
+    > | null
+  >(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Check if inspections exist for this booking
@@ -92,7 +98,7 @@ const BookingRequestCard = ({
         // Check for return inspection
         const { data: returnData, error: returnError } = await supabase
           .from("equipment_inspections")
-          .select("id")
+          .select("id, verified_by_owner, verified_by_renter, timestamp, created_at")
           .eq("booking_id", bookingRequest.id)
           .eq("inspection_type", "return")
           .maybeSingle();
@@ -100,7 +106,7 @@ const BookingRequestCard = ({
         if (returnError) {
           console.error("Error checking return inspection:", returnError);
         } else {
-          setReturnInspectionId(returnData?.id || null);
+          setReturnInspection(returnData ?? null);
         }
       } catch (error) {
         console.error("Error checking inspection status:", error);
@@ -115,19 +121,12 @@ const BookingRequestCard = ({
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "equipment_inspections",
           filter: `booking_id=eq.${bookingRequest.id}`,
         },
-        (payload) => {
-          const newInspection = payload.new as { id: string; inspection_type: string };
-          if (newInspection.inspection_type === "pickup") {
-            setPickupInspectionId(newInspection.id);
-          } else if (newInspection.inspection_type === "return") {
-            setReturnInspectionId(newInspection.id);
-          }
-        }
+        () => void checkInspections()
       )
       .subscribe();
 
@@ -342,13 +341,33 @@ const BookingRequestCard = ({
   const today = new Date();
   const isActive = isPast(startDate) && isFuture(endDate);
   const daysUntilStart = differenceInDays(startDate, today);
+  const claimWindowHours =
+    bookingRequest.equipment.deposit_refund_timeline_hours || 48;
+  const returnInspectionSubmittedAt =
+    returnInspection?.timestamp || returnInspection?.created_at;
+  const claimDeadlineMs = returnInspectionSubmittedAt
+    ? new Date(returnInspectionSubmittedAt).getTime() + claimWindowHours * 60 * 60 * 1000
+    : null;
+  const isClaimWindowExpired =
+    typeof claimDeadlineMs === "number" && Date.now() > claimDeadlineMs;
+  const needsOwnerReturnReview =
+    isOwner &&
+    !!returnInspection?.id &&
+    !!returnInspection.verified_by_renter &&
+    !returnInspection.verified_by_owner &&
+    !isClaimWindowExpired;
 
   // Determine if we should show the inspection flow banner prominently
   // Show for approved (pickup inspection) and active (return inspection) bookings
   const shouldShowInspectionBanner =
     hasPayment &&
-    (bookingRequest.status === "approved" || bookingRequest.status === "active") &&
-    (!isOwner || !!pickupInspectionId || bookingRequest.status === "active");
+    (bookingRequest.status === "approved" ||
+      bookingRequest.status === "active" ||
+      (bookingRequest.status === "completed" && needsOwnerReturnReview)) &&
+    (!isOwner ||
+      !!pickupInspectionId ||
+      bookingRequest.status === "active" ||
+      (bookingRequest.status === "completed" && needsOwnerReturnReview));
 
   return (
     <Card className="w-full overflow-hidden hover:shadow-lg transition-shadow !p-0">
@@ -412,7 +431,7 @@ const BookingRequestCard = ({
               <BookingLifecycleStepper
                 hasPayment={hasPayment}
                 hasPickupInspection={!!pickupInspectionId}
-                hasReturnInspection={!!returnInspectionId}
+                hasReturnInspection={!!returnInspection?.id}
                 startDate={startDate}
                 endDate={endDate}
                 bookingStatus={bookingRequest.status || "approved"}
@@ -431,8 +450,10 @@ const BookingRequestCard = ({
                     startDate={startDate}
                     endDate={endDate}
                     hasPickupInspection={!!pickupInspectionId}
-                    hasReturnInspection={!!returnInspectionId}
+                    hasReturnInspection={!!returnInspection?.id}
                     isOwner={isOwner}
+                    returnInspection={returnInspection}
+                    claimWindowHours={claimWindowHours}
                   />
                 ) : (
                   /* Desktop: Full banner */
@@ -441,15 +462,22 @@ const BookingRequestCard = ({
                     startDate={startDate}
                     endDate={endDate}
                     hasPickupInspection={!!pickupInspectionId}
-                    hasReturnInspection={!!returnInspectionId}
+                    hasReturnInspection={!!returnInspection?.id}
                     isOwner={isOwner}
+                    returnInspection={returnInspection}
+                    claimWindowHours={claimWindowHours}
                   />
                 )}
               </>
             )}
 
             {/* File Damage Claim - Desktop only, for owners */}
-            {!isMobile && shouldShowInspectionBanner && isOwner && (
+            {!isMobile &&
+              shouldShowInspectionBanner &&
+              isOwner &&
+              !!returnInspection?.id &&
+              !isClaimWindowExpired &&
+              !returnInspection.verified_by_owner && (
               <Button
                 size="sm"
                 variant="destructive"

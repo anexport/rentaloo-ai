@@ -21,6 +21,7 @@ interface BookingDetails {
     title: string;
     owner_id: string;
     daily_rate: number;
+    deposit_refund_timeline_hours: number | null;
   };
 }
 
@@ -64,7 +65,8 @@ export default function FileClaimPage() {
               id,
               title,
               owner_id,
-              daily_rate
+              daily_rate,
+              deposit_refund_timeline_hours
             )
           `
           )
@@ -88,9 +90,9 @@ export default function FileClaimPage() {
           return;
         }
 
-        // Check if booking is completed or approved
-        if (!["approved", "completed"].includes(bookingData.status)) {
-          setError("Can only file claims for approved or completed bookings");
+        // Claims are only filed after return
+        if (!["active", "completed"].includes(bookingData.status)) {
+          setError("Can only file claims for active or completed bookings");
           setLoading(false);
           return;
         }
@@ -112,6 +114,45 @@ export default function FileClaimPage() {
           ...bookingData,
           equipment,
         } as BookingDetails);
+
+        // Return inspection is required to file a claim and starts the claim window
+        const { data: returnInspection, error: returnInspectionError } = await supabase
+          .from("equipment_inspections")
+          .select("timestamp, verified_by_owner, verified_by_renter")
+          .eq("booking_id", bookingId)
+          .eq("inspection_type", "return")
+          .maybeSingle();
+
+        if (returnInspectionError) {
+          throw returnInspectionError;
+        }
+
+        if (!returnInspection) {
+          setError("Return inspection required before filing a claim");
+          setLoading(false);
+          return;
+        }
+
+        if (!returnInspection.verified_by_renter) {
+          setError("Return inspection must be submitted by the renter before filing a claim");
+          setLoading(false);
+          return;
+        }
+
+        if (returnInspection.verified_by_owner) {
+          setError("Return has already been confirmed. Claims can no longer be filed.");
+          setLoading(false);
+          return;
+        }
+
+        const claimWindowHours = equipment.deposit_refund_timeline_hours || 48;
+        const submittedAtMs = new Date(returnInspection.timestamp).getTime();
+        const claimDeadlineMs = submittedAtMs + claimWindowHours * 60 * 60 * 1000;
+        if (Date.now() > claimDeadlineMs) {
+          setError("Claim window expired. This return has been auto-accepted.");
+          setLoading(false);
+          return;
+        }
 
         // Fetch pickup inspection photos for comparison
         const { data: inspectionData } = await supabase

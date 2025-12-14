@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { differenceInDays, differenceInHours, isPast, isFuture, isToday, format } from "date-fns";
-import type { InspectionPhase } from "./InspectionFlowBanner";
+import type { InspectionPhase, ReturnInspectionSummary } from "./InspectionFlowBanner";
 
 interface MobileInspectionSheetProps {
   bookingId: string;
@@ -35,6 +35,8 @@ interface MobileInspectionSheetProps {
   hasPickupInspection: boolean;
   hasReturnInspection: boolean;
   isOwner: boolean;
+  returnInspection?: ReturnInspectionSummary | null;
+  claimWindowHours?: number;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -47,6 +49,8 @@ export default function MobileInspectionSheet({
   hasPickupInspection,
   hasReturnInspection,
   isOwner,
+  returnInspection,
+  claimWindowHours,
   isOpen,
   onOpenChange,
 }: MobileInspectionSheetProps) {
@@ -62,6 +66,18 @@ export default function MobileInspectionSheet({
     return null;
   }
   const today = new Date();
+
+  const windowHours = claimWindowHours ?? 48;
+  const submittedAt = returnInspection?.timestamp || returnInspection?.created_at;
+  const isClaimWindowExpired = submittedAt
+    ? Date.now() > new Date(submittedAt).getTime() + windowHours * 60 * 60 * 1000
+    : false;
+  const ownerNeedsReturnReview =
+    isOwner &&
+    hasReturnInspection &&
+    !!returnInspection?.verified_by_renter &&
+    !returnInspection?.verified_by_owner &&
+    !isClaimWindowExpired;
 
   // Determine the current phase
   const getPhase = (): InspectionPhase => {
@@ -179,14 +195,20 @@ export default function MobileInspectionSheet({
     {
       id: "return",
       label: "Return Inspection",
-      description: hasReturnInspection 
-        ? "Completed" 
-        : "Document condition upon return",
+      description: hasReturnInspection
+        ? ownerNeedsReturnReview
+          ? `Submitted — confirm${claimWindowHours ? ` within ${claimWindowHours}h` : ""}`
+          : "Completed"
+        : isOwner
+          ? "Awaiting renter submission"
+          : "Document condition upon return",
       status: hasReturnInspection ? "complete" : (phase === "awaiting_return_inspection" ? "current" : "upcoming"),
-      action: hasReturnInspection 
+      action: hasReturnInspection
         ? () => handleViewInspection("return")
-        : (hasPickupInspection ? () => handleInspectionAction("return") : undefined),
-      actionLabel: hasReturnInspection ? "View" : "Start",
+        : isOwner
+          ? undefined
+          : (hasPickupInspection ? () => handleInspectionAction("return") : undefined),
+      actionLabel: hasReturnInspection ? "View" : (isOwner ? undefined : "Start"),
       icon: hasReturnInspection ? CheckCircle2 : Camera,
       timing: hasPickupInspection && !hasReturnInspection ? getTimingText() : undefined,
     },
@@ -348,7 +370,10 @@ export default function MobileInspectionSheet({
           )}
 
           {/* File claim (owner only) */}
-          {isOwner && hasPickupInspection && (
+          {isOwner &&
+            hasReturnInspection &&
+            !isClaimWindowExpired &&
+            !returnInspection?.verified_by_owner && (
             <Button
               variant="destructive"
               className="flex-1"
@@ -371,7 +396,7 @@ export default function MobileInspectionSheet({
             </Button>
           )}
 
-          {phase === "awaiting_return_inspection" && (
+          {!isOwner && phase === "awaiting_return_inspection" && (
             <Button
               className={cn("flex-1", urgencyStyles[urgency].button)}
               onClick={() => handleInspectionAction("return")}
@@ -382,7 +407,18 @@ export default function MobileInspectionSheet({
             </Button>
           )}
 
-          {phase === "all_complete" && (
+          {ownerNeedsReturnReview && (
+            <Button
+              className="flex-1"
+              onClick={() => handleViewInspection("return")}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Review Return
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          )}
+
+          {phase === "all_complete" && !ownerNeedsReturnReview && (
             <Button variant="secondary" className="flex-1" disabled>
               <CheckCircle2 className="h-4 w-4 mr-2" />
               All Complete

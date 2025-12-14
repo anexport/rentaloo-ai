@@ -20,6 +20,7 @@ interface BookingInfo {
   startDate: string;
   endDate: string;
   depositAmount?: number;
+  claimWindowHours?: number;
 }
 
 interface InspectionWizardProps {
@@ -152,6 +153,11 @@ export default function InspectionWizard({
   const handleSubmit = async () => {
     if (!user) {
       setError("You must be logged in to submit an inspection");
+      return;
+    }
+
+    if (inspectionType === "return" && isOwner) {
+      setError("Owners can't submit return inspections. Please review the renter's return inspection instead.");
       return;
     }
 
@@ -304,7 +310,7 @@ export default function InspectionWizard({
     if (!bookingInfo?.depositAmount) return undefined;
     return {
       amount: bookingInfo.depositAmount,
-      claimWindowHours: 48,
+      claimWindowHours: bookingInfo.claimWindowHours ?? 48,
     };
   }, [bookingInfo]);
 
